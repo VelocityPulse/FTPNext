@@ -3,6 +3,7 @@ package com.example.ftpnext.database.TableTest1;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.ADataAccessObject;
@@ -17,11 +18,13 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
         super(iDataBase);
     }
 
+
     @Override
     public TableTest1 fetchById(int iId) {
         return super.fetchById(TABLE, iId, COLUMN_ID, COLUMNS);
     }
 
+    @Override
     public List<TableTest1> fetchAll() {
         return super.fetchAll(TABLE, COLUMNS, COLUMN_ID);
     }
@@ -54,6 +57,11 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
     }
 
     @Override
+    public void onUpgradeTable(int iOldVersion, int iNewVersion) {
+
+    }
+
+    @Override
     protected void setContentValue(TableTest1 iObject) {
         if (iObject == null) {
             LogManager.error(TAG, "Object to set content value is null");
@@ -82,8 +90,17 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
         return oObject;
     }
 
-    @Override
-    protected void onUpgradeTable(int iOldVersion, int iNewVersion) {
+    public boolean add(List<TableTest1> iTableTest1List) {
+        if (iTableTest1List == null)
+            return LogManager.error(TAG, "List is null");
 
+        for (TableTest1 lTableTest1 : iTableTest1List) {
+            if (lTableTest1 == null)
+                return LogManager.error(TAG, "Object in list is null. Return error.");
+            if (!add(lTableTest1, TABLE)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

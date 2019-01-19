@@ -8,7 +8,7 @@ public class LogManager {
 
     private static final String TAG = "CORE - Log Manager";
     private static final String TAG_PREFIX = "FTPNEXT LOG : ";
-    private static final boolean ENABLED_LOG = true;
+    private static final boolean ENABLED_LOG = AppInfo.DEBUG_ENABLED;
 
     public static boolean error(String iMessage) {
         if (ENABLED_LOG)

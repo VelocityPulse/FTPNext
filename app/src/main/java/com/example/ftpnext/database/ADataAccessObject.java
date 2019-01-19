@@ -13,10 +13,8 @@ import java.util.List;
 public abstract class ADataAccessObject<T> extends ADataBaseSQLiteHelper {
 
     private final String TAG = "DATABASE : Data Access Object";
-
-    private Cursor mCursor = null;
-
     protected ContentValues mContentValues = null;
+    private Cursor mCursor = null;
 
     public ADataAccessObject(SQLiteDatabase iDataBase) {
         super(iDataBase);
@@ -34,9 +32,9 @@ public abstract class ADataAccessObject<T> extends ADataBaseSQLiteHelper {
 
     public abstract boolean delete(int iId);
 
-    protected abstract void setContentValue(T iObject);
+    public abstract void onUpgradeTable(int iOldVersion, int iNewVersion);
 
-    protected abstract void onUpgradeTable(int iOldVersion, int iNewVersion);
+    protected abstract void setContentValue(T iObject);
 
     protected abstract T cursorToEntity(Cursor iCursor);
 
