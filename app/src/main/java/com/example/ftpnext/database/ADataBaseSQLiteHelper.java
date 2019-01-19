@@ -6,45 +6,37 @@ import android.database.sqlite.SQLiteDatabase;
 
 public abstract class ADataBaseSQLiteHelper {
 
-    public SQLiteDatabase mDb;
+    protected SQLiteDatabase mDataBase;
 
-
-    protected abstract <T> T cursorToEntity(Cursor cursor); 
-    public abstract void onUpgrade(int oldVersion, int newVersion);
-
-    public int delete(String tableName, String selection, String[] selectionArgs) {
-        return mDb.delete(tableName, selection, selectionArgs);
+    protected ADataBaseSQLiteHelper(SQLiteDatabase iDataBase) {
+        this.mDataBase = iDataBase;
     }
 
-    public long insert(String tableName, ContentValues values) {
-        return mDb.insert(tableName, null, values);
+    protected int delete(String iTableName, String iSelection, String[] iSelectionArgs) {
+        return mDataBase.delete(iTableName, iSelection, iSelectionArgs);
     }
 
-    public DbContentProvider(SQLiteDatabase db) {
-        this.mDb = db;
+    protected long insert(String iTableName, ContentValues iValues) {
+        return mDataBase.insert(iTableName, null, iValues);
     }
 
-    public Cursor query(String tableName, String[] columns, String selection, String[] selectionArgs, String sortOrder) {
-        final Cursor cursor = mDb.query(tableName, columns, selection, selectionArgs, null, null, sortOrder);
-        return cursor;
+    protected Cursor query(String iTableName, String[] iColumns, String iSelection, String[] iSelectionArgs, String iSortOrder) {
+        return mDataBase.query(iTableName, iColumns, iSelection, iSelectionArgs, null, null, iSortOrder);
     }
 
-    public Cursor query(String tableName, String[] columns, String selection, String[] selectionArgs, String sortOrder, String limit) {
-        return mDb.query(tableName, columns, selection, selectionArgs, null, null, sortOrder, limit);
+    protected Cursor query(String iTableName, String[] iColumns, String iSelection, String[] iSelectionArgs, String iSortOrder, String iLimit) {
+        return mDataBase.query(iTableName, iColumns, iSelection, iSelectionArgs, null, null, iSortOrder, iLimit);
     }
 
-
-    public Cursor query(String tableName, String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
-        return mDb.query(tableName, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
+    protected Cursor query(String iTableName, String[] iColumns, String iSelection, String[] iSelectionArgs, String iGroupBy, String iHaving, String iOrderBy, String iLimit) {
+        return mDataBase.query(iTableName, iColumns, iSelection, iSelectionArgs, iGroupBy, iHaving, iOrderBy, iLimit);
     }
 
-    public int update(String tableName, ContentValues values, String selection, String[] selectionArgs) {
-        return mDb.update(tableName, values, selection, selectionArgs);
+    protected int update(String iTableName, ContentValues iValues, String iSelection, String[] iSelectionArgs) {
+        return mDataBase.update(iTableName, iValues, iSelection, iSelectionArgs);
     }
 
-    public Cursor rawQuery(String sql, String[] selectionArgs) {
-        return mDb.rawQuery(sql, selectionArgs);
+    protected Cursor rawQuery(String iSQL, String[] iSelectionArgs) {
+        return mDataBase.rawQuery(iSQL, iSelectionArgs);
     }
-
-
 }

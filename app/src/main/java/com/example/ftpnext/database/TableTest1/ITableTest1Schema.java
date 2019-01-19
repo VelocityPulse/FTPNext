@@ -25,5 +25,4 @@ public interface ITableTest1Schema {
             + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
             + COLUMN_VALUE + " INTEGER, "
             + ")";
-
 }

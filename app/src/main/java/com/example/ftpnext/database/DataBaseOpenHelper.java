@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.example.ftpnext.database.TableTest1.TableTest1;
 import com.example.ftpnext.database.TableTest1.TableTest1DAO;
 
 public class DataBaseOpenHelper extends SQLiteOpenHelper {
@@ -14,14 +15,8 @@ public class DataBaseOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
-        // test debug :
-        TableTest1DAO t = new TableTest1DAO();
-
-        t.
-
-
 //        db.execSQL();
+
     }
 
     @Override

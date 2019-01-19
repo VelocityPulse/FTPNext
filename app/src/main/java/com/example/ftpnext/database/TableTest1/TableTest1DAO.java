@@ -1,7 +1,8 @@
 package com.example.ftpnext.database.TableTest1;
 
 import android.content.ContentValues;
-import android.database.sqlite.SQLiteConstraintException;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.ADataAccessObject;
@@ -10,55 +11,79 @@ import java.util.List;
 
 public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITableTest1Schema {
 
-    private static final String TAG = "TABLETEST1 DAO";
+    private static final String TAG = "DATABASE : Table Test 1 DAO";
+
+    public TableTest1DAO(SQLiteDatabase iDataBase) {
+        super(iDataBase);
+    }
 
     @Override
     public TableTest1 fetchById(int iId) {
-        return null;
+        return super.fetchById(TABLE, iId, COLUMN_ID, COLUMNS);
     }
 
-
-    @Override
     public List<TableTest1> fetchAll() {
-        return null;
+        return super.fetchAll(TABLE, COLUMNS, COLUMN_ID);
     }
 
     @Override
     public boolean add(TableTest1 iObject) {
-        setContentValue(iObject);
-        try {
-            return super.insert(TABLE, getContentValue()) > 0;
-        } catch (SQLiteConstraintException ex) {
-            LogManager.error(TAG, "Database ex.: " + ex.getMessage()); //error
-            return false;
-        }
-        return false;
+        if (iObject == null)
+            return LogManager.error(TAG, "Object to add is null");
+
+        return super.add(iObject, TABLE);
     }
 
     @Override
     public boolean update(TableTest1 iObject) {
-        return false;
+        if (iObject == null)
+            return LogManager.error(TAG, "Object to update is null");
+
+        return super.update(iObject, iObject.getId(), TABLE, COLUMN_ID);
     }
 
     @Override
     public boolean deleteAll() {
-        return false;
+        return super.delete(TABLE, null, null) > 0;
     }
 
     @Override
     public boolean delete(int iId) {
-        return false;
+        final String selection = " " + COLUMN_ID + " =" + iId;
+        return super.delete(TABLE, selection, null) > 0;
     }
 
     @Override
     protected void setContentValue(TableTest1 iObject) {
-        mInitialValues = new ContentValues();
+        if (iObject == null) {
+            LogManager.error(TAG, "Object to set content value is null");
+            return;
+        }
+
+        mContentValues = new ContentValues();
         if (iObject.getId() != 0) {
-            mInitialValues.put(COLUMN_ID, iObject.getId());
-            mInitialValues.put(COLUMN_VALUE, iObject.getValue());
+            mContentValues.put(COLUMN_ID, iObject.getId());
+            mContentValues.put(COLUMN_VALUE, iObject.getValue());
         }
     }
 
+    @Override
+    protected TableTest1 cursorToEntity(Cursor iCursor) {
+        if (iCursor == null) {
+            LogManager.error(TAG, "Cursor in cursorToEntity is null");
+            return null;
+        }
 
+        TableTest1 oObject = new TableTest1();
+        if (iCursor.getColumnIndex(COLUMN_ID) != -1)
+            oObject.setId(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_ID)));
+        if (iCursor.getColumnIndex(COLUMN_VALUE) != -1)
+            oObject.setValue(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_VALUE)));
+        return oObject;
+    }
 
+    @Override
+    protected void onUpgradeTable(int iOldVersion, int iNewVersion) {
+
+    }
 }
