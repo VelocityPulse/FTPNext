@@ -3,7 +3,6 @@ package com.example.ftpnext.database.TableTest1;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.ADataAccessObject;
@@ -71,8 +70,8 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
         mContentValues = new ContentValues();
         if (iObject.getId() != 0) {
             mContentValues.put(COLUMN_ID, iObject.getId());
-            mContentValues.put(COLUMN_VALUE, iObject.getValue());
         }
+        mContentValues.put(COLUMN_VALUE, iObject.getValue());
     }
 
     @Override

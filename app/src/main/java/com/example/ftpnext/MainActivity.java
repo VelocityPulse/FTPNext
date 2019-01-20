@@ -2,33 +2,36 @@ package com.example.ftpnext;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.util.Log;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
+import com.example.ftpnext.core.AppCore;
+import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
-import com.example.ftpnext.database.TableTest1.TableTest1DAO;
+import com.example.ftpnext.database.TableTest1.TableTest1;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private static String TAG = "MAIN ACTIVITY";
 
+    private AppCore mAppCore = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        DataBase.getInstance().open(this);
 
         Toolbar lToolBar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(lToolBar);
@@ -52,6 +55,27 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        mAppCore = new AppCore(this);
+        mAppCore.startApplication();
+
+
+        DataBase.getTableTest1Dao().add(new TableTest1(10));
+
+        List<TableTest1> lTableTest1s = DataBase.getTableTest1Dao().fetchAll();
+        for (TableTest1 lTableTest1 : lTableTest1s) {
+            LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
+        }
+
+        DataBase.getTableTest1Dao().delete(lTableTest1s.get(1).getId());
+        LogManager.info(TAG, "deleted");
+
+        lTableTest1s = DataBase.getTableTest1Dao().fetchAll();
+        for (TableTest1 lTableTest1 : lTableTest1s) {
+            LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
+        }
+
+
     }
 
     @Override

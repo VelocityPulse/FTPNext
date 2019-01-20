@@ -5,6 +5,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.example.ftpnext.core.AppInfo;
+import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.TableTest1.TableTest1DAO;
 
 public class DataBase {
@@ -15,13 +16,12 @@ public class DataBase {
     private static String TAG = "DATABASE : Database";
 
     private static TableTest1DAO mTableTest1Dao = null;
-
+    private static DataBase mSingleton = null;
     private DataBaseOpenHelper mDataBaseOpenHelper;
     private boolean mDataBaseIsOpen = false;
 
-    private static DataBase mSingleton = null;
-
-    private DataBase() { }
+    private DataBase() {
+    }
 
     public static DataBase getInstance() {
         if (mSingleton != null)
@@ -33,6 +33,9 @@ public class DataBase {
         return mTableTest1Dao;
     }
 
+    public static void initDataDirectory() {
+
+    }
 
     /**
      * @param iContext Context of the app
@@ -41,7 +44,9 @@ public class DataBase {
      */
     public boolean open(Context iContext) throws SQLException {
         if (mDataBaseIsOpen)
-            return mDataBaseIsOpen;
+            return true;
+
+        LogManager.info(TAG, "Open database");
         mDataBaseOpenHelper = new DataBaseOpenHelper(iContext);
         SQLiteDatabase lDataBase = mDataBaseOpenHelper.getWritableDatabase();
 
@@ -49,10 +54,6 @@ public class DataBase {
         mTableTest1Dao = new TableTest1DAO(lDataBase);
 
         return (mDataBaseIsOpen = true);
-    }
-
-    public static void initDataDirectory() {
-
     }
 
     public boolean isDataBaseIsOpen() {

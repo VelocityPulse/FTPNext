@@ -14,15 +14,9 @@ public interface ITableTest1Schema {
             COLUMN_VALUE,
     };
 
-    //Insert list
-    String TABLE_INSERT = TABLE + "("
-            + COLUMN_ID
-            + COLUMN_VALUE + ", "
-            + ")";
-
     //Create
     String TABLE_CREATE = "CREATE TABLE IF NOT EXISTS " + TABLE + " ("
             + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
-            + COLUMN_VALUE + " INTEGER, "
+            + COLUMN_VALUE + " INTEGER"
             + ")";
 }

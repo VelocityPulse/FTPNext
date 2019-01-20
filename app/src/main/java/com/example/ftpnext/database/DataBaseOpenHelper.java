@@ -14,10 +14,12 @@ public class DataBaseOpenHelper extends SQLiteOpenHelper {
 
     public DataBaseOpenHelper(Context context) {
         super(context, DataBase.DATABASE_NAME, null, DataBase.DATABASE_VERSION);
+        LogManager.info(TAG, "Constructor");
     }
 
     @Override
     public void onCreate(SQLiteDatabase iDataBase) {
+        LogManager.info(TAG, "On Create DataBase");
         iDataBase.execSQL(ITableTest1Schema.TABLE_CREATE);
 
         LogManager.info(TAG, "Database tables created");
