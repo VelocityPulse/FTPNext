@@ -8,6 +8,8 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -19,6 +21,7 @@ import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.TableTest1.TableTest1;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity
@@ -27,54 +30,19 @@ public class MainActivity extends AppCompatActivity
     private static String TAG = "MAIN ACTIVITY";
 
     private AppCore mAppCore = null;
+    private LinearLayoutManager mLayoutManager;
+    private RecyclerView mRecyclerView;
+    private MainRecyclerViewAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar lToolBar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(lToolBar);
-
-        FloatingActionButton lFloatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
-        lFloatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "You have to be connected.", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
-        DrawerLayout lDrawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-
-        ActionBarDrawerToggle lToggle = new ActionBarDrawerToggle(
-                this, lDrawer, lToolBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-
-        lDrawer.addDrawerListener(lToggle);
-        lToggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        initializeGUI();
 
         mAppCore = new AppCore(this);
         mAppCore.startApplication();
-
-
-        DataBase.getTableTest1Dao().add(new TableTest1(10));
-
-        List<TableTest1> lTableTest1s = DataBase.getTableTest1Dao().fetchAll();
-        for (TableTest1 lTableTest1 : lTableTest1s) {
-            LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
-        }
-
-        DataBase.getTableTest1Dao().delete(lTableTest1s.get(1).getId());
-        LogManager.info(TAG, "deleted");
-
-        lTableTest1s = DataBase.getTableTest1Dao().fetchAll();
-        for (TableTest1 lTableTest1 : lTableTest1s) {
-            LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
-        }
-
 
     }
 
@@ -137,4 +105,64 @@ public class MainActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
+    private void initializeGUI() {
+        Toolbar lToolBar = findViewById(R.id.toolbar);
+        setSupportActionBar(lToolBar);
+
+        FloatingActionButton lFloatingActionButton = findViewById(R.id.fab);
+        lFloatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "You have to be connected.", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+
+                mAdapter.mItemList.add("x");
+
+            }
+        });
+
+        DrawerLayout lDrawer = findViewById(R.id.drawer_layout);
+
+        ActionBarDrawerToggle lToggle = new ActionBarDrawerToggle(
+                this, lDrawer, lToolBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+
+        lDrawer.addDrawerListener(lToggle);
+        lToggle.syncState();
+
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        // use a linear layout manager
+        mRecyclerView = findViewById(R.id.main_recycler_view);
+        mLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLayoutManager);
+
+        // specify an adapter (see also next example)
+        mAdapter = new MainRecyclerViewAdapter(new ArrayList<String>());
+        mRecyclerView.setAdapter(mAdapter);
+
+    }
+
+    private void runTests() {
+
+        DataBase.getTableTest1Dao().add(new TableTest1(10));
+
+        List<TableTest1> lTableTest1s = DataBase.getTableTest1Dao().fetchAll();
+        for (TableTest1 lTableTest1 : lTableTest1s) {
+            LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
+        }
+
+        DataBase.getTableTest1Dao().delete(lTableTest1s.get(1).getId());
+        LogManager.info(TAG, "deleted");
+
+        lTableTest1s = DataBase.getTableTest1Dao().fetchAll();
+        for (TableTest1 lTableTest1 : lTableTest1s) {
+            LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
+        }
+
+
+    }
+
+
 }

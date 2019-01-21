@@ -41,33 +41,33 @@ public abstract class ADataAccessObject<T> extends ADataBaseSQLiteHelper {
     protected T fetchById(String iTable, int iId, String iColumnId, String[] iColumns) {
         final String lSelectionArgs[] = {String.valueOf(iId)};
         final String lSelection = iColumnId + " = ?";
-        T iObject = null;
+        T lObject = null;
 
         mCursor = super.query(iTable, iColumns, lSelection, lSelectionArgs, iColumnId);
         if (mCursor != null) {
             mCursor.moveToFirst();
             while (!mCursor.isAfterLast()) {
-                iObject = cursorToEntity(mCursor);
+                lObject = cursorToEntity(mCursor);
                 mCursor.moveToNext();
             }
             mCursor.close();
         }
-        return iObject;
+        return lObject;
     }
 
     protected List<T> fetchAll(String iTable, String[] iColumns, String iColumnId) {
-        List<T> mList = new ArrayList<>();
+        List<T> lList = new ArrayList<>();
 
         mCursor = super.query(iTable, iColumns, null, null, iColumnId);
         if (mCursor != null) {
             mCursor.moveToFirst();
             while (!mCursor.isAfterLast()) {
-                mList.add(cursorToEntity(mCursor));
+                lList.add(cursorToEntity(mCursor));
                 mCursor.moveToNext();
             }
             mCursor.close();
         }
-        return mList;
+        return lList;
     }
 
     protected boolean add(T iObject, String iTable) {

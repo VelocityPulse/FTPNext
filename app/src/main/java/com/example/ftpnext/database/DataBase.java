@@ -15,7 +15,8 @@ public class DataBase {
 
     private static String TAG = "DATABASE : Database";
 
-    private static TableTest1DAO mTableTest1Dao = null;
+    private static TableTest1DAO mTableTest1Dao;
+
     private static DataBase mSingleton = null;
     private DataBaseOpenHelper mDataBaseOpenHelper;
     private boolean mDataBaseIsOpen = false;
