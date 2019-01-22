@@ -144,16 +144,12 @@ public class MainActivity extends AppCompatActivity
             LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
         }
 
-        DataBase.getTableTest1Dao().delete(lTableTest1s.get(1).getId());
+        DataBase.getTableTest1Dao().delete(lTableTest1s.get(1).getDataBaseId());
         LogManager.info(TAG, "deleted");
 
         lTableTest1s = DataBase.getTableTest1Dao().fetchAll();
         for (TableTest1 lTableTest1 : lTableTest1s) {
             LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
         }
-
-
     }
-
-
 }

@@ -10,7 +10,7 @@ import com.example.ftpnext.core.LogManager;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class ADataAccessObject<T> extends ADataBaseSQLiteHelper {
+public abstract class ADataAccessObject<T extends ABaseTable> extends ADataBaseSQLiteHelper {
 
     private final String TAG = "DATABASE : Data Access Object";
     protected ContentValues mContentValues = null;

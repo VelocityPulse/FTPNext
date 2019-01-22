@@ -41,7 +41,7 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
         if (iObject == null)
             return LogManager.error(TAG, "Object to update is null");
 
-        return super.update(iObject, iObject.getId(), TABLE, COLUMN_ID);
+        return super.update(iObject, iObject.getDataBaseId(), TABLE, COLUMN_ID);
     }
 
     @Override
@@ -68,8 +68,8 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
         }
 
         mContentValues = new ContentValues();
-        if (iObject.getId() != 0) {
-            mContentValues.put(COLUMN_ID, iObject.getId());
+        if (iObject.getDataBaseId() != 0) {
+            mContentValues.put(COLUMN_ID, iObject.getDataBaseId());
         }
         mContentValues.put(COLUMN_VALUE, iObject.getValue());
     }
@@ -83,7 +83,7 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
 
         TableTest1 oObject = new TableTest1();
         if (iCursor.getColumnIndex(COLUMN_ID) != -1)
-            oObject.setId(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_ID)));
+            oObject.setDataBaseId(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_ID)));
         if (iCursor.getColumnIndex(COLUMN_VALUE) != -1)
             oObject.setValue(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_VALUE)));
         return oObject;
