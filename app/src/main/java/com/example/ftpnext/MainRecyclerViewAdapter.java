@@ -26,19 +26,25 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
                 from(iViewGroup.getContext()).inflate(R.layout.activit_main_item, iViewGroup, false);
 
         return new CustomItemViewAdapter(v, (TextView) v.findViewById(R.id.main_recycler_item_text));
-
     }
 
     @Override
     public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iPosition) {
         String lValue = mItemList.get(iPosition);
 
+        iCustomItemViewAdapter.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
         iCustomItemViewAdapter.mTextView.setText(lValue);
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        return mItemList.size();
     }
 
     static class CustomItemViewAdapter extends RecyclerView.ViewHolder {
@@ -47,6 +53,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 
         public CustomItemViewAdapter(@NonNull View iItemView, TextView iTextView) {
             super(iItemView);
+            mTextView = iTextView;
         }
     }
 

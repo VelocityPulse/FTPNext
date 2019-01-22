@@ -117,7 +117,8 @@ public class MainActivity extends AppCompatActivity
                 Snackbar.make(view, "You have to be connected.", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
 
-                mAdapter.mItemList.add("x");
+                mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                mAdapter.notifyDataSetChanged();
 
             }
         });
@@ -127,21 +128,11 @@ public class MainActivity extends AppCompatActivity
         ActionBarDrawerToggle lToggle = new ActionBarDrawerToggle(
                 this, lDrawer, lToolBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
-        lDrawer.addDrawerListener(lToggle);
-        lToggle.syncState();
 
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        // use a linear layout manager
         mRecyclerView = findViewById(R.id.main_recycler_view);
-        mLayoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-
-        // specify an adapter (see also next example)
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new MainRecyclerViewAdapter(new ArrayList<String>());
         mRecyclerView.setAdapter(mAdapter);
-
     }
 
     private void runTests() {
