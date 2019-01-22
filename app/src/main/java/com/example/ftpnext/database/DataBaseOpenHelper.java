@@ -34,7 +34,7 @@ public class DataBaseOpenHelper extends SQLiteOpenHelper {
 
     private static class UpgradeTask extends AsyncTask<String, Void, Boolean> {
 
-        private static final String TAG = DataBaseOpenHelper.TAG + " UpgradeTask : ";
+        private static final String TAG = DataBaseOpenHelper.TAG + " UpgradeTask";
 
         private SQLiteDatabase mDataBase;
 
@@ -49,6 +49,15 @@ public class DataBaseOpenHelper extends SQLiteOpenHelper {
 
         @Override
         protected Boolean doInBackground(String... params) {
+
+            while (!DataBase.isDataBaseIsOpen()) {
+                try {
+                    LogManager.info(TAG, "Upgrade task is waiting...");
+                    Thread.sleep(100L);
+                } catch (InterruptedException iE) {
+                    iE.printStackTrace();
+                }
+            }
 
             DataBase.getTableTest1Dao().onUpgradeTable(mOldVersion, mNewVersion);
             //todo : call all onUpgrade

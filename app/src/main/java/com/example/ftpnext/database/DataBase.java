@@ -17,17 +17,18 @@ public class DataBase {
 
     private static TableTest1DAO mTableTest1Dao;
 
-    private static DataBase mSingleton = null;
+    private static DataBase sSingleton = null;
+    private static boolean sDataBaseIsOpen = false;
+
     private DataBaseOpenHelper mDataBaseOpenHelper;
-    private boolean mDataBaseIsOpen = false;
 
     private DataBase() {
     }
 
     public static DataBase getInstance() {
-        if (mSingleton != null)
-            return mSingleton;
-        return (mSingleton = new DataBase());
+        if (sSingleton != null)
+            return sSingleton;
+        return (sSingleton = new DataBase());
     }
 
     public static TableTest1DAO getTableTest1Dao() {
@@ -44,7 +45,7 @@ public class DataBase {
      * @throws SQLException Exception during opening database.
      */
     public boolean open(Context iContext) throws SQLException {
-        if (mDataBaseIsOpen)
+        if (sDataBaseIsOpen)
             return true;
 
         LogManager.info(TAG, "Open database");
@@ -54,10 +55,10 @@ public class DataBase {
         //DAO list
         mTableTest1Dao = new TableTest1DAO(lDataBase);
 
-        return (mDataBaseIsOpen = true);
+        return (sDataBaseIsOpen = true);
     }
 
-    public boolean isDataBaseIsOpen() {
-        return mDataBaseIsOpen;
+    public static boolean isDataBaseIsOpen() {
+        return sDataBaseIsOpen;
     }
 }
