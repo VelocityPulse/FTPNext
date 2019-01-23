@@ -15,17 +15,17 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
 
     public TableTest1DAO(SQLiteDatabase iDataBase) {
         super(iDataBase);
+        LogManager.info(TAG, "Creating " + this.getClass().getSimpleName());
     }
-
 
     @Override
     public TableTest1 fetchById(int iId) {
-        return super.fetchById(TABLE, iId, COLUMN_ID, COLUMNS);
+        return super.fetchById(TABLE, iId, COLUMN_DATABASE_ID, COLUMNS);
     }
 
     @Override
     public List<TableTest1> fetchAll() {
-        return super.fetchAll(TABLE, COLUMNS, COLUMN_ID);
+        return super.fetchAll(TABLE, COLUMNS, COLUMN_DATABASE_ID);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
         if (iObject == null)
             return LogManager.error(TAG, "Object to update is null");
 
-        return super.update(iObject, iObject.getDataBaseId(), TABLE, COLUMN_ID);
+        return super.update(iObject, iObject.getDataBaseId(), TABLE, COLUMN_DATABASE_ID);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
 
     @Override
     public boolean delete(int iId) {
-        final String selection = " " + COLUMN_ID + " =" + iId;
+        final String selection = " " + COLUMN_DATABASE_ID + " =" + iId;
         return super.delete(TABLE, selection, null) > 0;
     }
 
@@ -69,7 +69,7 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
 
         mContentValues = new ContentValues();
         if (iObject.getDataBaseId() != 0) {
-            mContentValues.put(COLUMN_ID, iObject.getDataBaseId());
+            mContentValues.put(COLUMN_DATABASE_ID, iObject.getDataBaseId());
         }
         mContentValues.put(COLUMN_VALUE, iObject.getValue());
     }
@@ -82,8 +82,8 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
         }
 
         TableTest1 oObject = new TableTest1();
-        if (iCursor.getColumnIndex(COLUMN_ID) != -1)
-            oObject.setDataBaseId(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_ID)));
+        if (iCursor.getColumnIndex(COLUMN_DATABASE_ID) != -1)
+            oObject.setDataBaseId(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_DATABASE_ID)));
         if (iCursor.getColumnIndex(COLUMN_VALUE) != -1)
             oObject.setValue(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_VALUE)));
         return oObject;

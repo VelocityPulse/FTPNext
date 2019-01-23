@@ -21,11 +21,6 @@ public class TableTest1 extends ABaseTable {
     }
 
     @Override
-    public int getDataBaseId() {
-        return mDataBaseId;
-    }
-
-    @Override
     protected void setDataBaseId(int iDataBaseId) {
         mDataBaseId = iDataBaseId;
     }

@@ -59,15 +59,15 @@ public class DataBaseOpenHelper extends SQLiteOpenHelper {
                 }
             }
 
-            DataBase.getTableTest1Dao().onUpgradeTable(mOldVersion, mNewVersion);
+            DataBase.getTableTest1DAO().onUpgradeTable(mOldVersion, mNewVersion);
             //todo : call all onUpgrade
 
             //this code explain how to update a table
 /*
-            List<TableTest1> lTableTest1s = DataBase.getTableTest1Dao().fetchAll();
+            List<TableTest1> lTableTest1s = DataBase.getTableTest1DAO().fetchAll();
             mDataBase.execSQL("DROP TABLE IF EXISTS " + ITableTest1Schema.TABLE);
             onCreate(mDataBase);
-            if (!DataBase.getTableTest1Dao().add(lTableTest1s))
+            if (!DataBase.getTableTest1DAO().add(lTableTest1s))
                 return LogManager.error(UpgradeTask.TAG, "Adding TableTest has failed");
 */
             return true;

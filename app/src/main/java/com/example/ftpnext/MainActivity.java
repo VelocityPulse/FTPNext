@@ -19,6 +19,7 @@ import android.view.View;
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
+import com.example.ftpnext.database.FTPHostTable.FTPHost;
 import com.example.ftpnext.database.TableTest1.TableTest1;
 
 import java.util.ArrayList;
@@ -137,19 +138,34 @@ public class MainActivity extends AppCompatActivity
 
     private void runTests() {
 
-        DataBase.getTableTest1Dao().add(new TableTest1(10));
+        DataBase.getTableTest1DAO().add(new TableTest1(10));
 
-        List<TableTest1> lTableTest1s = DataBase.getTableTest1Dao().fetchAll();
+        List<TableTest1> lTableTest1s = DataBase.getTableTest1DAO().fetchAll();
         for (TableTest1 lTableTest1 : lTableTest1s) {
             LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
         }
 
-        DataBase.getTableTest1Dao().delete(lTableTest1s.get(1).getDataBaseId());
+        DataBase.getTableTest1DAO().delete(lTableTest1s.get(1).getDataBaseId());
         LogManager.info(TAG, "deleted");
 
-        lTableTest1s = DataBase.getTableTest1Dao().fetchAll();
+        lTableTest1s = DataBase.getTableTest1DAO().fetchAll();
         for (TableTest1 lTableTest1 : lTableTest1s) {
             LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
+        }
+
+        DataBase.getFTPHostDAO().add(new FTPHost());
+
+        List<FTPHost> lFTPHosts = DataBase.getFTPHostDAO().fetchAll();
+        for (FTPHost lFTPHost : lFTPHosts) {
+            LogManager.info(TAG, "table test value : " + lFTPHost);
+        }
+
+        DataBase.getFTPHostDAO().delete(lFTPHosts.get(1).getDataBaseId());
+        LogManager.info(TAG, "deleted");
+
+        lFTPHosts = DataBase.getFTPHostDAO().fetchAll();
+        for (FTPHost lFTPHost : lFTPHosts) {
+            LogManager.info(TAG, "table test value : " + lFTPHost);
         }
     }
 }

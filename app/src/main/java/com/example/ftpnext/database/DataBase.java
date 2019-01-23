@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.example.ftpnext.core.AppInfo;
 import com.example.ftpnext.core.LogManager;
+import com.example.ftpnext.database.FTPHostTable.FTPHostDAO;
 import com.example.ftpnext.database.TableTest1.TableTest1DAO;
 
 public class DataBase {
@@ -15,7 +16,8 @@ public class DataBase {
 
     private static String TAG = "DATABASE : Database";
 
-    private static TableTest1DAO mTableTest1Dao;
+    private static TableTest1DAO sTableTest1Dao;
+    private static FTPHostDAO sFTPHostDAO;
 
     private static DataBase sSingleton = null;
     private static boolean sDataBaseIsOpen = false;
@@ -31,8 +33,12 @@ public class DataBase {
         return (sSingleton = new DataBase());
     }
 
-    public static TableTest1DAO getTableTest1Dao() {
-        return mTableTest1Dao;
+    public static TableTest1DAO getTableTest1DAO() {
+        return sTableTest1Dao;
+    }
+
+    public static FTPHostDAO getFTPHostDAO() {
+        return sFTPHostDAO;
     }
 
     public static void initDataDirectory() {
@@ -53,7 +59,8 @@ public class DataBase {
         SQLiteDatabase lDataBase = mDataBaseOpenHelper.getWritableDatabase();
 
         //DAO list
-        mTableTest1Dao = new TableTest1DAO(lDataBase);
+        sTableTest1Dao = new TableTest1DAO(lDataBase);
+        sFTPHostDAO = new FTPHostDAO(lDataBase);
 
         return (sDataBaseIsOpen = true);
     }

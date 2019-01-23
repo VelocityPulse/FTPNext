@@ -4,7 +4,9 @@ public abstract class ABaseTable {
 
     protected int mDataBaseId;
 
-    public abstract int getDataBaseId();
+    public int getDataBaseId() {
+        return mDataBaseId;
+    }
 
     protected abstract void setDataBaseId(int iDataBaseId);
 
