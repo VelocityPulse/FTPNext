@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity
         Toolbar lToolBar = findViewById(R.id.toolbar);
         setSupportActionBar(lToolBar);
 
-        FloatingActionButton lFloatingActionButton = findViewById(R.id.fab);
+        final FloatingActionButton lFloatingActionButton = findViewById(R.id.fab);
         lFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -136,6 +136,28 @@ public class MainActivity extends AppCompatActivity
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new MainRecyclerViewAdapter(new ArrayList<String>());
         mRecyclerView.setAdapter(mAdapter);
+
+
+
+
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (dy > 0 || dy < 0 && lFloatingActionButton.isShown())
+                    lFloatingActionButton.hide();
+            }
+
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    lFloatingActionButton.show();
+                }
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+        });
+
+
     }
 
     private void runTests() {
