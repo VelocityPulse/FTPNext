@@ -12,8 +12,8 @@ public class FTPHost extends ABaseTable {
     private String mHost;
     private int mPort;
     private String mAttributedFolder;
-    private FTPCharacterEncoding mFTPCharacterEncoding;
-    private FTPType mFTPType;
+    private FTPCharacterEncoding mFTPCharacterEncoding = FTPCharacterEncoding.DEFAULT;
+    private FTPType mFTPType = FTPType.DEFAULT;
 
     public String getName() {
         return mName;

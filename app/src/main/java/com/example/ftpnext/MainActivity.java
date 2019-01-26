@@ -42,9 +42,11 @@ public class MainActivity extends AppCompatActivity
 
         initializeGUI();
 
+
         mAppCore = new AppCore(this);
         mAppCore.startApplication();
 
+        runTests();
     }
 
     @Override
@@ -139,6 +141,7 @@ public class MainActivity extends AppCompatActivity
     private void runTests() {
 
         DataBase.getTableTest1DAO().add(new TableTest1(10));
+        DataBase.getTableTest1DAO().add(new TableTest1(12));
 
         List<TableTest1> lTableTest1s = DataBase.getTableTest1DAO().fetchAll();
         for (TableTest1 lTableTest1 : lTableTest1s) {
@@ -153,6 +156,7 @@ public class MainActivity extends AppCompatActivity
             LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
         }
 
+        DataBase.getFTPHostDAO().add(new FTPHost());
         DataBase.getFTPHostDAO().add(new FTPHost());
 
         List<FTPHost> lFTPHosts = DataBase.getFTPHostDAO().fetchAll();

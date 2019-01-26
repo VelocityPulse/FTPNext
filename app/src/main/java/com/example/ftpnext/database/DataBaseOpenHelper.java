@@ -6,28 +6,37 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 
 import com.example.ftpnext.core.LogManager;
+import com.example.ftpnext.database.FTPHostTable.IFTPHostSchema;
 import com.example.ftpnext.database.TableTest1.ITableTest1Schema;
+
+import java.util.List;
 
 public class DataBaseOpenHelper extends SQLiteOpenHelper {
 
     private static final String TAG = "DATABASE : Database Open Helper";
 
-    public DataBaseOpenHelper(Context context) {
+    private List<String> mTableSchemaToCreate;
+
+    public DataBaseOpenHelper(Context context, List<String> iTableSchemaToCreate) {
         super(context, DataBase.DATABASE_NAME, null, DataBase.DATABASE_VERSION);
+        mTableSchemaToCreate = iTableSchemaToCreate;
         LogManager.info(TAG, "Constructor");
     }
 
     @Override
     public void onCreate(SQLiteDatabase iDataBase) {
         LogManager.info(TAG, "On Create DataBase");
-        iDataBase.execSQL(ITableTest1Schema.TABLE_CREATE);
 
-        LogManager.info(TAG, "Database tables created");
+        for (String lTableCreate : mTableSchemaToCreate) {
+            iDataBase.execSQL(lTableCreate);
+        }
+
+        LogManager.info(TAG, "DataBase tables created");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase iDataBase, int iOldVersion, int iNewVersion) {
-        LogManager.info(TAG, "Upgrading database from version " + iOldVersion + " to " + iNewVersion + " which destroys all old data");
+        LogManager.info(TAG, "Upgrading DataBase from version " + iOldVersion + " to " + iNewVersion + " which destroys all old data");
         UpgradeTask upgradeTask = new UpgradeTask(iDataBase, iOldVersion, iNewVersion);
         upgradeTask.execute();
     }

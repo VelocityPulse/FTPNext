@@ -7,7 +7,12 @@ import android.database.sqlite.SQLiteDatabase;
 import com.example.ftpnext.core.AppInfo;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.FTPHostTable.FTPHostDAO;
+import com.example.ftpnext.database.FTPHostTable.IFTPHostSchema;
+import com.example.ftpnext.database.TableTest1.ITableTest1Schema;
 import com.example.ftpnext.database.TableTest1.TableTest1DAO;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DataBase {
 
@@ -55,7 +60,12 @@ public class DataBase {
             return true;
 
         LogManager.info(TAG, "Open database");
-        mDataBaseOpenHelper = new DataBaseOpenHelper(iContext);
+
+        List<String> lTableSchemaToCreate = new ArrayList<>();
+        lTableSchemaToCreate.add(ITableTest1Schema.TABLE_CREATE);
+        lTableSchemaToCreate.add(IFTPHostSchema.TABLE_CREATE);
+
+        mDataBaseOpenHelper = new DataBaseOpenHelper(iContext, lTableSchemaToCreate);
         SQLiteDatabase lDataBase = mDataBaseOpenHelper.getWritableDatabase();
 
         //DAO list
