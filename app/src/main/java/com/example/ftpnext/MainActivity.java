@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView mRecyclerView;
     private MainRecyclerViewAdapter mAdapter;
     private HostFormAnimationManager mHostFormAnimationManager;
+    private FloatingActionButton mFloatingActionButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,14 +65,13 @@ public class MainActivity extends AppCompatActivity
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         LogManager.error(String.valueOf(mHostFormAnimationManager.isFormOpen()));
-        if (/*mHostFormAnimationManager.isFormOpen()*/true) {
+
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else if (mHostFormAnimationManager.isFormOpen()) {
             mHostFormAnimationManager.closeForm();
         } else {
-            if (drawer.isDrawerOpen(GravityCompat.START)) {
-                drawer.closeDrawer(GravityCompat.START);
-            } else {
-                super.onBackPressed();
-            }
+            super.onBackPressed();
         }
     }
 
@@ -119,7 +120,7 @@ public class MainActivity extends AppCompatActivity
             Log.i(TAG, "nav send clicked");
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -128,8 +129,8 @@ public class MainActivity extends AppCompatActivity
         Toolbar lToolBar = findViewById(R.id.toolbar);
         setSupportActionBar(lToolBar);
 
-        final FloatingActionButton lFloatingActionButton = findViewById(R.id.floating_action_button);
-        lFloatingActionButton.setOnClickListener(new View.OnClickListener() {
+        mFloatingActionButton = findViewById(R.id.floating_action_button);
+        mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 //                Snackbar.make(view, "You have to be connected.", Snackbar.LENGTH_LONG)
@@ -147,29 +148,14 @@ public class MainActivity extends AppCompatActivity
         ActionBarDrawerToggle lToggle = new ActionBarDrawerToggle(
                 this, lDrawer, lToolBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
+        lDrawer.addDrawerListener(lToggle);
+        lToggle.syncState();
 
         mRecyclerView = findViewById(R.id.main_recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new MainRecyclerViewAdapter(new ArrayList<String>());
         mRecyclerView.setAdapter(mAdapter);
 
-
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                if (dy > 0 || dy < 0 && lFloatingActionButton.isShown())
-                    lFloatingActionButton.hide();
-            }
-
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    lFloatingActionButton.show();
-                }
-                super.onScrollStateChanged(recyclerView, newState);
-            }
-        });
 
         // TODO rename this
         View mainListdebug = findViewById(R.id.main_host_list);
@@ -180,10 +166,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void runTests() {
-
         DataBaseTests.runTests(new TableTest1(), DataBase.getTableTest1DAO());
         DataBaseTests.runTests(new FTPHost(), DataBase.getFTPHostDAO());
-
     }
 
     private class HostFormAnimationManager extends Animation {
@@ -196,6 +180,7 @@ public class MainActivity extends AppCompatActivity
         private boolean mIsFormOpen;
         private boolean mIsAnimating;
 
+        //TODO block floating button open when its already open
         public HostFormAnimationManager(View iView, View iRootView) {
             mHostView = iView;
             mRootView = iRootView;
@@ -226,6 +211,7 @@ public class MainActivity extends AppCompatActivity
             mHostView.startAnimation(this);
             mIsAnimating = true;
             mIsFormOpen = true;
+            mFloatingActionButton.hide();
         }
 
         public void closeForm() {
@@ -239,6 +225,7 @@ public class MainActivity extends AppCompatActivity
             mHostView.startAnimation(this);
             mIsAnimating = true;
             mIsFormOpen = false;
+            mFloatingActionButton.show();
         }
 
         @Override
