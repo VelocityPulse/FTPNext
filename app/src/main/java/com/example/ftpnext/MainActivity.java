@@ -15,6 +15,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
+import android.widget.LinearLayout;
 
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LogManager;
@@ -34,6 +38,9 @@ public class MainActivity extends AppCompatActivity
     private LinearLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
     private MainRecyclerViewAdapter mAdapter;
+    private LinearLayout mainListdebug;
+    private ResizeAnimation resizeAnimation;
+    private int size;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +84,17 @@ public class MainActivity extends AppCompatActivity
         Log.i(TAG, "id : " + id);
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+
+
+
+            resizeAnimation = new ResizeAnimation(
+                    mainListdebug,
+                    0,
+                    size
+            );
+            resizeAnimation.setDuration(1000);
+
+            mainListdebug.startAnimation(resizeAnimation);
             return true;
         }
 
@@ -138,8 +156,6 @@ public class MainActivity extends AppCompatActivity
         mRecyclerView.setAdapter(mAdapter);
 
 
-
-
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
@@ -157,8 +173,56 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        mainListdebug = (LinearLayout) findViewById(R.id.mainlist_debug);
+
+        final ViewTreeObserver observer= mainListdebug.getViewTreeObserver();
+        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                size = mainListdebug.getHeight();
+                LogManager.info("debug " + size);
+//                observer.removeGlobalOnLayoutListener(this);
+            }
+        });
+
+
+
 
     }
+
+    class ResizeAnimation extends Animation {
+        final int targetHeight;
+        int startHeight;
+        View view;
+
+        public ResizeAnimation(View view, int targetHeight, int startHeight) {
+            this.view = view;
+            this.targetHeight = targetHeight;
+            this.startHeight = startHeight;
+        }
+
+        @Override
+        protected void applyTransformation(float interpolatedTime, Transformation t) {
+            //to support decent animation, change new heigt as Nico S. recommended in comments
+            int newHeight = (int) (startHeight+(targetHeight - startHeight) * interpolatedTime);
+
+            LogManager.info(String.valueOf(newHeight) + " | " + targetHeight + " | " + startHeight);
+            view.getLayoutParams().height = newHeight;
+            view.requestLayout();
+        }
+
+        @Override
+        public void initialize(int width, int height, int parentWidth, int parentHeight) {
+            super.initialize(width, height, parentWidth, parentHeight);
+        }
+
+        @Override
+        public boolean willChangeBounds() {
+            return true;
+        }
+
+    }
+
 
     private void runTests() {
 
