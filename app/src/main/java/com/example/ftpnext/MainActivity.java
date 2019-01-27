@@ -1,6 +1,7 @@
 package com.example.ftpnext;
 
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -16,13 +17,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Transformation;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
+import com.example.ftpnext.database.DataBaseTests;
 import com.example.ftpnext.database.FTPHostTable.FTPHost;
 import com.example.ftpnext.database.TableTest1.TableTest1;
 
@@ -38,7 +42,7 @@ public class MainActivity extends AppCompatActivity
     private LinearLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
     private MainRecyclerViewAdapter mAdapter;
-    private LinearLayout mainListdebug;
+    private RelativeLayout mainListdebug;
     private ResizeAnimation resizeAnimation;
     private int size;
 
@@ -86,13 +90,12 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.action_settings) {
 
 
-
             resizeAnimation = new ResizeAnimation(
                     mainListdebug,
                     0,
                     size
             );
-            resizeAnimation.setDuration(1000);
+            resizeAnimation.setDuration(getResources().getInteger(R.integer.form_animation_time));
 
             mainListdebug.startAnimation(resizeAnimation);
             return true;
@@ -173,21 +176,58 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        mainListdebug = (LinearLayout) findViewById(R.id.mainlist_debug);
+        mainListdebug = findViewById(R.id.mainlist_debug);
 
-        final ViewTreeObserver observer= mainListdebug.getViewTreeObserver();
+        final ViewTreeObserver observer = mainListdebug.getViewTreeObserver();
         observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 size = mainListdebug.getHeight();
                 LogManager.info("debug " + size);
-//                observer.removeGlobalOnLayoutListener(this);
+                if (observer.isAlive())
+                    observer.removeGlobalOnLayoutListener(this);
             }
         });
 
 
+    }
 
+    private void runTests() {
 
+        DataBaseTests.runTests(new TableTest1(), DataBase.getTableTest1DAO());
+        DataBaseTests.runTests(new FTPHost(), DataBase.getFTPHostDAO());
+
+//        DataBase.getTableTest1DAO().add(new TableTest1(10));
+//        DataBase.getTableTest1DAO().add(new TableTest1(12));
+//
+//        List<TableTest1> lTableTest1s = DataBase.getTableTest1DAO().fetchAll();
+//        for (TableTest1 lTableTest1 : lTableTest1s) {
+//            LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
+//        }
+//
+//        DataBase.getTableTest1DAO().delete(lTableTest1s.get(1).getDataBaseId());
+//        LogManager.info(TAG, "deleted");
+//
+//        lTableTest1s = DataBase.getTableTest1DAO().fetchAll();
+//        for (TableTest1 lTableTest1 : lTableTest1s) {
+//            LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
+//        }
+//
+//        DataBase.getFTPHostDAO().add(new FTPHost());
+//        DataBase.getFTPHostDAO().add(new FTPHost());
+//
+//        List<FTPHost> lFTPHosts = DataBase.getFTPHostDAO().fetchAll();
+//        for (FTPHost lFTPHost : lFTPHosts) {
+//            LogManager.info(TAG, "table test value : " + lFTPHost);
+//        }
+//
+//        DataBase.getFTPHostDAO().delete(lFTPHosts.get(1).getDataBaseId());
+//        LogManager.info(TAG, "deleted");
+//
+//        lFTPHosts = DataBase.getFTPHostDAO().fetchAll();
+//        for (FTPHost lFTPHost : lFTPHosts) {
+//            LogManager.info(TAG, "table test value : " + lFTPHost);
+//        }
     }
 
     class ResizeAnimation extends Animation {
@@ -199,12 +239,13 @@ public class MainActivity extends AppCompatActivity
             this.view = view;
             this.targetHeight = targetHeight;
             this.startHeight = startHeight;
+            this.setInterpolator(new DecelerateInterpolator(5F));
         }
 
         @Override
         protected void applyTransformation(float interpolatedTime, Transformation t) {
-            //to support decent animation, change new heigt as Nico S. recommended in comments
-            int newHeight = (int) (startHeight+(targetHeight - startHeight) * interpolatedTime);
+            //to support decent animation, change new height as Nico S. recommended in comments
+            int newHeight = (int) (startHeight + (targetHeight - startHeight) * interpolatedTime);
 
             LogManager.info(String.valueOf(newHeight) + " | " + targetHeight + " | " + startHeight);
             view.getLayoutParams().height = newHeight;
@@ -221,41 +262,5 @@ public class MainActivity extends AppCompatActivity
             return true;
         }
 
-    }
-
-
-    private void runTests() {
-
-        DataBase.getTableTest1DAO().add(new TableTest1(10));
-        DataBase.getTableTest1DAO().add(new TableTest1(12));
-
-        List<TableTest1> lTableTest1s = DataBase.getTableTest1DAO().fetchAll();
-        for (TableTest1 lTableTest1 : lTableTest1s) {
-            LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
-        }
-
-        DataBase.getTableTest1DAO().delete(lTableTest1s.get(1).getDataBaseId());
-        LogManager.info(TAG, "deleted");
-
-        lTableTest1s = DataBase.getTableTest1DAO().fetchAll();
-        for (TableTest1 lTableTest1 : lTableTest1s) {
-            LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
-        }
-
-        DataBase.getFTPHostDAO().add(new FTPHost());
-        DataBase.getFTPHostDAO().add(new FTPHost());
-
-        List<FTPHost> lFTPHosts = DataBase.getFTPHostDAO().fetchAll();
-        for (FTPHost lFTPHost : lFTPHosts) {
-            LogManager.info(TAG, "table test value : " + lFTPHost);
-        }
-
-        DataBase.getFTPHostDAO().delete(lFTPHosts.get(1).getDataBaseId());
-        LogManager.info(TAG, "deleted");
-
-        lFTPHosts = DataBase.getFTPHostDAO().fetchAll();
-        for (FTPHost lFTPHost : lFTPHosts) {
-            LogManager.info(TAG, "table test value : " + lFTPHost);
-        }
     }
 }

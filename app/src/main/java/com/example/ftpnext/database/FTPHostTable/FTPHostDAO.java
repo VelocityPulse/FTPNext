@@ -53,8 +53,16 @@ public class FTPHostDAO extends ADataAccessObject<FTPHost> implements IFTPHostSc
 
     @Override
     public boolean delete(int iId) {
-        final String selection = " " + COLUMN_DATABASE_ID + " =" + iId;
-        return super.delete(TABLE, selection, null) > 0;
+        return super.delete(iId, TABLE, COLUMN_DATABASE_ID);
+    }
+
+    @Override
+    public boolean delete(FTPHost iObject) {
+        if (iObject == null) {
+            LogManager.error(TAG, "Object to set content value is null");
+            return false;
+        }
+        return delete(iObject.getDataBaseId());
     }
 
     @Override

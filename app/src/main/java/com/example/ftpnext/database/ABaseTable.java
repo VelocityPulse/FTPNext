@@ -4,6 +4,10 @@ public abstract class ABaseTable {
 
     protected int mDataBaseId;
 
+    public ABaseTable() {
+
+    }
+
     public int getDataBaseId() {
         return mDataBaseId;
     }

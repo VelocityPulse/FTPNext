@@ -32,6 +32,8 @@ public abstract class ADataAccessObject<T extends ABaseTable> extends ADataBaseS
 
     public abstract boolean delete(int iId);
 
+    public abstract boolean delete(T iObject);
+
     public abstract void onUpgradeTable(int iOldVersion, int iNewVersion);
 
     protected abstract void setContentValue(T iObject);
@@ -78,6 +80,11 @@ public abstract class ADataAccessObject<T extends ABaseTable> extends ADataBaseS
         } catch (SQLiteConstraintException iEx) {
             return LogManager.error(TAG, "Add error: " + iEx.getMessage()); //error
         }
+    }
+
+    protected boolean delete(int iId, String iTable, String iColumnDataBaseId) {
+        final String selection = " " + iColumnDataBaseId + " =" + iId;
+        return super.delete(iTable, selection, null) > 0;
     }
 
     protected boolean update(T iObject, int iId, String iTable, String iColumnId) {
