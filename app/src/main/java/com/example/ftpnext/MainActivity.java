@@ -1,10 +1,8 @@
 package com.example.ftpnext;
 
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -17,11 +15,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
-import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Transformation;
-import android.widget.RelativeLayout;
 
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LogManager;
@@ -31,7 +27,6 @@ import com.example.ftpnext.database.FTPHostTable.FTPHost;
 import com.example.ftpnext.database.TableTest1.TableTest1;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -42,9 +37,7 @@ public class MainActivity extends AppCompatActivity
     private LinearLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
     private MainRecyclerViewAdapter mAdapter;
-    private RelativeLayout mainListdebug;
-    private ResizeAnimation resizeAnimation;
-    private int size;
+    private HostFormAnimationManager mHostFormAnimationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,12 +54,23 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        // TODO save the form for change orientation of phone
+    }
+
+    @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
+        LogManager.error(String.valueOf(mHostFormAnimationManager.isFormOpen()));
+        if (/*mHostFormAnimationManager.isFormOpen()*/true) {
+            mHostFormAnimationManager.closeForm();
         } else {
-            super.onBackPressed();
+            if (drawer.isDrawerOpen(GravityCompat.START)) {
+                drawer.closeDrawer(GravityCompat.START);
+            } else {
+                super.onBackPressed();
+            }
         }
     }
 
@@ -88,16 +92,6 @@ public class MainActivity extends AppCompatActivity
         Log.i(TAG, "id : " + id);
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-
-
-            resizeAnimation = new ResizeAnimation(
-                    mainListdebug,
-                    0,
-                    size
-            );
-            resizeAnimation.setDuration(getResources().getInteger(R.integer.form_animation_time));
-
-            mainListdebug.startAnimation(resizeAnimation);
             return true;
         }
 
@@ -134,19 +128,20 @@ public class MainActivity extends AppCompatActivity
         Toolbar lToolBar = findViewById(R.id.toolbar);
         setSupportActionBar(lToolBar);
 
-        final FloatingActionButton lFloatingActionButton = findViewById(R.id.fab);
+        final FloatingActionButton lFloatingActionButton = findViewById(R.id.floating_action_button);
         lFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "You have to be connected.", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+//                Snackbar.make(view, "You have to be connected.", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
 
                 mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
                 mAdapter.notifyDataSetChanged();
-
+                mHostFormAnimationManager.openForm();
             }
         });
 
+        // TODO block left nav in form mode
         DrawerLayout lDrawer = findViewById(R.id.drawer_layout);
 
         ActionBarDrawerToggle lToggle = new ActionBarDrawerToggle(
@@ -176,19 +171,11 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        mainListdebug = findViewById(R.id.mainlist_debug);
+        // TODO rename this
+        View mainListdebug = findViewById(R.id.main_host_list);
+        View mainRootLinearLayout = findViewById(R.id.main_root_linear_layout);
 
-        final ViewTreeObserver observer = mainListdebug.getViewTreeObserver();
-        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                size = mainListdebug.getHeight();
-                LogManager.info("debug " + size);
-                if (observer.isAlive())
-                    observer.removeGlobalOnLayoutListener(this);
-            }
-        });
-
+        mHostFormAnimationManager = new HostFormAnimationManager(mainListdebug, mainRootLinearLayout);
 
     }
 
@@ -197,70 +184,82 @@ public class MainActivity extends AppCompatActivity
         DataBaseTests.runTests(new TableTest1(), DataBase.getTableTest1DAO());
         DataBaseTests.runTests(new FTPHost(), DataBase.getFTPHostDAO());
 
-//        DataBase.getTableTest1DAO().add(new TableTest1(10));
-//        DataBase.getTableTest1DAO().add(new TableTest1(12));
-//
-//        List<TableTest1> lTableTest1s = DataBase.getTableTest1DAO().fetchAll();
-//        for (TableTest1 lTableTest1 : lTableTest1s) {
-//            LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
-//        }
-//
-//        DataBase.getTableTest1DAO().delete(lTableTest1s.get(1).getDataBaseId());
-//        LogManager.info(TAG, "deleted");
-//
-//        lTableTest1s = DataBase.getTableTest1DAO().fetchAll();
-//        for (TableTest1 lTableTest1 : lTableTest1s) {
-//            LogManager.info(TAG, "table test value : " + lTableTest1.getValue());
-//        }
-//
-//        DataBase.getFTPHostDAO().add(new FTPHost());
-//        DataBase.getFTPHostDAO().add(new FTPHost());
-//
-//        List<FTPHost> lFTPHosts = DataBase.getFTPHostDAO().fetchAll();
-//        for (FTPHost lFTPHost : lFTPHosts) {
-//            LogManager.info(TAG, "table test value : " + lFTPHost);
-//        }
-//
-//        DataBase.getFTPHostDAO().delete(lFTPHosts.get(1).getDataBaseId());
-//        LogManager.info(TAG, "deleted");
-//
-//        lFTPHosts = DataBase.getFTPHostDAO().fetchAll();
-//        for (FTPHost lFTPHost : lFTPHosts) {
-//            LogManager.info(TAG, "table test value : " + lFTPHost);
-//        }
     }
 
-    class ResizeAnimation extends Animation {
-        final int targetHeight;
-        int startHeight;
-        View view;
+    private class HostFormAnimationManager extends Animation {
+        private int mTargetHeight;
+        private int mStartHeight;
+        private View mRootView;
+        private View mHostView;
+        private int mRootViewHeight;
+        private int mHostViewHeight;
+        private boolean mIsFormOpen;
+        private boolean mIsAnimating;
 
-        public ResizeAnimation(View view, int targetHeight, int startHeight) {
-            this.view = view;
-            this.targetHeight = targetHeight;
-            this.startHeight = startHeight;
+        public HostFormAnimationManager(View iView, View iRootView) {
+            mHostView = iView;
+            mRootView = iRootView;
+
             this.setInterpolator(new DecelerateInterpolator(5F));
+            this.setDuration(getResources().getInteger(R.integer.form_animation_time));
+
+            ViewTreeObserver observer = mRootView.getViewTreeObserver();
+            observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    mRootViewHeight = mRootView.getHeight();
+                    mHostViewHeight = mHostView.getHeight();
+//                    LogManager.info(TAG, "main root linear layout updated : " + mHostViewHeight);
+                }
+            });
+
+        }
+
+        public void openForm() {
+            LogManager.error("open form");
+            mTargetHeight = 0;
+            mStartHeight = mRootViewHeight;
+            if (!mIsAnimating)
+                mHostView.clearAnimation();
+            else
+                mStartHeight = mHostViewHeight;
+            mHostView.startAnimation(this);
+            mIsAnimating = true;
+            mIsFormOpen = true;
+        }
+
+        public void closeForm() {
+            LogManager.error("close form");
+            mTargetHeight = mRootViewHeight;
+            mStartHeight = 0;
+            if (!mIsAnimating)
+                mHostView.clearAnimation();
+            else
+                mStartHeight = mHostViewHeight;
+            mHostView.startAnimation(this);
+            mIsAnimating = true;
+            mIsFormOpen = false;
         }
 
         @Override
-        protected void applyTransformation(float interpolatedTime, Transformation t) {
+        protected void applyTransformation(float iInterpolatedTime, Transformation iT) {
             //to support decent animation, change new height as Nico S. recommended in comments
-            int newHeight = (int) (startHeight + (targetHeight - startHeight) * interpolatedTime);
+            int newHeight = (int) (mStartHeight + (mTargetHeight - mStartHeight) * iInterpolatedTime);
 
-            LogManager.info(String.valueOf(newHeight) + " | " + targetHeight + " | " + startHeight);
-            view.getLayoutParams().height = newHeight;
-            view.requestLayout();
+//            LogManager.info(String.valueOf(newHeight) + " | " + mTargetHeight + " | " + mStartHeight);
+            mHostView.getLayoutParams().height = newHeight;
+            mHostView.requestLayout();
+
+            if (newHeight == mTargetHeight)
+                mIsAnimating = false;
         }
 
-        @Override
-        public void initialize(int width, int height, int parentWidth, int parentHeight) {
-            super.initialize(width, height, parentWidth, parentHeight);
+        public boolean isFormOpen() {
+            return mIsFormOpen;
         }
 
-        @Override
-        public boolean willChangeBounds() {
-            return true;
+        public boolean isAnimating() {
+            return mIsAnimating;
         }
-
     }
 }

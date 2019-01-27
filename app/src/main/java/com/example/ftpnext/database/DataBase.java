@@ -62,6 +62,7 @@ public class DataBase {
         LogManager.info(TAG, "Open database");
 
         List<String> lTableSchemaToCreate = new ArrayList<>();
+        // Table Create
         lTableSchemaToCreate.add(ITableTest1Schema.TABLE_CREATE);
         lTableSchemaToCreate.add(IFTPHostSchema.TABLE_CREATE);
 

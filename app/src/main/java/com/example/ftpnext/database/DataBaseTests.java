@@ -1,7 +1,6 @@
 package com.example.ftpnext.database;
 
 import com.example.ftpnext.core.LogManager;
-import com.example.ftpnext.database.TableTest1.TableTest1;
 
 import java.util.List;
 
@@ -23,9 +22,9 @@ public class DataBaseTests {
         LogManager.info(TAG, "deleted");
 
         lList = iDao.fetchAll();
-        if (lList.size() == 0) {
+        if (lList.size() == 0)
             LogManager.info(TAG, "table " + iObjectInstance.getClass().getCanonicalName() + " has been reset well.");
-        } else {
+        else {
             for (T lItem : lList)
                 LogManager.error(TAG, "table id for " + iObjectInstance.getClass().getCanonicalName() + " sill in the DB : " + lItem.mDataBaseId);
         }

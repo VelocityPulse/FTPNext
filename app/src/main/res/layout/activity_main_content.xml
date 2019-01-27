@@ -8,11 +8,12 @@
 
     <LinearLayout
         android:layout_width="match_parent"
+        android:id="@+id/main_root_linear_layout"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
         <RelativeLayout
-            android:id="@+id/mainlist_debug"
+            android:id="@+id/main_host_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
@@ -45,7 +46,7 @@
             </LinearLayout>
 
             <android.support.design.widget.FloatingActionButton
-                android:id="@+id/fab"
+                android:id="@+id/floating_action_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
@@ -55,7 +56,6 @@
                 app:srcCompat="@drawable/baseline_add_black_48" />
 
         </RelativeLayout>
-
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -84,8 +84,6 @@
 
         </LinearLayout>
 
-
     </LinearLayout>
-
 
 </android.support.design.widget.CoordinatorLayout>
