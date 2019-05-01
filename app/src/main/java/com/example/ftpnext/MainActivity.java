@@ -1,11 +1,12 @@
 package com.example.ftpnext;
 
+import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.support.annotation.ColorInt;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -17,7 +18,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
-import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Transformation;
@@ -31,6 +31,17 @@ import com.example.ftpnext.database.TableTest1.TableTest1;
 
 import java.util.ArrayList;
 
+/*
+TODO Resume when screen change orientation
+
+Ideas :
+    Queues of file to download even if the connection fail
+    Wifi download/upload only
+    Notification view of transfer
+    Check if the download can continue after a stop
+    Connection with ssh
+ */
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -40,7 +51,7 @@ public class MainActivity extends AppCompatActivity
     private LinearLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
     private MainRecyclerViewAdapter mAdapter;
-    private HostFormAnimationManager mHostFormAnimationManager;
+    private FormAnimationManager mFormAnimationManager;
     private FloatingActionButton mFloatingActionButton;
 
     @Override
@@ -65,12 +76,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        LogManager.error(String.valueOf(mHostFormAnimationManager.isFormOpen()));
+        LogManager.error(String.valueOf(mFormAnimationManager.isFormOpen()));
 
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else if (mHostFormAnimationManager.isFormOpen()) {
-            mHostFormAnimationManager.closeForm();
+        } else if (mFormAnimationManager.isFormOpen()) {
+            mFormAnimationManager.closeForm();
         } else {
             super.onBackPressed();
         }
@@ -79,7 +90,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        if (!mHostFormAnimationManager.isFormOpen())
+        if (!mFormAnimationManager.isFormOpen())
             getMenuInflater().inflate(R.menu.main, menu);
         else
             getMenuInflater().inflate(R.menu.activity_main_form, menu);
@@ -143,7 +154,7 @@ public class MainActivity extends AppCompatActivity
 //                        .setAction("Action", null).show();
 
                 mAdapter.notifyDataSetChanged();
-                mHostFormAnimationManager.openForm();
+                mFormAnimationManager.openForm();
             }
         });
 
@@ -169,7 +180,7 @@ public class MainActivity extends AppCompatActivity
         View lHostListView = findViewById(R.id.main_host_list);
         View lRootView = findViewById(R.id.main_root_linear_layout);
 
-        mHostFormAnimationManager = new HostFormAnimationManager(lHostListView, lRootView);
+        mFormAnimationManager = new FormAnimationManager(lHostListView, lRootView);
 
         // cause a crash
 //        getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
@@ -178,12 +189,17 @@ public class MainActivity extends AppCompatActivity
     private void runTests() {
         DataBaseTests.runTests(new TableTest1(), DataBase.getTableTest1DAO());
         DataBaseTests.runTests(new FTPHost(), DataBase.getFTPHostDAO());
+
+        TextInputLayout lTextInputLayout = (TextInputLayout) findViewById(R.id.form_server_host);
+        lTextInputLayout.setError("error");
+        lTextInputLayout.setErrorTextColor(ColorStateList.valueOf(0xFFDE4255));
+
     }
 
     /**
      * A class for handle all the animation of the form page display and hide
      */
-    private class HostFormAnimationManager extends Animation {
+    private class FormAnimationManager extends Animation {
         private int mTargetHeight;
         private int mStartHeight;
         private View mRootView;
@@ -194,7 +210,7 @@ public class MainActivity extends AppCompatActivity
         private boolean mIsAnimating;
 
         //TODO block floating button open when its already open
-        public HostFormAnimationManager(View iView, View iRootView) {
+        public FormAnimationManager(View iView, View iRootView) {
             mHostView = iView;
             mRootView = iRootView;
 
