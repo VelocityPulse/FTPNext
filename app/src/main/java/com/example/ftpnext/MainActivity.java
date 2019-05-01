@@ -3,6 +3,7 @@ package com.example.ftpnext;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -16,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Transformation;
@@ -48,7 +50,6 @@ public class MainActivity extends AppCompatActivity
 
         initializeGUI();
 
-
         mAppCore = new AppCore(this);
         mAppCore.startApplication();
 
@@ -78,7 +79,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
+        if (!mHostFormAnimationManager.isFormOpen())
+            getMenuInflater().inflate(R.menu.main, menu);
+        else
+            getMenuInflater().inflate(R.menu.activity_main_form, menu);
+
         return true;
     }
 
@@ -101,7 +106,7 @@ public class MainActivity extends AppCompatActivity
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(MenuItem item)  {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
@@ -133,10 +138,10 @@ public class MainActivity extends AppCompatActivity
         mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Sample snackbar
 //                Snackbar.make(view, "You have to be connected.", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
 
-                mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
                 mAdapter.notifyDataSetChanged();
                 mHostFormAnimationManager.openForm();
             }
@@ -156,13 +161,18 @@ public class MainActivity extends AppCompatActivity
         mAdapter = new MainRecyclerViewAdapter(new ArrayList<String>());
         mRecyclerView.setAdapter(mAdapter);
 
+//        for (int i = 0; i < 20; i++) {
+//            mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + i);
+//        }
+        mAdapter.notifyDataSetChanged();
 
-        // TODO rename this
-        View mainListdebug = findViewById(R.id.main_host_list);
-        View mainRootLinearLayout = findViewById(R.id.main_root_linear_layout);
+        View lHostListView = findViewById(R.id.main_host_list);
+        View lRootView = findViewById(R.id.main_root_linear_layout);
 
-        mHostFormAnimationManager = new HostFormAnimationManager(mainListdebug, mainRootLinearLayout);
+        mHostFormAnimationManager = new HostFormAnimationManager(lHostListView, lRootView);
 
+        // cause a crash
+//        getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
     }
 
     private void runTests() {
@@ -170,6 +180,9 @@ public class MainActivity extends AppCompatActivity
         DataBaseTests.runTests(new FTPHost(), DataBase.getFTPHostDAO());
     }
 
+    /**
+     * A class for handle all the animation of the form page display and hide
+     */
     private class HostFormAnimationManager extends Animation {
         private int mTargetHeight;
         private int mStartHeight;
@@ -197,7 +210,6 @@ public class MainActivity extends AppCompatActivity
 //                    LogManager.info(TAG, "main root linear layout updated : " + mHostViewHeight);
                 }
             });
-
         }
 
         public void openForm() {
@@ -212,6 +224,9 @@ public class MainActivity extends AppCompatActivity
             mIsAnimating = true;
             mIsFormOpen = true;
             mFloatingActionButton.hide();
+
+            Toolbar lToolBarForm = findViewById(R.id.toolbar_form);
+            setSupportActionBar(lToolBarForm);
         }
 
         public void closeForm() {
@@ -230,10 +245,8 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void applyTransformation(float iInterpolatedTime, Transformation iT) {
-            //to support decent animation, change new height as Nico S. recommended in comments
             int newHeight = (int) (mStartHeight + (mTargetHeight - mStartHeight) * iInterpolatedTime);
 
-//            LogManager.info(String.valueOf(newHeight) + " | " + mTargetHeight + " | " + mStartHeight);
             mHostView.getLayoutParams().height = newHeight;
             mHostView.requestLayout();
 
@@ -243,10 +256,6 @@ public class MainActivity extends AppCompatActivity
 
         public boolean isFormOpen() {
             return mIsFormOpen;
-        }
-
-        public boolean isAnimating() {
-            return mIsAnimating;
         }
     }
 }

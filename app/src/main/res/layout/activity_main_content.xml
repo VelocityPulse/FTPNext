@@ -46,7 +46,7 @@
 
         </RelativeLayout>
 
-        <include layout="@layout/activity_main_form" />
+        <include layout="@layout/activity_main_content_form" />
 
     </LinearLayout>
 

@@ -23,7 +23,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     public CustomItemViewAdapter onCreateViewHolder(@NonNull ViewGroup iViewGroup, int iI) {
 
         LinearLayout v = (LinearLayout) LayoutInflater.
-                from(iViewGroup.getContext()).inflate(R.layout.activit_main_item, iViewGroup, false);
+                from(iViewGroup.getContext()).inflate(R.layout.activity_main_item, iViewGroup, false);
 
         return new CustomItemViewAdapter(v, (TextView) v.findViewById(R.id.main_recycler_item_text));
     }
