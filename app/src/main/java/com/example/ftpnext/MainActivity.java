@@ -1,8 +1,6 @@
 package com.example.ftpnext;
 
-import android.content.res.ColorStateList;
 import android.os.Bundle;
-import android.support.annotation.ColorInt;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TextInputLayout;
@@ -21,7 +19,10 @@ import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Transformation;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 
+import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
@@ -48,15 +49,17 @@ public class MainActivity extends AppCompatActivity
     private static String TAG = "MAIN ACTIVITY";
 
     private AppCore mAppCore = null;
-    private LinearLayoutManager mLayoutManager;
-    private RecyclerView mRecyclerView;
+
+    private LinearLayout mMainRootLinearLayout;
     private MainRecyclerViewAdapter mAdapter;
     private FormAnimationManager mFormAnimationManager;
     private FloatingActionButton mFloatingActionButton;
+    private boolean mIsBlockedScrollView;
+    private View mRootView;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle iSavedInstanceState) {
+        super.onCreate(iSavedInstanceState);
         setContentView(R.layout.activity_main);
 
         initializeGUI();
@@ -117,7 +120,7 @@ public class MainActivity extends AppCompatActivity
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item)  {
+    public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
@@ -142,6 +145,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void initializeGUI() {
+
         Toolbar lToolBar = findViewById(R.id.toolbar);
         setSupportActionBar(lToolBar);
 
@@ -167,20 +171,17 @@ public class MainActivity extends AppCompatActivity
         lDrawer.addDrawerListener(lToggle);
         lToggle.syncState();
 
-        mRecyclerView = findViewById(R.id.main_recycler_view);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        RecyclerView lRecyclerView = findViewById(R.id.main_recycler_view);
+        lRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new MainRecyclerViewAdapter(new ArrayList<String>());
-        mRecyclerView.setAdapter(mAdapter);
+        lRecyclerView.setAdapter(mAdapter);
 
-//        for (int i = 0; i < 20; i++) {
-//            mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + i);
-//        }
         mAdapter.notifyDataSetChanged();
 
         View lHostListView = findViewById(R.id.main_host_list);
-        View lRootView = findViewById(R.id.main_root_linear_layout);
+        mRootView = findViewById(R.id.main_root_linear_layout);
 
-        mFormAnimationManager = new FormAnimationManager(lHostListView, lRootView);
+        mFormAnimationManager = new FormAnimationManager(lHostListView, mRootView);
 
         // cause a crash
 //        getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
@@ -190,9 +191,12 @@ public class MainActivity extends AppCompatActivity
         DataBaseTests.runTests(new TableTest1(), DataBase.getTableTest1DAO());
         DataBaseTests.runTests(new FTPHost(), DataBase.getFTPHostDAO());
 
-        TextInputLayout lTextInputLayout = (TextInputLayout) findViewById(R.id.form_server_host);
-        lTextInputLayout.setError("error");
-        lTextInputLayout.setErrorTextColor(ColorStateList.valueOf(0xFFDE4255));
+        for (int i = 0; i < 20; i++) {
+            mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + i);
+        }
+//        TextInputLayout lTextInputLayout = (TextInputLayout) findViewById(R.id.form_server_host);
+//        lTextInputLayout.setError("error");
+//        lTextInputLayout.setErrorTextColor(ColorStateList.valueOf(0xFFDE4255));
 
     }
 
@@ -209,7 +213,6 @@ public class MainActivity extends AppCompatActivity
         private boolean mIsFormOpen;
         private boolean mIsAnimating;
 
-        //TODO block floating button open when its already open
         public FormAnimationManager(View iView, View iRootView) {
             mHostView = iView;
             mRootView = iRootView;
@@ -230,6 +233,8 @@ public class MainActivity extends AppCompatActivity
 
         public void openForm() {
             LogManager.error("open form");
+            //The following line prevent the scrollview resize bug when we close the form with a focus on an edit text
+            mRootView.requestFocus();
             mTargetHeight = 0;
             mStartHeight = mRootViewHeight;
             if (!mIsAnimating)
@@ -247,6 +252,7 @@ public class MainActivity extends AppCompatActivity
 
         public void closeForm() {
             LogManager.error("close form");
+            mRootView.requestFocus();
             mTargetHeight = mRootViewHeight;
             mStartHeight = 0;
             if (!mIsAnimating)

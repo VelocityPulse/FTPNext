@@ -12,13 +12,8 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <RelativeLayout
-            android:id="@+id/main_host_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
-
             <LinearLayout
+                android:id="@+id/main_host_list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical">
@@ -43,8 +38,6 @@
                     android:orientation="vertical" />
 
             </LinearLayout>
-
-        </RelativeLayout>
 
         <include layout="@layout/activity_main_content_form" />
 
