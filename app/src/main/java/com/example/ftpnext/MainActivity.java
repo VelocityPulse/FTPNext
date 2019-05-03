@@ -1,9 +1,10 @@
 package com.example.ftpnext;
 
+import android.app.ActivityOptions;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.TextInputLayout;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -11,20 +12,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.transition.Slide;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewTreeObserver;
-import android.view.animation.Animation;
-import android.view.animation.DecelerateInterpolator;
-import android.view.animation.Transformation;
+import android.view.Window;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 
-import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
-import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.DataBaseTests;
 import com.example.ftpnext.database.FTPHostTable.FTPHost;
@@ -52,7 +49,6 @@ public class MainActivity extends AppCompatActivity
 
     private LinearLayout mMainRootLinearLayout;
     private MainRecyclerViewAdapter mAdapter;
-    private FormAnimationManager mFormAnimationManager;
     private FloatingActionButton mFloatingActionButton;
     private boolean mIsBlockedScrollView;
     private View mRootView;
@@ -60,6 +56,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
+        // TODO introduce animation / splash screen
+//        getWindow().requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS);
+//        Slide lSlide = new Slide();
+//        lSlide.setSlideEdge(Gravity.BOTTOM);
+//        getWindow().setEnterTransition(lSlide);
+
         setContentView(R.layout.activity_main);
 
         initializeGUI();
@@ -79,24 +81,24 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        LogManager.error(String.valueOf(mFormAnimationManager.isFormOpen()));
+//        LogManager.error(String.valueOf(mFormAnimationManager.isFormOpen()));
 
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else if (mFormAnimationManager.isFormOpen()) {
-            mFormAnimationManager.closeForm();
-        } else {
-            super.onBackPressed();
-        }
+//        if (drawer.isDrawerOpen(GravityCompat.START)) {
+//            drawer.closeDrawer(GravityCompat.START);
+//        } else if (mFormAnimationManager.isFormOpen()) {
+//            mFormAnimationManager.closeForm();
+//        } else {
+        super.onBackPressed();
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        if (!mFormAnimationManager.isFormOpen())
-            getMenuInflater().inflate(R.menu.main, menu);
-        else
-            getMenuInflater().inflate(R.menu.activity_main_form, menu);
+//        if (!mFormAnimationManager.isFormOpen())
+//            getMenuInflater().inflate(R.menu.main, menu);
+//        else
+        getMenuInflater().inflate(R.menu.activity_main_form, menu);
 
         return true;
     }
@@ -158,7 +160,9 @@ public class MainActivity extends AppCompatActivity
 //                        .setAction("Action", null).show();
 
                 mAdapter.notifyDataSetChanged();
-                mFormAnimationManager.openForm();
+                Intent lIntent = new Intent(MainActivity.this, ConfigureFTPServerActivity.class);
+                startActivity(lIntent,
+                        ActivityOptions.makeSceneTransitionAnimation(MainActivity.this).toBundle());
             }
         });
 
@@ -180,11 +184,6 @@ public class MainActivity extends AppCompatActivity
 
         View lHostListView = findViewById(R.id.main_host_list);
         mRootView = findViewById(R.id.main_root_linear_layout);
-
-        mFormAnimationManager = new FormAnimationManager(lHostListView, mRootView);
-
-        // cause a crash
-//        getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
     }
 
     private void runTests() {
@@ -198,86 +197,5 @@ public class MainActivity extends AppCompatActivity
 //        lTextInputLayout.setError("error");
 //        lTextInputLayout.setErrorTextColor(ColorStateList.valueOf(0xFFDE4255));
 
-    }
-
-    /**
-     * A class for handle all the animation of the form page display and hide
-     */
-    private class FormAnimationManager extends Animation {
-        private int mTargetHeight;
-        private int mStartHeight;
-        private View mRootView;
-        private View mHostView;
-        private int mRootViewHeight;
-        private int mHostViewHeight;
-        private boolean mIsFormOpen;
-        private boolean mIsAnimating;
-
-        public FormAnimationManager(View iView, View iRootView) {
-            mHostView = iView;
-            mRootView = iRootView;
-
-            this.setInterpolator(new DecelerateInterpolator(5F));
-            this.setDuration(getResources().getInteger(R.integer.form_animation_time));
-
-            ViewTreeObserver observer = mRootView.getViewTreeObserver();
-            observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    mRootViewHeight = mRootView.getHeight();
-                    mHostViewHeight = mHostView.getHeight();
-//                    LogManager.info(TAG, "main root linear layout updated : " + mHostViewHeight);
-                }
-            });
-        }
-
-        public void openForm() {
-            LogManager.error("open form");
-            //The following line prevent the scrollview resize bug when we close the form with a focus on an edit text
-            mRootView.requestFocus();
-            mTargetHeight = 0;
-            mStartHeight = mRootViewHeight;
-            if (!mIsAnimating)
-                mHostView.clearAnimation();
-            else
-                mStartHeight = mHostViewHeight;
-            mHostView.startAnimation(this);
-            mIsAnimating = true;
-            mIsFormOpen = true;
-            mFloatingActionButton.hide();
-
-            Toolbar lToolBarForm = findViewById(R.id.toolbar_form);
-            setSupportActionBar(lToolBarForm);
-        }
-
-        public void closeForm() {
-            LogManager.error("close form");
-            mRootView.requestFocus();
-            mTargetHeight = mRootViewHeight;
-            mStartHeight = 0;
-            if (!mIsAnimating)
-                mHostView.clearAnimation();
-            else
-                mStartHeight = mHostViewHeight;
-            mHostView.startAnimation(this);
-            mIsAnimating = true;
-            mIsFormOpen = false;
-            mFloatingActionButton.show();
-        }
-
-        @Override
-        protected void applyTransformation(float iInterpolatedTime, Transformation iT) {
-            int newHeight = (int) (mStartHeight + (mTargetHeight - mStartHeight) * iInterpolatedTime);
-
-            mHostView.getLayoutParams().height = newHeight;
-            mHostView.requestLayout();
-
-            if (newHeight == mTargetHeight)
-                mIsAnimating = false;
-        }
-
-        public boolean isFormOpen() {
-            return mIsFormOpen;
-        }
     }
 }

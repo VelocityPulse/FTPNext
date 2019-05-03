@@ -39,8 +39,6 @@
 
             </LinearLayout>
 
-        <include layout="@layout/activity_main_content_form" />
-
     </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
