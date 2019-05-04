@@ -91,7 +91,7 @@
                 android:layout_height="wrap_content"
                 android:drawableEnd="@drawable/baseline_remove_red_eye_24"
                 android:hint="Password"
-                android:inputType="text" />
+                android:inputType="textPassword" />
 
         </android.support.design.widget.TextInputLayout>
 

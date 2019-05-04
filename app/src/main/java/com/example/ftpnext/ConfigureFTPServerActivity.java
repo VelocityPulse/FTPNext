@@ -1,8 +1,11 @@
 package com.example.ftpnext;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.provider.DocumentFile;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -15,6 +18,7 @@ import android.widget.RadioGroup;
 
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.FTPType;
+import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
@@ -79,6 +83,9 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
 
         mLocalFolderEditText = findViewById(R.id.local_folder_edit_text);
         mLocalFolderEditText.setTag(findViewById(R.id.local_folder_edit_text_layout));
+        mLocalFolderEditText.setShowSoftInputOnFocus(false);
+        mLocalFolderEditText.setTextIsSelectable(true);
+        mLocalFolderEditText.setTextIsSelectable(false);
 
         mTypeRadioGroup = findViewById(R.id.type_radio_group);
         mRootView.requestFocus();
@@ -198,9 +205,23 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
         }
     }
 
+    public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
+        if (resultCode == RESULT_OK) {
+            Uri treeUri = resultData.getData();
+            DocumentFile pickedDir = DocumentFile.fromTreeUri(this, treeUri);
+
+            mLocalFolderEditText.setText(pickedDir.getName());
+            mFullLocalFolder = pickedDir.getUri().getPath();
+
+            LogManager.error(mFullLocalFolder);
+        }
+    }
+
     public void OnClickLocalFolder(View view) {
 
-
-
+        LogManager.error("open");
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+//        intent.setType("file/*");
+        startActivityForResult(intent, 10);
     }
 }
