@@ -6,8 +6,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 
 import com.example.ftpnext.core.LogManager;
-import com.example.ftpnext.database.FTPHostTable.IFTPHostSchema;
-import com.example.ftpnext.database.TableTest1.ITableTest1Schema;
 
 import java.util.List;
 

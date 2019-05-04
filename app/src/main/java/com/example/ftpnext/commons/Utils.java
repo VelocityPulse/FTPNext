@@ -11,9 +11,8 @@ public class Utils {
         //Find the currently focused view, so we can grab the correct window token from it.
         View lView = iActivity.getCurrentFocus();
         //If no view currently has focus, create a new one, just so we can grab a window token from it
-        if (lView == null) {
+        if (lView == null)
             lView = new View(iActivity);
-        }
         lImm.hideSoftInputFromWindow(lView.getWindowToken(), 0);
     }
 
@@ -23,5 +22,9 @@ public class Utils {
         if (iView == null)
             iView = new View(iActivity);
         lImm.hideSoftInputFromWindow(iView.getWindowToken(), 0);
+    }
+
+    public static boolean isNullOrEmpty(String iStr) {
+        return iStr == null || iStr.trim().isEmpty();
     }
 }

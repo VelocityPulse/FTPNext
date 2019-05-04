@@ -1,17 +1,17 @@
-package com.example.ftpnext.database.FTPHostTable;
+package com.example.ftpnext.database.FTPServerTable;
 
 import com.example.ftpnext.core.FTPCharacterEncoding;
 import com.example.ftpnext.core.FTPType;
 import com.example.ftpnext.database.ABaseTable;
 
-public class FTPHost extends ABaseTable {
+public class FTPServer extends ABaseTable {
 
     private String mName;
+    private String mServer;
     private String mUser;
     private String mPass;
-    private String mHost;
     private int mPort;
-    private String mAttributedFolder;
+    private String mLocalFolder;
     private FTPCharacterEncoding mFTPCharacterEncoding = FTPCharacterEncoding.DEFAULT;
     private FTPType mFTPType = FTPType.DEFAULT;
 
@@ -21,6 +21,14 @@ public class FTPHost extends ABaseTable {
 
     public void setName(String iName) {
         mName = iName;
+    }
+
+    public String getServer() {
+        return mServer;
+    }
+
+    public void setServer(String iServer) {
+        mServer = iServer;
     }
 
     public String getUser() {
@@ -39,14 +47,6 @@ public class FTPHost extends ABaseTable {
         mPass = iPass;
     }
 
-    public String getHost() {
-        return mHost;
-    }
-
-    public void setHost(String iHost) {
-        mHost = iHost;
-    }
-
     public int getPort() {
         return mPort;
     }
@@ -55,12 +55,12 @@ public class FTPHost extends ABaseTable {
         mPort = iPort;
     }
 
-    public String getAttributedFolder() {
-        return mAttributedFolder;
+    public String getLocalFolder() {
+        return mLocalFolder;
     }
 
-    public void setAttributedFolder(String iAttributedFolder) {
-        mAttributedFolder = iAttributedFolder;
+    public void setLocalFolder(String iLocalFolder) {
+        mLocalFolder = iLocalFolder;
     }
 
     public FTPCharacterEncoding getFTPCharacterEncoding() {

@@ -14,7 +14,7 @@ public abstract class ADataAccessObject<T extends ABaseTable> extends ADataBaseS
 
     private final String TAG = "DATABASE : Data Access Object";
     protected ContentValues mContentValues = null;
-    private Cursor mCursor = null;
+    protected Cursor mCursor = null;
 
     public ADataAccessObject(SQLiteDatabase iDataBase) {
         super(iDataBase);

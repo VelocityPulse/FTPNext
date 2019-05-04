@@ -4,9 +4,9 @@ public enum FTPType {
 
     FTP(0),
 
-    FTPS(1),
+    SFTP(1),
 
-    FTPES(2),
+//    FTPES(2),
 
     DEFAULT(0);
 
@@ -24,9 +24,9 @@ public enum FTPType {
         if (iValue == 0)
             return FTPType.FTP;
         else if (iValue == 1)
-            return FTPType.FTPES;
-        else if (iValue == 2)
-            return FTPType.FTPES;
+            return FTPType.SFTP;
+//        else if (iValue == 2)
+//            return FTPType.FTPES;
         return FTPType.DEFAULT;
     }
 }

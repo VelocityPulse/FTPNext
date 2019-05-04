@@ -12,25 +12,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.transition.Slide;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.LinearLayout;
 
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.DataBaseTests;
-import com.example.ftpnext.database.FTPHostTable.FTPHost;
+import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.TableTest1.TableTest1;
 
 import java.util.ArrayList;
 
 /*
-TODO Resume when screen change orientation
+TODO : Resume when screen change orientation
 
 Ideas :
     Queues of file to download even if the connection fail
@@ -38,6 +35,7 @@ Ideas :
     Notification view of transfer
     Check if the download can continue after a stop
     Connection with ssh
+    Multiple theme
  */
 
 public class MainActivity extends AppCompatActivity
@@ -188,7 +186,7 @@ public class MainActivity extends AppCompatActivity
 
     private void runTests() {
         DataBaseTests.runTests(new TableTest1(), DataBase.getTableTest1DAO());
-        DataBaseTests.runTests(new FTPHost(), DataBase.getFTPHostDAO());
+        DataBaseTests.runTests(new FTPServer(), DataBase.getFTPServerDAO());
 
         for (int i = 0; i < 20; i++) {
             mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + i);

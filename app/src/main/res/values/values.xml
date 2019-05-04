@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <integer name="form_animation_time">1200</integer>
+    <integer name="configure_ftp_server_animation_slide_time">700</integer>
 
 </resources>
