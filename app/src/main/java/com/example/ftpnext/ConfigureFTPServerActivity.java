@@ -44,6 +44,7 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_configure_ftp_server);
 
         initializeGUI();
+        initializeListeners();
         mFTPServerDAO = DataBase.getFTPServerDAO();
         mFullLocalFolder = null;
     }
@@ -83,6 +84,61 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
         mRootView.requestFocus();
     }
 
+    private void initializeListeners() {
+        mNameEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable iEditable) {
+                if (iEditable != null && !Utils.isNullOrEmpty(iEditable.toString()))
+                    ((TextInputLayout) mNameEditText.getTag()).setErrorEnabled(false);
+            }
+        });
+
+        mServerEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence iCharSequence, int iStart, int iCount, int iAfter) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence iCharSequence, int iStart, int iBefore, int iCount) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable iEditable) {
+                if (iEditable != null && !Utils.isNullOrEmpty(iEditable.toString()))
+                    ((TextInputLayout) mServerEditText.getTag()).setErrorEnabled(false);
+            }
+        });
+
+        mPortEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence iCharSequence, int iStart, int iCount, int iAfter) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence iCharSequence, int iStart, int iBefore, int iCount) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable iEditable) {
+                if (iEditable != null && !Utils.isNullOrEmpty(iEditable.toString()))
+                    ((TextInputLayout) mPortEditText.getTag()).setErrorEnabled(false);
+            }
+        });
+    }
 
     public void OnClickSaveButton(View view) {
         boolean lCanSave = true;
@@ -140,5 +196,11 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
             if (mFTPServerDAO.add(lNewFTPServer))
                 finish();
         }
+    }
+
+    public void OnClickLocalFolder(View view) {
+
+
+
     }
 }

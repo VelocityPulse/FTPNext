@@ -30,6 +30,7 @@
                 android:id="@+id/name_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:drawableEnd="@drawable/baseline_bookmark_24"
                 android:hint="Name"
                 android:inputType="text" />
 
@@ -49,6 +50,7 @@
                 android:id="@+id/server_host_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:drawableEnd="@drawable/baseline_device_hub_24"
                 android:hint="Server Host"
                 android:inputType="text" />
 
@@ -61,7 +63,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="@dimen/text_input_layout_vertical_margin"
-
             android:layout_marginBottom="@dimen/text_input_layout_vertical_margin"
             app:boxStrokeColor="#FFFF">
 
@@ -69,6 +70,7 @@
                 android:id="@+id/username_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:drawableEnd="@drawable/baseline_account_circle_24"
                 android:hint="Username"
                 android:inputType="text" />
 
@@ -80,7 +82,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="@dimen/text_input_layout_vertical_margin"
-
             android:layout_marginBottom="@dimen/text_input_layout_vertical_margin"
             app:boxStrokeColor="#FFFF">
 
@@ -88,6 +89,7 @@
                 android:id="@+id/password_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:drawableEnd="@drawable/baseline_remove_red_eye_24"
                 android:hint="Password"
                 android:inputType="text" />
 
@@ -98,7 +100,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-
             android:layout_marginTop="@dimen/text_input_layout_vertical_margin"
             android:layout_marginBottom="@dimen/text_input_layout_vertical_margin"
             android:orientation="horizontal">
@@ -133,7 +134,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="@dimen/text_input_layout_vertical_margin"
-
             android:layout_marginBottom="@dimen/text_input_layout_vertical_margin"
             app:boxStrokeColor="#FFFF">
 
@@ -141,6 +141,7 @@
                 android:id="@+id/port_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:drawableEnd="@drawable/baseline_lock_24"
                 android:hint="Port"
                 android:inputType="number" />
 
@@ -159,8 +160,11 @@
                 android:id="@+id/local_folder_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:cursorVisible="false"
+                android:drawableEnd="@drawable/baseline_folder_24"
                 android:hint="Local Folder"
-                android:inputType="text" />
+                android:inputType="text"
+                android:onClick="OnClickLocalFolder" />
 
         </android.support.design.widget.TextInputLayout>
 
@@ -168,9 +172,9 @@
             style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="100dp"
             android:layout_height="match_parent"
-            android:layout_gravity="right"
-            android:layout_marginTop="10dp"
-            android:layout_marginRight="20dp"
+            android:layout_gravity="end"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"
             android:onClick="OnClickSaveButton"
             android:text="Save" />
 
