@@ -19,7 +19,6 @@ import android.widget.RadioGroup;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppInfo;
 import com.example.ftpnext.core.FTPType;
-import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
@@ -27,6 +26,14 @@ import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 // TODO : remember the last local folder used
 
 public class ConfigureFTPServerActivity extends AppCompatActivity {
+
+    public static final int ACTIVITY_REQUEST_CODE = 1;
+
+    public static final int ACTIVITY_RESULT_ADD_SUCCESS = 0;
+    public static final int ACTIVITY_RESULT_ADD_FAIL = 1;
+    public static final int ACTIVITY_RESULT_ABORT = 2;
+
+    public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
 
     private View mRootView;
 
@@ -64,6 +71,12 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
         lSlide.setInterpolator(new DecelerateInterpolator(5F));
         lSlide.setSlideEdge(Gravity.BOTTOM);
         getWindow().setEnterTransition(lSlide);
+    }
+
+    @Override
+    public void onBackPressed() {
+        setResult(ACTIVITY_RESULT_ABORT);
+        super.onBackPressed();
     }
 
     private void initializeGUI() {
@@ -111,12 +124,15 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
                 if (iEditable != null) {
                     String lString = iEditable.toString();
 
+                    if (mFTPServerDAO.fetchByName(lString) != null) {// TODO use resources
+                        ((TextInputLayout) mNameEditText.getTag()).setError("Name already used");
+                        return;
+                    }
                     if (iEditable != null && !Utils.isNullOrEmpty(lString))
                         ((TextInputLayout) mNameEditText.getTag()).setErrorEnabled(false);
                     else if (Utils.isNullOrEmpty(lString))
                         ((TextInputLayout) mNameEditText.getTag()).setError("Obligatory");
-                    else if (mFTPServerDAO.fetchByName(lString) != null) // TODO use resources
-                        ((TextInputLayout) mNameEditText.getTag()).setError("Name already used");
+
                 }
             }
         });
@@ -134,7 +150,6 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable iEditable) {
-
                 if (iEditable != null) {
                     String lString = iEditable.toString();
 
@@ -142,7 +157,6 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
                         ((TextInputLayout) mServerEditText.getTag()).setError("Obligatory");
                     else
                         ((TextInputLayout) mServerEditText.getTag()).setErrorEnabled(false);
-
                 }
             }
         });
@@ -181,11 +195,6 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
             lCanSave = false;
         }
 
-//        if (Utils.isNullOrEmpty(lPort)) {
-//            ((TextInputLayout) mPortEditText.getTag()).setError("Obligatory");
-//            lCanSave = false;
-//        }
-
         if (Utils.isNullOrEmpty(mFullLocalFolder)) {
             ((TextInputLayout) mLocalFolderEditText.getTag()).setError("Obligatory");
             lCanSave = false;
@@ -214,20 +223,24 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
             } else
                 lNewFTPServer.setPort(Integer.parseInt(lPort));
 
-            if (mFTPServerDAO.add(lNewFTPServer))
-                finish();
+            int lId;
+            if ((lId = mFTPServerDAO.add(lNewFTPServer)) != -1) {
+                Intent lIntent = new Intent();
+                lIntent.putExtra(KEY_DATABASE_ID, lId);
+                setResult(ACTIVITY_RESULT_ADD_SUCCESS, lIntent);
+            } else
+                setResult(ACTIVITY_RESULT_ADD_FAIL);
+            finish();
         }
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
-        if (resultCode == RESULT_OK) {
-            Uri lTreeUri = resultData.getData();
+    public void onActivityResult(int iRequestCode, int iResultCode, Intent iResultData) {
+        if (iResultCode == RESULT_OK) {
+            Uri lTreeUri = iResultData.getData();
             DocumentFile lPickedDir = DocumentFile.fromTreeUri(this, lTreeUri);
 
             mLocalFolderEditText.setText(lPickedDir.getName());
             mFullLocalFolder = lPickedDir.getUri().getPath();
-
-            LogManager.error(mFullLocalFolder);
         }
     }
 
@@ -237,10 +250,10 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
     }
 
     public void OnClickRadioButtonFTP(View iView) {
-        ((TextInputLayout)mPortEditText.getTag()).setHint("Default: 21");
+        ((TextInputLayout) mPortEditText.getTag()).setHint("Default: 21");
     }
 
     public void OnClickRadioButtonSFTP(View iView) {
-        ((TextInputLayout)mPortEditText.getTag()).setHint("Default: 22");
+        ((TextInputLayout) mPortEditText.getTag()).setHint("Default: 22");
     }
 }

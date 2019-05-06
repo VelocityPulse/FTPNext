@@ -29,9 +29,11 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
     }
 
     @Override
-    public boolean add(TableTest1 iObject) {
-        if (iObject == null)
-            return LogManager.error(TAG, "Object to add is null");
+    public int add(TableTest1 iObject) {
+        if (iObject == null) {
+            LogManager.error(TAG, "Object to add is null");
+            return -1;
+        }
 
         return super.add(iObject, TABLE);
     }
@@ -104,7 +106,7 @@ public class TableTest1DAO extends ADataAccessObject<TableTest1> implements ITab
         for (TableTest1 lTableTest1 : iTableTest1List) {
             if (lTableTest1 == null)
                 return LogManager.error(TAG, "Object in list is null. Return error.");
-            if (!add(lTableTest1, TABLE)) {
+            if (add(lTableTest1, TABLE) == -1) {
                 return false;
             }
         }

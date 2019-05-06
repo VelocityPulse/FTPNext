@@ -49,9 +49,11 @@ public class FTPServerDAO extends ADataAccessObject<FTPServer> implements IFTPSe
     }
 
     @Override
-    public boolean add(FTPServer iObject) {
-        if (iObject == null)
-            return LogManager.error(TAG, "Object to add is null");
+    public int add(FTPServer iObject) {
+        if (iObject == null) {
+            LogManager.error(TAG, "Object to add is null");
+            return -1;
+        }
 
         return super.add(iObject, TABLE);
     }

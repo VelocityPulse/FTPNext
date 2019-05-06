@@ -19,12 +19,14 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 import com.example.ftpnext.core.AppCore;
+import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.DataBaseTests;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
+import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.example.ftpnext.database.TableTest1.TableTest1;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /*
 TODO : Resume when screen change orientation
@@ -51,6 +53,8 @@ public class MainActivity extends AppCompatActivity
     private boolean mIsBlockedScrollView;
     private View mRootView;
 
+    private FTPServerDAO mFTPServerDAO;
+
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
@@ -63,9 +67,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         initializeGUI();
-
-        mAppCore = new AppCore(this);
-        mAppCore.startApplication();
+        initialize();
 
         runTests();
     }
@@ -78,7 +80,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
 //        LogManager.error(String.valueOf(mFormAnimationManager.isFormOpen()));
 
 //        if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -97,7 +99,6 @@ public class MainActivity extends AppCompatActivity
 //            getMenuInflater().inflate(R.menu.main, menu);
 //        else
         getMenuInflater().inflate(R.menu.activity_main_form, menu);
-
         return true;
     }
 
@@ -157,14 +158,10 @@ public class MainActivity extends AppCompatActivity
 //                Snackbar.make(view, "You have to be connected.", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
 
-                mAdapter.notifyDataSetChanged();
-                Intent lIntent = new Intent(MainActivity.this, ConfigureFTPServerActivity.class);
-                startActivity(lIntent,
-                        ActivityOptions.makeSceneTransitionAnimation(MainActivity.this).toBundle());
+                startConfigureFTPServerActivity();
             }
         });
 
-        // TODO block left nav in form mode
         DrawerLayout lDrawer = findViewById(R.id.drawer_layout);
 
         ActionBarDrawerToggle lToggle = new ActionBarDrawerToggle(
@@ -175,25 +172,53 @@ public class MainActivity extends AppCompatActivity
 
         RecyclerView lRecyclerView = findViewById(R.id.main_recycler_view);
         lRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new MainRecyclerViewAdapter(new ArrayList<String>());
+        mAdapter = new MainRecyclerViewAdapter(lRecyclerView, this);
         lRecyclerView.setAdapter(mAdapter);
 
-        mAdapter.notifyDataSetChanged();
-
-        View lHostListView = findViewById(R.id.main_host_list);
         mRootView = findViewById(R.id.main_root_linear_layout);
+    }
+
+    public void initialize() {
+        LogManager.info(TAG, "Initialize");
+        mAppCore = new AppCore(this);
+        mAppCore.startApplication();
+        mFTPServerDAO = DataBase.getFTPServerDAO();
+
+        List<FTPServer> lFTPServers = mFTPServerDAO.fetchAll();
+        for (FTPServer lFTPServer : lFTPServers) {
+            mAdapter.insertItem(lFTPServer.getName());
+        }
+    }
+
+    public void onActivityResult(int iRequestCode, int iResultCode, Intent iResultData) {
+        if (iRequestCode == ConfigureFTPServerActivity.ACTIVITY_REQUEST_CODE) {
+            if (iResultCode == ConfigureFTPServerActivity.ACTIVITY_RESULT_ADD_SUCCESS) {
+                int lId;
+                if ((lId = iResultData.getIntExtra(ConfigureFTPServerActivity.KEY_DATABASE_ID, -1)) != -1) {
+                    mAdapter.insertItem(mFTPServerDAO.fetchById(lId).getName());
+                }
+            }
+        }
+    }
+
+    private void startConfigureFTPServerActivity() {
+        Intent lIntent = new Intent(MainActivity.this, ConfigureFTPServerActivity.class);
+        startActivityForResult(lIntent,
+                ConfigureFTPServerActivity.ACTIVITY_REQUEST_CODE,
+                ActivityOptions.makeSceneTransitionAnimation(MainActivity.this).toBundle());
     }
 
     private void runTests() {
         DataBaseTests.runTests(new TableTest1(), DataBase.getTableTest1DAO());
         DataBaseTests.runTests(new FTPServer(), DataBase.getFTPServerDAO());
 
-        for (int i = 0; i < 20; i++) {
-            mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + i);
-        }
+//        for (int i = 0; i < 20; i++) {
+//            mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + i);
+//        }
+
+
 //        TextInputLayout lTextInputLayout = (TextInputLayout) findViewById(R.id.form_server_host);
 //        lTextInputLayout.setError("error");
 //        lTextInputLayout.setErrorTextColor(ColorStateList.valueOf(0xFFDE4255));
-
     }
 }
