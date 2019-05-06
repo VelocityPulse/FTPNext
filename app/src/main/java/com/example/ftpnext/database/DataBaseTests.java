@@ -10,23 +10,25 @@ public class DataBaseTests {
 
     public static <T extends ABaseTable, V extends ADataAccessObject> void runTests(T iObjectInstance, V iDao) {
 
-        iDao.add(iObjectInstance);
-        iDao.add(iObjectInstance);
+        int lId1 = iDao.add(iObjectInstance);
+        int lId2 = iDao.add(iObjectInstance);
+        LogManager.info(TAG, "new " + iObjectInstance.getClass().getSimpleName() + " created. Id : " + lId1);
+        LogManager.info(TAG, "new " + iObjectInstance.getClass().getSimpleName() + " created. Id : " + lId2);
 
         List<T> lList = iDao.fetchAll();
         for (T lItem : lList)
-            LogManager.info(TAG, "table id for " + iObjectInstance.getClass().getCanonicalName() + " : " + lItem.mDataBaseId);
+            LogManager.info(TAG, "table id for " + iObjectInstance.getClass().getSimpleName() + " : " + lItem.mDataBaseId);
 
-        iDao.delete(lList.get(0));
-        iDao.delete(lList.get(1).getDataBaseId());
+        iDao.delete(lId1);
+        iDao.delete(lId2);
         LogManager.info(TAG, "deleted");
 
         lList = iDao.fetchAll();
         if (lList.size() == 0)
-            LogManager.info(TAG, "table " + iObjectInstance.getClass().getCanonicalName() + " has been reset well.");
+            LogManager.info(TAG, "table " + iObjectInstance.getClass().getSimpleName() + " has been reset well.");
         else {
             for (T lItem : lList)
-                LogManager.error(TAG, "table id for " + iObjectInstance.getClass().getCanonicalName() + " sill in the DB : " + lItem.mDataBaseId);
+                LogManager.error(TAG, "table id for " + iObjectInstance.getClass().getSimpleName() + " sill in the DB : " + lItem.mDataBaseId);
         }
     }
 }
