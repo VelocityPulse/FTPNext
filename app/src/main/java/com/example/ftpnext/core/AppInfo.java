@@ -7,4 +7,7 @@ public class AppInfo {
 
     public static final boolean DEBUG_ENABLED = true;
 
+    public static final int FTP_DEFAULT_PORT = 21;
+    public static final int SFTP_DEFAULT_PORT = 22;
+
 }

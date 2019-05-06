@@ -17,5 +17,4 @@ public class AppCore {
         mDataBase = DataBase.getInstance();
         mDataBase.open(mContext);
     }
-
 }
