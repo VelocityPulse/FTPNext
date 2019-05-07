@@ -51,12 +51,12 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iPosition) {
         String lValue = mItemList.get(iPosition);
 
-        iCustomItemViewAdapter.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
+//        iCustomItemViewAdapter.itemView.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                LogManager.info("click on item view");
+//            }
+//        });
 
         iCustomItemViewAdapter.mTextView.setText(lValue);
         LogManager.error(String.valueOf(iPosition));

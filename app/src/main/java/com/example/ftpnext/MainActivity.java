@@ -221,4 +221,8 @@ public class MainActivity extends AppCompatActivity
 //        lTextInputLayout.setError("error");
 //        lTextInputLayout.setErrorTextColor(ColorStateList.valueOf(0xFFDE4255));
     }
+
+    public void OnClickServerItem(View view) {
+        LogManager.info("click");
+    }
 }
