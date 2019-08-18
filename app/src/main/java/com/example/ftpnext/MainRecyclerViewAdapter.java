@@ -54,32 +54,11 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iPosition) {
         FTPServer lServer = mItemList.get(iPosition);
 
-//        iCustomItemViewAdapter.itemView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                LogManager.info("click on item view");
-//            }
-//        });
-
         iCustomItemViewAdapter.mMainText.setText(lServer.getName());
         iCustomItemViewAdapter.mSecondaryText.setText(lServer.getUser());
-//        LogManager.error(String.valueOf(iPosition));
 
         Animation animation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.item_animation_fall_down);
         iCustomItemViewAdapter.itemView.startAnimation(animation);
-
-        // If the bound view wasn't previously displayed on screen, it's animated
-//        if (iPosition > lastPosition) {
-//            Animation animation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.item_animation_fall_down);
-//            iCustomItemViewAdapter.itemView.startAnimation(animation);
-//            lastPosition = iPosition;
-//        }
-
-//        Animation animation = AnimationUtils.loadAnimation(mRecyclerView.getContext(),
-//                (position > lastPosition) ?
-//                        : R.anim.down_from_top);
-//        holder.itemView.startAnimation(animation);
-//        lastPosition = position;
 
     }
 
@@ -87,18 +66,6 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     public int getItemCount() {
         return mItemList.size();
     }
-
-//    public void runLayoutAnimation() {
-//        final LayoutAnimationController lAnimation;
-//
-//        lAnimation = AnimationUtils.loadLayoutAnimation(
-//                mRecyclerView.getContext(),
-//                R.anim.layout_animation_fall_down);
-//
-//        mRecyclerView.setLayoutAnimation(lAnimation);
-//        notifyDataSetChanged();
-//        mRecyclerView.scheduleLayoutAnimation();
-//    }
 
     public void insertItem(FTPServer iItem) {
         if (mItemList == null) {
@@ -123,7 +90,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
             LogManager.error(TAG, "Cannot set the data if the given parameter is null.");
             return;
         }
-        mItemList = new ArrayList<FTPServer>(iData);
+        mItemList = new ArrayList<>(iData);
         notifyDataSetChanged();
     }
 
