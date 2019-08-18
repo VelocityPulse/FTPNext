@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
 
         <item name="colorPrimary">@color/colorPrimary</item>
@@ -10,8 +10,12 @@
         <item name="colorSecondary">@color/colorSecondary</item>
         <item name="colorError">#F44336</item>
         <item name="android:colorBackground">@color/colorBackground</item>
-
+        <!--<item name="android:buttonStyle"></item>-->
     </style>
+
+    <!--<style name="Button">-->
+        <!--&lt;!&ndash;<item name="colorAccent">@android:color/wh</item>&ndash;&gt;-->
+    <!--</style>-->
 
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
@@ -21,5 +25,9 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <!--<style name="ApplicationStyle" parent="android:Theme">-->
+
+    <!--</style>-->
 
 </resources>

@@ -12,6 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.ftpnext.core.LogManager;
+import com.example.ftpnext.database.FTPServerTable.FTPServer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +21,12 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 
     private static final String TAG = "MAIN RECYCLER VIEW ADAPTER";
 
-    private List<String> mItemList;
+    private List<FTPServer> mItemList;
     private RecyclerView mRecyclerView;
     private Context mContext;
     private int lastPosition = -1;
 
-    public MainRecyclerViewAdapter(List<String> iItemList, RecyclerView iRecyclerView, Context iContext) {
+    public MainRecyclerViewAdapter(List<FTPServer> iItemList, RecyclerView iRecyclerView, Context iContext) {
         mItemList = iItemList;
         mRecyclerView = iRecyclerView;
         mContext = iContext;
@@ -41,15 +42,17 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     @Override
     public CustomItemViewAdapter onCreateViewHolder(@NonNull ViewGroup iViewGroup, int iI) {
 
-        LinearLayout v = (LinearLayout) LayoutInflater.
+        LinearLayout lLayout = (LinearLayout) LayoutInflater.
                 from(iViewGroup.getContext()).inflate(R.layout.activity_main_item, iViewGroup, false);
 
-        return new CustomItemViewAdapter(v, (TextView) v.findViewById(R.id.main_recycler_item_text));
+        return new CustomItemViewAdapter(lLayout,
+                (TextView) lLayout.findViewById(R.id.main_recycler_item_main_text),
+                (TextView) lLayout.findViewById(R.id.main_recycler_item_secondary_text));
     }
 
     @Override
     public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iPosition) {
-        String lValue = mItemList.get(iPosition);
+        FTPServer lServer = mItemList.get(iPosition);
 
 //        iCustomItemViewAdapter.itemView.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -58,8 +61,9 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 //            }
 //        });
 
-        iCustomItemViewAdapter.mTextView.setText(lValue);
-        LogManager.error(String.valueOf(iPosition));
+        iCustomItemViewAdapter.mMainText.setText(lServer.getName());
+        iCustomItemViewAdapter.mSecondaryText.setText(lServer.getUser());
+//        LogManager.error(String.valueOf(iPosition));
 
         Animation animation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.item_animation_fall_down);
         iCustomItemViewAdapter.itemView.startAnimation(animation);
@@ -96,7 +100,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 //        mRecyclerView.scheduleLayoutAnimation();
 //    }
 
-    public void insertItem(String iItem) {
+    public void insertItem(FTPServer iItem) {
         if (mItemList == null) {
             LogManager.error(TAG, "Cannot insert an item if the list of items isn't initialized.");
             return;
@@ -105,7 +109,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         notifyItemRangeInserted(mItemList.size() + 1, 1);
     }
 
-    public void insertItem(String iItem, int iPosition) {
+    public void insertItem(FTPServer iItem, int iPosition) {
         if (mItemList == null) {
             LogManager.error(TAG, "Cannot insert an item if the list of items isn't initialized.");
             return;
@@ -114,21 +118,23 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         notifyItemRangeInserted(iPosition, 1);
     }
 
-    public void setData(List<String> iData) {
+    public void setData(List<FTPServer> iData) {
         if (mItemList == null) {
             LogManager.error(TAG, "Cannot set the data if the given parameter is null.");
             return;
         }
-        mItemList = new ArrayList<>(iData);
+        mItemList = new ArrayList<FTPServer>(iData);
         notifyDataSetChanged();
     }
 
     static class CustomItemViewAdapter extends RecyclerView.ViewHolder {
-        TextView mTextView;
+        TextView mMainText;
+        TextView mSecondaryText;
 
-        public CustomItemViewAdapter(@NonNull View iItemView, TextView iTextView) {
+        public CustomItemViewAdapter(@NonNull View iItemView, TextView iMainText, TextView iSecondaryText) {
             super(iItemView);
-            mTextView = iTextView;
+            mMainText = iMainText;
+            mSecondaryText = iSecondaryText;
         }
     }
 

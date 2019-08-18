@@ -119,7 +119,6 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
@@ -186,7 +185,7 @@ public class MainActivity extends AppCompatActivity
 
         List<FTPServer> lFTPServers = mFTPServerDAO.fetchAll();
         for (FTPServer lFTPServer : lFTPServers) {
-            mAdapter.insertItem(lFTPServer.getName());
+            mAdapter.insertItem(lFTPServer);
         }
     }
 
@@ -195,7 +194,7 @@ public class MainActivity extends AppCompatActivity
             if (iResultCode == ConfigureFTPServerActivity.ACTIVITY_RESULT_ADD_SUCCESS) {
                 int lId;
                 if ((lId = iResultData.getIntExtra(ConfigureFTPServerActivity.KEY_DATABASE_ID, -1)) != -1) {
-                    mAdapter.insertItem(mFTPServerDAO.fetchById(lId).getName());
+                    mAdapter.insertItem(mFTPServerDAO.fetchById(lId));
                 }
             }
         }
@@ -215,7 +214,6 @@ public class MainActivity extends AppCompatActivity
 //        for (int i = 0; i < 20; i++) {
 //            mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + i);
 //        }
-
 
 //        TextInputLayout lTextInputLayout = (TextInputLayout) findViewById(R.id.form_server_host);
 //        lTextInputLayout.setError("error");

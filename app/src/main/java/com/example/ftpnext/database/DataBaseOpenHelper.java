@@ -67,7 +67,7 @@ public class DataBaseOpenHelper extends SQLiteOpenHelper {
             }
 
             DataBase.getTableTest1DAO().onUpgradeTable(mOldVersion, mNewVersion);
-            //todo : call all onUpgrade
+            //instruction : call all onUpgrade
 
             //this code explain how to update a table
 /*

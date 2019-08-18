@@ -1,5 +1,7 @@
 package com.example.ftpnext;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,6 +13,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.transition.Slide;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.animation.DecelerateInterpolator;
@@ -19,6 +22,7 @@ import android.widget.RadioGroup;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppInfo;
 import com.example.ftpnext.core.FTPType;
+import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
@@ -46,6 +50,7 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
     private RadioGroup mTypeRadioGroup;
 
     private String mFullLocalFolder;
+    private boolean mForceBackReturn;
 
     private FTPServerDAO mFTPServerDAO;
 
@@ -75,8 +80,31 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        setResult(ACTIVITY_RESULT_ABORT);
-        super.onBackPressed();
+        if (!mForceBackReturn &&
+                (!Utils.isNullOrEmpty(mNameEditText.getText().toString().trim()) ||
+                        !Utils.isNullOrEmpty(mServerEditText.getText().toString().trim()) ||
+                        !Utils.isNullOrEmpty(mUserNameEditText.getText().toString().trim()) ||
+                        !Utils.isNullOrEmpty(mPasswordEditText.getText().toString()) ||
+                        !Utils.isNullOrEmpty(mPortEditText.getText().toString()))) {
+
+            LogManager.info("message a");
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Wait !")
+                    .setMessage("Are you sure to cancel this entry?")
+                    .setPositiveButton("yes", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            mForceBackReturn = true;
+                            onBackPressed();
+                        }
+                    })
+                    .setNegativeButton("no", null)
+                    .show();
+        } else {
+            LogManager.info("message b");
+            setResult(ACTIVITY_RESULT_ABORT);
+            super.onBackPressed();
+        }
     }
 
     private void initializeGUI() {
