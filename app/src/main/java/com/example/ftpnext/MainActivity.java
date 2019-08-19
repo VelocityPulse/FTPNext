@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity
                         mAdapter.insertItem(mFTPServerDAO.fetchById(lId));
                     else if (iResultCode == ConfigureFTPServerActivity.ACTIVITY_RESULT_UPDATE_SUCCESS)
                         LogManager.error("update success");
-                        mAdapter.updateItem(mFTPServerDAO.fetchById(lId));
+                    mAdapter.updateItem(mFTPServerDAO.fetchById(lId));
                 }
             }
         }

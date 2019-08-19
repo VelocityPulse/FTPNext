@@ -26,6 +26,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     private RecyclerView mRecyclerView;
     private Context mContext;
     private int lastPosition = -1;
+
     public MainRecyclerViewAdapter(List<FTPServer> iItemList, RecyclerView iRecyclerView, Context iContext) {
         mItemList = iItemList;
         mRecyclerView = iRecyclerView;

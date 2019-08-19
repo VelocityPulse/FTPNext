@@ -14,79 +14,82 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 
 public final class FileUtils {
-    static String TAG="TAG";
     private static final String PRIMARY_VOLUME_NAME = "primary";
+    static String TAG = "TAG";
 
     @Nullable
-    public static String getFullPathFromTreeUri(@Nullable final Uri treeUri, Context con) {
-        if (treeUri == null) return null;
-        String volumePath = getVolumePath(getVolumeIdFromTreeUri(treeUri),con);
-        if (volumePath == null) return File.separator;
-        if (volumePath.endsWith(File.separator))
-            volumePath = volumePath.substring(0, volumePath.length() - 1);
+    public static String getFullPathFromTreeUri(@Nullable final Uri iTreeUri, Context iCon) {
+        if (iTreeUri == null)
+            return null;
 
-        String documentPath = getDocumentPathFromTreeUri(treeUri);
-        if (documentPath.endsWith(File.separator))
-            documentPath = documentPath.substring(0, documentPath.length() - 1);
+        String oVolumePath = getVolumePath(getVolumeIdFromTreeUri(iTreeUri), iCon);
+        if (oVolumePath == null) return File.separator;
+        if (oVolumePath.endsWith(File.separator))
+            oVolumePath = oVolumePath.substring(0, oVolumePath.length() - 1);
 
-        if (documentPath.length() > 0) {
-            if (documentPath.startsWith(File.separator))
-                return volumePath + documentPath;
+        String lDocumentPath = getDocumentPathFromTreeUri(iTreeUri);
+        if (lDocumentPath.endsWith(File.separator))
+            lDocumentPath = lDocumentPath.substring(0, lDocumentPath.length() - 1);
+
+        if (lDocumentPath.length() > 0) {
+            if (lDocumentPath.startsWith(File.separator))
+                return oVolumePath + lDocumentPath;
             else
-                return volumePath + File.separator + documentPath;
-        }
-        else return volumePath;
+                return oVolumePath + File.separator + lDocumentPath;
+        } else
+            return oVolumePath;
     }
 
-
     @SuppressLint("ObsoleteSdkInt")
-    private static String getVolumePath(final String volumeId, Context context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return null;
+    private static String getVolumePath(final String iVolumeId, Context iContext) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
+            return null;
         try {
             StorageManager mStorageManager =
-                    (StorageManager) context.getSystemService(Context.STORAGE_SERVICE);
-            Class<?> storageVolumeClazz = Class.forName("android.os.storage.StorageVolume");
-            Method getVolumeList = mStorageManager.getClass().getMethod("getVolumeList");
-            Method getUuid = storageVolumeClazz.getMethod("getUuid");
-            Method getPath = storageVolumeClazz.getMethod("getPath");
-            Method isPrimary = storageVolumeClazz.getMethod("isPrimary");
-            Object result = getVolumeList.invoke(mStorageManager);
+                    (StorageManager) iContext.getSystemService(Context.STORAGE_SERVICE);
+            Class<?> lStorageVolumeClazz = Class.forName("android.os.storage.StorageVolume");
+            Method lGetVolumeList = mStorageManager.getClass().getMethod("getVolumeList");
+            Method lGetUuid = lStorageVolumeClazz.getMethod("getUuid");
+            Method lGetPath = lStorageVolumeClazz.getMethod("getPath");
+            Method lIsPrimary = lStorageVolumeClazz.getMethod("isPrimary");
+            Object lResult = lGetVolumeList.invoke(mStorageManager);
 
-            final int length = Array.getLength(result);
-            for (int i = 0; i < length; i++) {
-                Object storageVolumeElement = Array.get(result, i);
-                String uuid = (String) getUuid.invoke(storageVolumeElement);
-                Boolean primary = (Boolean) isPrimary.invoke(storageVolumeElement);
+            final int lIength = Array.getLength(lResult);
+            for (int lI = 0; lI < lIength; lI++) {
+                Object lStorageVolumeElement = Array.get(lResult, lI);
+                String lUUID = (String) lGetUuid.invoke(lStorageVolumeElement);
+                Boolean lPrimary = (Boolean) lIsPrimary.invoke(lStorageVolumeElement);
 
                 // primary volume?
-                if (primary && PRIMARY_VOLUME_NAME.equals(volumeId))
-                    return (String) getPath.invoke(storageVolumeElement);
+                if (lPrimary && PRIMARY_VOLUME_NAME.equals(iVolumeId))
+                    return (String) lGetPath.invoke(lStorageVolumeElement);
 
                 // other volumes?
-                if (uuid != null && uuid.equals(volumeId))
-                    return (String) getPath.invoke(storageVolumeElement);
+                if (lUUID != null && lUUID.equals(iVolumeId))
+                    return (String) lGetPath.invoke(lStorageVolumeElement);
             }
             // not found.
             return null;
-        } catch (Exception ex) {
+        } catch (Exception iEx) {
             return null;
         }
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private static String getVolumeIdFromTreeUri(final Uri treeUri) {
-        final String docId = DocumentsContract.getTreeDocumentId(treeUri);
-        final String[] split = docId.split(":");
-        if (split.length > 0) return split[0];
+    private static String getVolumeIdFromTreeUri(final Uri iTreeUri) {
+        final String lDocId = DocumentsContract.getTreeDocumentId(iTreeUri);
+        final String[] lSplit = lDocId.split(":");
+        if (lSplit.length > 0)
+            return lSplit[0];
         else return null;
     }
 
-
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private static String getDocumentPathFromTreeUri(final Uri treeUri) {
-        final String docId = DocumentsContract.getTreeDocumentId(treeUri);
-        final String[] split = docId.split(":");
-        if ((split.length >= 2) && (split[1] != null)) return split[1];
+    private static String getDocumentPathFromTreeUri(final Uri iTreeUri) {
+        final String lDocId = DocumentsContract.getTreeDocumentId(iTreeUri);
+        final String[] lSplit = lDocId.split(":");
+        if ((lSplit.length >= 2) && (lSplit[1] != null))
+            return lSplit[1];
         else return File.separator;
     }
 }
