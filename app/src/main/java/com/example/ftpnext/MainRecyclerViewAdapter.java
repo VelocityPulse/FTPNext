@@ -11,6 +11,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 
@@ -42,7 +43,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     public CustomItemViewAdapter onCreateViewHolder(@NonNull ViewGroup iViewGroup, int iI) {
 
         LinearLayout lLayout = (LinearLayout) LayoutInflater.
-                from(iViewGroup.getContext()).inflate(R.layout.activity_main_item, iViewGroup, false);
+                from(iViewGroup.getContext()).inflate(R.layout.activity_main_list_item, iViewGroup, false);
 
         return new CustomItemViewAdapter(lLayout,
                 (TextView) lLayout.findViewById(R.id.main_recycler_item_main_text),
@@ -54,7 +55,8 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         final FTPServer lServer = mItemList.get(iPosition);
 
         iCustomItemViewAdapter.mMainText.setText(lServer.getName());
-        iCustomItemViewAdapter.mSecondaryText.setText(lServer.getUser());
+        if (!Utils.isNullOrEmpty(lServer.getUser()))
+            iCustomItemViewAdapter.mSecondaryText.setText(lServer.getUser());
         iCustomItemViewAdapter.mMainLayout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {

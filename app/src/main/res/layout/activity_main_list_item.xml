@@ -6,36 +6,36 @@
     android:id="@+id/main_recycler_item"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
-    android:layout_margin="6dp"
     android:background="@drawable/ripple_effect_primary"
     android:clickable="true"
-    android:elevation="4dp"
+    android:focusable="true"
+    android:gravity="center_vertical"
     android:onClick="OnClickServerItem"
     android:orientation="horizontal"
+    android:paddingRight="13dp"
+    android:paddingLeft="15dp"
+    android:showDividers="middle"
     tools:showIn="@layout/activity_main_content">
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="2"
         android:orientation="vertical">
 
         <TextView
+            android:layout_marginTop="2dp"
             android:id="@+id/main_recycler_item_main_text"
             android:layout_width="match_parent"
-            android:layout_height="28dp"
-            android:layout_marginLeft="15dp"
-            android:gravity="center_vertical"
+            android:layout_height="wrap_content"
             android:text="Main text"
-            android:textSize="22sp" />
+            android:textSize="25sp" />
 
         <TextView
             android:id="@+id/main_recycler_item_secondary_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="15dp"
-            android:gravity="center_vertical"
-            android:text="Secondary text"
+            android:text="(No user name)"
             android:textSize="15sp" />
 
     </LinearLayout>
@@ -43,7 +43,7 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/baseline_storage_white_48" />
+        android:src="@drawable/baseline_storage_black_48" />
 
     <!--</LinearLayout>-->
 
