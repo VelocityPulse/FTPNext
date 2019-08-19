@@ -9,10 +9,12 @@ import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.provider.DocumentFile;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.transition.Slide;
 import android.view.Gravity;
+import android.view.Menu;
 import android.view.View;
 import android.view.Window;
 import android.view.animation.DecelerateInterpolator;
@@ -100,6 +102,9 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
     }
 
     private void initializeGUI() {
+        Toolbar lToolBar = findViewById(R.id.toolbar);
+        setSupportActionBar(lToolBar);
+
         mRootView = findViewById(R.id.activity_configure_ftp_server_scrollview);
 
         mNameEditText = findViewById(R.id.name_edit_text);

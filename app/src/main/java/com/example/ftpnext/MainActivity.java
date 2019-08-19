@@ -32,6 +32,7 @@ import java.util.List;
 TODO : Resume when screen change orientation
 
 Ideas :
+    - Remember the last folder used for create a server
     - Queues of file to download even if the connection fail
     - Wifi download/upload only
     - Notification view of transfer
@@ -99,7 +100,7 @@ public class MainActivity extends AppCompatActivity
 //        if (!mFormAnimationManager.isFormOpen())
 //            getMenuInflater().inflate(R.menu.main, menu);
 //        else
-        getMenuInflater().inflate(R.menu.activity_main_form, menu);
+        getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
@@ -113,7 +114,9 @@ public class MainActivity extends AppCompatActivity
 
         Log.i(TAG, "id : " + id);
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_remove) {
+
+
             return true;
         }
 

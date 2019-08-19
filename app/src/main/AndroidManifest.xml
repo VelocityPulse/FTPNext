@@ -25,7 +25,8 @@
         </activity>
         <activity
             android:name=".ConfigureFTPServerActivity"
-            android:label="@string/configure_ftp_server" />
+            android:label="@string/configure_ftp_server"
+            android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 
 </manifest>
