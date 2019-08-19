@@ -106,7 +106,8 @@ public class FTPServerDAO extends ADataAccessObject<FTPServer> implements IFTPSe
         mContentValues.put(COLUMN_PASS, iObject.getPass());
         mContentValues.put(COLUMN_SERVER, iObject.getServer());
         mContentValues.put(COLUMN_PORT, iObject.getPort());
-        mContentValues.put(COLUMN_LOCAL_FOLDER, iObject.getLocalFolder());
+        mContentValues.put(COLUMN_FOLDER_NAME, iObject.getFolderName());
+        mContentValues.put(COLUMN_ABSOLUTE_PATH, iObject.getAbsolutePath());
         mContentValues.put(COLUMN_CHARACTER_ENCODING, iObject.getFTPCharacterEncoding().getValue());
         mContentValues.put(COLUMN_TYPE, iObject.getFTPType().getValue());
     }
@@ -131,8 +132,10 @@ public class FTPServerDAO extends ADataAccessObject<FTPServer> implements IFTPSe
             oObject.setServer(iCursor.getString(iCursor.getColumnIndexOrThrow(COLUMN_SERVER)));
         if (iCursor.getColumnIndex(COLUMN_PORT) != -1)
             oObject.setPort(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_PORT)));
-        if (iCursor.getColumnIndex(COLUMN_LOCAL_FOLDER) != -1)
-            oObject.setLocalFolder(iCursor.getString(iCursor.getColumnIndexOrThrow(COLUMN_LOCAL_FOLDER)));
+        if (iCursor.getColumnIndex(COLUMN_FOLDER_NAME) != 1)
+            oObject.setFolderName(iCursor.getString(iCursor.getColumnIndexOrThrow(COLUMN_FOLDER_NAME)));
+        if (iCursor.getColumnIndex(COLUMN_ABSOLUTE_PATH) != -1)
+            oObject.setAbsolutePath(iCursor.getString(iCursor.getColumnIndexOrThrow(COLUMN_ABSOLUTE_PATH)));
         if (iCursor.getColumnIndex(COLUMN_CHARACTER_ENCODING) != -1)
             oObject.setFTPCharacterEncoding(FTPCharacterEncoding.getValue(
                     iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_CHARACTER_ENCODING))));

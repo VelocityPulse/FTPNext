@@ -11,7 +11,8 @@ public interface IFTPServerSchema {
     String COLUMN_PASS = "column_pass";
     String COLUMN_SERVER = "column_server";
     String COLUMN_PORT = "column_port";
-    String COLUMN_LOCAL_FOLDER = "column_folder";
+    String COLUMN_FOLDER_NAME = "column_folder_name";
+    String COLUMN_ABSOLUTE_PATH = "column_absolute_path";
     String COLUMN_CHARACTER_ENCODING = "column_encoding";
     String COLUMN_TYPE = "column_type";
 
@@ -23,7 +24,8 @@ public interface IFTPServerSchema {
             COLUMN_PASS,
             COLUMN_SERVER,
             COLUMN_PORT,
-            COLUMN_LOCAL_FOLDER,
+            COLUMN_FOLDER_NAME,
+            COLUMN_ABSOLUTE_PATH,
             COLUMN_CHARACTER_ENCODING,
             COLUMN_TYPE
     };
@@ -36,7 +38,8 @@ public interface IFTPServerSchema {
             + COLUMN_USER + " TEXT, "
             + COLUMN_PASS + " TEXT, "
             + COLUMN_PORT + " INTEGER, "
-            + COLUMN_LOCAL_FOLDER + " TEXT, "
+            + COLUMN_FOLDER_NAME + " TEXT, "
+            + COLUMN_ABSOLUTE_PATH + " TEXT, "
             + COLUMN_CHARACTER_ENCODING + " TEXT, "
             + COLUMN_TYPE + " INTEGER"
             + ")";

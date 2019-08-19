@@ -20,12 +20,11 @@ import java.util.List;
 public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerViewAdapter.CustomItemViewAdapter> {
 
     private static final String TAG = "MAIN RECYCLER VIEW ADAPTER";
-
     private List<FTPServer> mItemList;
+    private OnLongClickListener mLongClickListener;
     private RecyclerView mRecyclerView;
     private Context mContext;
     private int lastPosition = -1;
-
     public MainRecyclerViewAdapter(List<FTPServer> iItemList, RecyclerView iRecyclerView, Context iContext) {
         mItemList = iItemList;
         mRecyclerView = iRecyclerView;
@@ -51,15 +50,22 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iPosition) {
-        FTPServer lServer = mItemList.get(iPosition);
+    public void onBindViewHolder(@NonNull final CustomItemViewAdapter iCustomItemViewAdapter, int iPosition) {
+        final FTPServer lServer = mItemList.get(iPosition);
 
         iCustomItemViewAdapter.mMainText.setText(lServer.getName());
         iCustomItemViewAdapter.mSecondaryText.setText(lServer.getUser());
+        iCustomItemViewAdapter.mMainLayout.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (mLongClickListener != null)
+                    mLongClickListener.onClick(lServer.getDataBaseId());
+                return true;
+            }
+        });
 
         Animation animation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.item_animation_fall_down);
         iCustomItemViewAdapter.itemView.startAnimation(animation);
-
     }
 
     @Override
@@ -85,6 +91,16 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         notifyItemRangeInserted(iPosition, 1);
     }
 
+    public void updateItem(FTPServer iNewItem) {
+        for (FTPServer lItem : mItemList) {
+            if (lItem.getDataBaseId() == iNewItem.getDataBaseId()) {
+                lItem.updateContent(iNewItem);
+                notifyDataSetChanged();
+                return;
+            }
+        }
+    }
+
     public void setData(List<FTPServer> iData) {
         if (mItemList == null) {
             LogManager.error(TAG, "Cannot set the data if the given parameter is null.");
@@ -94,15 +110,24 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         notifyDataSetChanged();
     }
 
+    public void setOnLongClickListener(OnLongClickListener iListener) {
+        mLongClickListener = iListener;
+    }
+
+    public interface OnLongClickListener {
+        void onClick(int iServerID);
+    }
+
     static class CustomItemViewAdapter extends RecyclerView.ViewHolder {
+        View mMainLayout;
         TextView mMainText;
         TextView mSecondaryText;
 
-        public CustomItemViewAdapter(@NonNull View iItemView, TextView iMainText, TextView iSecondaryText) {
-            super(iItemView);
+        public CustomItemViewAdapter(@NonNull View iMainView, TextView iMainText, TextView iSecondaryText) {
+            super(iMainView);
+            mMainLayout = iMainView;
             mMainText = iMainText;
             mSecondaryText = iSecondaryText;
         }
     }
-
 }

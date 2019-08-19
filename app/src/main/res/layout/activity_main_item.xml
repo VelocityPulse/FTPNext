@@ -23,7 +23,7 @@
         <TextView
             android:id="@+id/main_recycler_item_main_text"
             android:layout_width="match_parent"
-            android:layout_height="27dp"
+            android:layout_height="28dp"
             android:layout_marginLeft="15dp"
             android:gravity="center_vertical"
             android:text="Main text"

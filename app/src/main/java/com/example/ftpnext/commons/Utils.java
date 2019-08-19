@@ -1,8 +1,20 @@
 package com.example.ftpnext.commons;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Context;
+import android.net.Uri;
+import android.os.Build;
+import android.os.storage.StorageManager;
+import android.provider.DocumentsContract;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+
+import java.io.File;
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 
 public class Utils {
 

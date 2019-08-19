@@ -8,6 +8,7 @@ public class DataBaseTests {
 
     private static final String TAG = "DATABASE : Run tests";
 
+    // Note : RunTests will automatically increment the database ID
     public static <T extends ABaseTable, V extends ADataAccessObject> void runTests(T iObjectInstance, V iDao) {
 
         int lId1 = iDao.add(iObjectInstance);

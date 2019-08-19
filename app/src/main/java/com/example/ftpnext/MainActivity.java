@@ -32,12 +32,13 @@ import java.util.List;
 TODO : Resume when screen change orientation
 
 Ideas :
-    Queues of file to download even if the connection fail
-    Wifi download/upload only
-    Notification view of transfer
-    Check if the download can continue after a stop
-    Connection with ssh
-    Multiple theme
+    - Queues of file to download even if the connection fail
+    - Wifi download/upload only
+    - Notification view of transfer
+    - Check if the download can continue after a stop
+    - Connection with ssh
+    - Multiple theme
+    - Add a shortcut of a server on the desktop
  */
 
 public class MainActivity extends AppCompatActivity
@@ -157,7 +158,7 @@ public class MainActivity extends AppCompatActivity
 //                Snackbar.make(view, "You have to be connected.", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
 
-                startConfigureFTPServerActivity();
+                startConfigureFTPServerActivity(ConfigureFTPServerActivity.NO_DATABASE_ID);
             }
         });
 
@@ -173,6 +174,13 @@ public class MainActivity extends AppCompatActivity
         lRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new MainRecyclerViewAdapter(lRecyclerView, this);
         lRecyclerView.setAdapter(mAdapter);
+
+        mAdapter.setOnLongClickListener(new MainRecyclerViewAdapter.OnLongClickListener() {
+            @Override
+            public void onClick(int iServerID) {
+                startConfigureFTPServerActivity(iServerID);
+            }
+        });
 
         mRootView = findViewById(R.id.main_root_linear_layout);
     }
@@ -191,25 +199,33 @@ public class MainActivity extends AppCompatActivity
 
     public void onActivityResult(int iRequestCode, int iResultCode, Intent iResultData) {
         if (iRequestCode == ConfigureFTPServerActivity.ACTIVITY_REQUEST_CODE) {
-            if (iResultCode == ConfigureFTPServerActivity.ACTIVITY_RESULT_ADD_SUCCESS) {
-                int lId;
-                if ((lId = iResultData.getIntExtra(ConfigureFTPServerActivity.KEY_DATABASE_ID, -1)) != -1) {
-                    mAdapter.insertItem(mFTPServerDAO.fetchById(lId));
+            if (iResultData != null) {
+                int lId = iResultData.getIntExtra(ConfigureFTPServerActivity.KEY_DATABASE_ID, -1);
+
+                if (lId != -1) {
+                    if (iResultCode == ConfigureFTPServerActivity.ACTIVITY_RESULT_ADD_SUCCESS)
+                        mAdapter.insertItem(mFTPServerDAO.fetchById(lId));
+                    else if (iResultCode == ConfigureFTPServerActivity.ACTIVITY_RESULT_UPDATE_SUCCESS)
+                        LogManager.error("update success");
+                        mAdapter.updateItem(mFTPServerDAO.fetchById(lId));
                 }
             }
         }
     }
 
-    private void startConfigureFTPServerActivity() {
+    private void startConfigureFTPServerActivity(int iFTPServerId) {
         Intent lIntent = new Intent(MainActivity.this, ConfigureFTPServerActivity.class);
+
+        lIntent.putExtra(ConfigureFTPServerActivity.KEY_DATABASE_ID, iFTPServerId);
         startActivityForResult(lIntent,
                 ConfigureFTPServerActivity.ACTIVITY_REQUEST_CODE,
                 ActivityOptions.makeSceneTransitionAnimation(MainActivity.this).toBundle());
     }
 
     private void runTests() {
+        // Note : RunTests will automatically increment the database ID
         DataBaseTests.runTests(new TableTest1(), DataBase.getTableTest1DAO());
-        DataBaseTests.runTests(new FTPServer(), DataBase.getFTPServerDAO());
+//        DataBaseTests.runTests(new FTPServer(), DataBase.getFTPServerDAO());
 
 //        for (int i = 0; i < 20; i++) {
 //            mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + i);

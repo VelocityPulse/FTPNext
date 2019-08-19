@@ -13,12 +13,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.transition.Slide;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.RadioGroup;
 
+import com.example.ftpnext.commons.FileUtils;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppInfo;
 import com.example.ftpnext.core.FTPType;
@@ -27,18 +27,20 @@ import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 
+import java.io.File;
+
 // TODO : remember the last local folder used
 
 public class ConfigureFTPServerActivity extends AppCompatActivity {
 
     public static final int ACTIVITY_REQUEST_CODE = 1;
-
     public static final int ACTIVITY_RESULT_ADD_SUCCESS = 0;
     public static final int ACTIVITY_RESULT_ADD_FAIL = 1;
     public static final int ACTIVITY_RESULT_ABORT = 2;
-
+    public static final int ACTIVITY_RESULT_UPDATE_SUCCESS = 3;
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
-
+    public static final int NO_DATABASE_ID = -1;
+    private static String TAG = "CONFIGURE FTP SERVER ACTIVITY";
     private View mRootView;
 
     private TextInputEditText mNameEditText;
@@ -46,13 +48,15 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
     private TextInputEditText mUserNameEditText;
     private TextInputEditText mPasswordEditText;
     private TextInputEditText mPortEditText;
-    private TextInputEditText mLocalFolderEditText;
+    private TextInputEditText mFolderNameEditText;
     private RadioGroup mTypeRadioGroup;
 
-    private String mFullLocalFolder;
+    private String mFolderName;
+    private String mAbsolutePath;
     private boolean mForceBackReturn;
 
     private FTPServerDAO mFTPServerDAO;
+    private FTPServer mEditedFTPServer;
 
     @Override
     public void onCreate(Bundle iSavedInstanceState) {
@@ -63,7 +67,14 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
         initializeGUI();
         initializeListeners();
         mFTPServerDAO = DataBase.getFTPServerDAO();
-        mFullLocalFolder = null;
+        mAbsolutePath = null;
+
+        Bundle lBundle = this.getIntent().getExtras();
+        int lServerId = lBundle.getInt(KEY_DATABASE_ID);
+        if (lServerId != NO_DATABASE_ID) {
+            mEditedFTPServer = mFTPServerDAO.fetchById(lServerId);
+            configureEntriesForEdition(mEditedFTPServer);
+        }
     }
 
     // TODO on resume
@@ -80,28 +91,9 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (!mForceBackReturn &&
-                (!Utils.isNullOrEmpty(mNameEditText.getText().toString().trim()) ||
-                        !Utils.isNullOrEmpty(mServerEditText.getText().toString().trim()) ||
-                        !Utils.isNullOrEmpty(mUserNameEditText.getText().toString().trim()) ||
-                        !Utils.isNullOrEmpty(mPasswordEditText.getText().toString()) ||
-                        !Utils.isNullOrEmpty(mPortEditText.getText().toString()))) {
-
-            LogManager.info("message a");
-
-            new AlertDialog.Builder(this)
-                    .setTitle("Wait !")
-                    .setMessage("Are you sure to cancel this entry?")
-                    .setPositiveButton("yes", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            mForceBackReturn = true;
-                            onBackPressed();
-                        }
-                    })
-                    .setNegativeButton("no", null)
-                    .show();
+        if (!mForceBackReturn) {
+            handleAlertLosingEdition();
         } else {
-            LogManager.info("message b");
             setResult(ACTIVITY_RESULT_ABORT);
             super.onBackPressed();
         }
@@ -125,11 +117,11 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
         mPortEditText = findViewById(R.id.port_edit_text);
         mPortEditText.setTag(findViewById(R.id.port_edit_text_layout));
 
-        mLocalFolderEditText = findViewById(R.id.local_folder_edit_text);
-        mLocalFolderEditText.setTag(findViewById(R.id.local_folder_edit_text_layout));
-        mLocalFolderEditText.setShowSoftInputOnFocus(false);
-        mLocalFolderEditText.setTextIsSelectable(true);
-        mLocalFolderEditText.setTextIsSelectable(false);
+        mFolderNameEditText = findViewById(R.id.local_folder_edit_text);
+        mFolderNameEditText.setTag(findViewById(R.id.local_folder_edit_text_layout));
+        mFolderNameEditText.setShowSoftInputOnFocus(false);
+        mFolderNameEditText.setTextIsSelectable(true);
+        mFolderNameEditText.setTextIsSelectable(false);
 
         mTypeRadioGroup = findViewById(R.id.type_radio_group);
         mRootView.requestFocus();
@@ -152,8 +144,10 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
                 if (iEditable != null) {
                     String lString = iEditable.toString();
 
-                    if (mFTPServerDAO.fetchByName(lString) != null) {// TODO use resources
-                        ((TextInputLayout) mNameEditText.getTag()).setError("Name already used");
+                    if (mFTPServerDAO.fetchByName(lString) != null &&
+                            (mEditedFTPServer != null && !lString.equals(mEditedFTPServer.getName()))) {// TODO use resources
+                        if (!lString.equals(mEditedFTPServer.getName()))
+                            ((TextInputLayout) mNameEditText.getTag()).setError("Name already used");
                         return;
                     }
                     if (iEditable != null && !Utils.isNullOrEmpty(lString))
@@ -190,6 +184,74 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
         });
     }
 
+    private void configureEntriesForEdition(FTPServer iEditedFTPServer) {
+        mNameEditText.setText(iEditedFTPServer.getName());
+        mServerEditText.setText(iEditedFTPServer.getServer());
+        mUserNameEditText.setText(iEditedFTPServer.getUser());
+        mPasswordEditText.setText(iEditedFTPServer.getPass());
+        mPortEditText.setText(String.valueOf(iEditedFTPServer.getPort()));
+        mAbsolutePath = iEditedFTPServer.getAbsolutePath();
+        mFolderName = iEditedFTPServer.getFolderName();
+
+//        LogManager.error(getExternalStorageDirectory().getAbsolutePath());
+        LogManager.error(iEditedFTPServer.getAbsolutePath());
+        File f = new File(iEditedFTPServer.getAbsolutePath());
+        mFolderNameEditText.setText(iEditedFTPServer.getFolderName());
+
+        switch (iEditedFTPServer.getFTPType()) {
+            case FTP:
+                mTypeRadioGroup.check(R.id.radio_button_ftp);
+                break;
+            case SFTP:
+                mTypeRadioGroup.check(R.id.radio_button_sftp);
+                break;
+            default:
+                mTypeRadioGroup.check(R.id.radio_button_ftp);
+        }
+    }
+
+    private void handleAlertLosingEdition() {
+        FTPServer lFTPServer = new FTPServer();
+        lFTPServer.setName(mNameEditText.getText().toString().trim());
+        lFTPServer.setServer(mServerEditText.getText().toString().trim());
+        lFTPServer.setUser(mUserNameEditText.getText().toString().trim());
+        lFTPServer.setPass(mPasswordEditText.getText().toString());
+        String lPort = mPortEditText.getText().toString();
+        lFTPServer.setPort(lPort.equals("") ? 0 : Integer.valueOf(lPort));
+        lFTPServer.setFolderName(mFolderName);
+        lFTPServer.setAbsolutePath(mAbsolutePath);
+        lFTPServer.setFTPType(getRadioGroupType());
+
+        // If form isn't empty && (edited != null && form hasn't been edited)
+        if (!lFTPServer.isEmpty() && (lFTPServer != null && !lFTPServer.equals(mEditedFTPServer))) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Wait !")
+                    .setMessage("Are you sure to cancel this entry?")
+                    .setPositiveButton("yes", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            mForceBackReturn = true;
+                            onBackPressed();
+                        }
+                    })
+                    .setNegativeButton("no", null)
+                    .show();
+        } else {
+            mForceBackReturn = true;
+            onBackPressed();
+        }
+    }
+
+    private FTPType getRadioGroupType() {
+        switch (mTypeRadioGroup.getCheckedRadioButtonId()) {
+            case R.id.radio_button_ftp:
+                return FTPType.FTP;
+            case R.id.radio_button_sftp:
+                return FTPType.SFTP;
+            default:
+                return FTPType.DEFAULT;
+        }
+    }
+
     public void OnClickSaveButton(View view) {
         boolean lCanSave = true;
         String lName = mNameEditText.getText().toString().trim();
@@ -197,23 +259,13 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
         String lUserName = mUserNameEditText.getText().toString().trim();
         String lPassword = mPasswordEditText.getText().toString();
         String lPort = mPortEditText.getText().toString();
-
-        FTPType lFTPType;
-        switch (mTypeRadioGroup.getCheckedRadioButtonId()) {
-            case R.id.radio_button_ftp:
-                lFTPType = FTPType.FTP;
-                break;
-            case R.id.radio_button_sftp:
-                lFTPType = FTPType.SFTP;
-                break;
-            default:
-                lFTPType = FTPType.DEFAULT;
-        }
+        FTPType lFTPType = getRadioGroupType();
 
         if (Utils.isNullOrEmpty(lName)) {
             ((TextInputLayout) mNameEditText.getTag()).setError("Obligatory");
             lCanSave = false;
-        } else if (mFTPServerDAO.fetchByName(lName) != null) {
+        } else if (mFTPServerDAO.fetchByName(lName) != null &&
+                (mEditedFTPServer != null && !lName.equals(mEditedFTPServer.getName()))) {
             ((TextInputLayout) mNameEditText.getTag()).setError("Name already used");
             lCanSave = false;
         }
@@ -223,8 +275,8 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
             lCanSave = false;
         }
 
-        if (Utils.isNullOrEmpty(mFullLocalFolder)) {
-            ((TextInputLayout) mLocalFolderEditText.getTag()).setError("Obligatory");
+        if (Utils.isNullOrEmpty(mAbsolutePath)) {
+            ((TextInputLayout) mFolderNameEditText.getTag()).setError("Obligatory");
             lCanSave = false;
         }
 
@@ -235,7 +287,8 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
             lNewFTPServer.setUser(lUserName);
             lNewFTPServer.setPass(lPassword);
             lNewFTPServer.setFTPType(lFTPType);
-            lNewFTPServer.setLocalFolder(mFullLocalFolder);
+            lNewFTPServer.setFolderName(mFolderName);
+            lNewFTPServer.setAbsolutePath(mAbsolutePath);
 
             if (Utils.isNullOrEmpty(lPort)) {
                 switch (lFTPType) {
@@ -251,9 +304,15 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
             } else
                 lNewFTPServer.setPort(Integer.parseInt(lPort));
 
+            Intent lIntent = new Intent();
             int lId;
-            if ((lId = mFTPServerDAO.add(lNewFTPServer)) != -1) {
-                Intent lIntent = new Intent();
+            if (mEditedFTPServer != null) {
+                mEditedFTPServer.updateContent(lNewFTPServer);
+                mFTPServerDAO.update(mEditedFTPServer);
+                LogManager.error("updated id " + mEditedFTPServer.getDataBaseId());
+                lIntent.putExtra(KEY_DATABASE_ID, mEditedFTPServer.getDataBaseId());
+                setResult(ACTIVITY_RESULT_UPDATE_SUCCESS, lIntent);
+            } else if ((lId = mFTPServerDAO.add(lNewFTPServer)) != -1) {
                 lIntent.putExtra(KEY_DATABASE_ID, lId);
                 setResult(ACTIVITY_RESULT_ADD_SUCCESS, lIntent);
             } else
@@ -267,8 +326,11 @@ public class ConfigureFTPServerActivity extends AppCompatActivity {
             Uri lTreeUri = iResultData.getData();
             DocumentFile lPickedDir = DocumentFile.fromTreeUri(this, lTreeUri);
 
-            mLocalFolderEditText.setText(lPickedDir.getName());
-            mFullLocalFolder = lPickedDir.getUri().getPath();
+            LogManager.error(TAG, lPickedDir.getName());
+            LogManager.error(TAG, FileUtils.getFullPathFromTreeUri(lTreeUri, this));
+            mFolderName = lPickedDir.getName();
+            mFolderNameEditText.setText(mFolderName);
+            mAbsolutePath = FileUtils.getFullPathFromTreeUri(lTreeUri, this);
         }
     }
 

@@ -41,7 +41,7 @@ public abstract class ADataAccessObject<T extends ABaseTable> extends ADataBaseS
     protected abstract T cursorToEntity(Cursor iCursor);
 
     protected T fetchById(String iTable, int iId, String iColumnId, String[] iColumns) {
-        final String lSelectionArgs[] = {String.valueOf(iId)};
+        final String[] lSelectionArgs = {String.valueOf(iId)};
         final String lSelection = iColumnId + " = ?";
         T lObject = null;
 
