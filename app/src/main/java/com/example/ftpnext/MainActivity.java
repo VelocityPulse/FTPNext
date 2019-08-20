@@ -41,6 +41,7 @@ Ideas :
     - Connection with ssh
     - Multiple theme
     - Add a shortcut of a server on the desktop
+    - A FTPTransferActivity for show / manage all the transfers
  */
 
 public class MainActivity extends AppCompatActivity {
@@ -69,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initializeGUI();
+        initializeAdapter();
         initialize();
 
         runTests();
@@ -138,6 +140,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
+        mRootView = findViewById(R.id.main_root_linear_layout);
+    }
+
+    private void initializeAdapter() {
         RecyclerView lRecyclerView = findViewById(R.id.main_recycler_view);
         lRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new MainRecyclerViewAdapter(lRecyclerView, this);
@@ -148,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
         mAdapter.setOnLongClickListener(new MainRecyclerViewAdapter.OnLongClickListener() {
             @Override
-            public void onClick(final int iServerID) {
+            public void onLongClick(final int iServerID) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 // TODO add string xml
                 builder.setTitle("title")
@@ -175,11 +182,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mRootView = findViewById(R.id.main_root_linear_layout);
+        mAdapter.setOnClickListener(new MainRecyclerViewAdapter.OnClickListener() {
+            @Override
+            public void onClick(int iServerID) {
+
+            }
+        });
     }
 
-    public void initialize() {
-        LogManager.info(TAG, "Initialize");
+    private void initialize() {
         mAppCore = new AppCore(this);
         mAppCore.startApplication();
         mFTPServerDAO = DataBase.getFTPServerDAO();
@@ -204,6 +215,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    private void startFTPNavigationActivity(int iFTPServerId) {
+
     }
 
     private void startConfigureFTPServerActivity(int iFTPServerId) {

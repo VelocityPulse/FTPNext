@@ -23,6 +23,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     private static final String TAG = "MAIN RECYCLER VIEW ADAPTER";
     private List<FTPServer> mItemList;
     private OnLongClickListener mLongClickListener;
+    private OnClickListener mClickListener;
     private RecyclerView mRecyclerView;
     private Context mContext;
     private int lastPosition = -1;
@@ -62,7 +63,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
             @Override
             public boolean onLongClick(View v) {
                 if (mLongClickListener != null)
-                    mLongClickListener.onClick(lServer.getDataBaseId());
+                    mLongClickListener.onLongClick(lServer.getDataBaseId());
                 return true;
             }
         });
@@ -137,7 +138,15 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         mLongClickListener = iListener;
     }
 
+    public void setOnClickListener(OnClickListener iListener) {
+        mClickListener = iListener;
+    }
+
     public interface OnLongClickListener {
+        void onLongClick(int iServerID);
+    }
+
+    public interface OnClickListener {
         void onClick(int iServerID);
     }
 
