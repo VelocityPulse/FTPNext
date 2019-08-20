@@ -168,8 +168,8 @@ public class MainActivity extends AppCompatActivity
 
         DrawerLayout lDrawer = findViewById(R.id.drawer_layout);
 
-//        ActionBarDrawerToggle lToggle = new ActionBarDrawerToggle(
-//                this, lDrawer, lToolBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        ActionBarDrawerToggle lToggle = new ActionBarDrawerToggle(
+                this, lDrawer, lToolBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
         lDrawer.addDrawerListener(lToggle);
         lToggle.syncState();
