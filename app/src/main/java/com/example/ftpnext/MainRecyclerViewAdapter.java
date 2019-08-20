@@ -67,6 +67,13 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
                 return true;
             }
         });
+        iCustomItemViewAdapter.mMainLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mClickListener != null)
+                    mClickListener.onClick(lServer.getDataBaseId());
+            }
+        });
 
         Animation animation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.item_animation_fall_down);
         iCustomItemViewAdapter.itemView.startAnimation(animation);

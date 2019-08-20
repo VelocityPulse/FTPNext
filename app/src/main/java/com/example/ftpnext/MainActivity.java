@@ -7,13 +7,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,6 +25,9 @@ import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.example.ftpnext.database.TableTest1.TableTest1;
 
+import org.apache.commons.net.ftp.FTPClient;
+
+import java.net.InetAddress;
 import java.util.List;
 
 /*
@@ -105,16 +106,9 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    // ID OF MENU BUTTONS
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        Log.i(TAG, "id : " + id);
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_parameters) {
 
             return true;
@@ -185,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
         mAdapter.setOnClickListener(new MainRecyclerViewAdapter.OnClickListener() {
             @Override
             public void onClick(int iServerID) {
-
+                startFTPNavigationActivity(iServerID);
             }
         });
     }
@@ -217,8 +211,51 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void startFTPNavigationActivity(int iFTPServerId) {
+    private void startFTPNavigationActivity(final int iServerID) {
+        final FTPServer lFTPServer = mFTPServerDAO.fetchById(iServerID);
 
+        if (lFTPServer == null) {
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Error")
+                    .setMessage("FTP Server cannot be found")
+                    .setPositiveButton("Ok", null)
+                    .show();
+            return;
+        }
+
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("Connection...")
+                .setView(R.layout.loading_icon)
+                .setNegativeButton("Cancel", null)
+                .show();
+
+        Thread thread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    try {
+                        LogManager.error(TAG, lFTPServer.toString());
+
+                        FTPClient ftpClient = new FTPClient();
+                        ftpClient.connect(InetAddress.getByName(lFTPServer.getServer()));
+                        ftpClient.login(lFTPServer.getUser(), lFTPServer.getPass());
+                        System.out.println("status :: " + ftpClient.getStatus());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        thread.start();
+
+
+//        Intent lIntent = new Intent(MainActivity.this, FTPNavigationActivity.class);
+//
+//        startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
     }
 
     private void startConfigureFTPServerActivity(int iFTPServerId) {
