@@ -43,7 +43,7 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/baseline_storage_black_48" />
+        android:src="@drawable/baseline_storage_gray" />
 
     <!--</LinearLayout>-->
 
