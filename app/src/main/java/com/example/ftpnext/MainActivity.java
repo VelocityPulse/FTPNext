@@ -1,6 +1,8 @@
 package com.example.ftpnext;
 
 import android.app.ActivityOptions;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -94,7 +96,6 @@ public class MainActivity extends AppCompatActivity
         super.onBackPressed();
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -115,8 +116,7 @@ public class MainActivity extends AppCompatActivity
 
         Log.i(TAG, "id : " + id);
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_remove) {
-
+        if (id == R.id.action_parameters) {
 
             return true;
         }
@@ -168,8 +168,8 @@ public class MainActivity extends AppCompatActivity
 
         DrawerLayout lDrawer = findViewById(R.id.drawer_layout);
 
-        ActionBarDrawerToggle lToggle = new ActionBarDrawerToggle(
-                this, lDrawer, lToolBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+//        ActionBarDrawerToggle lToggle = new ActionBarDrawerToggle(
+//                this, lDrawer, lToolBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
         lDrawer.addDrawerListener(lToggle);
         lToggle.syncState();
@@ -184,8 +184,30 @@ public class MainActivity extends AppCompatActivity
 
         mAdapter.setOnLongClickListener(new MainRecyclerViewAdapter.OnLongClickListener() {
             @Override
-            public void onClick(int iServerID) {
-                startConfigureFTPServerActivity(iServerID);
+            public void onClick(final int iServerID) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                // TODO add string xml
+                builder.setTitle("title")
+                        .setItems(R.array.string_array_name, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface iDialog, int iWhich) {
+                                if (iWhich == 0) {
+                                    new AlertDialog.Builder(MainActivity.this)
+                                            .setTitle("Deleting :")
+                                            .setMessage("Are you sure to delete this server ?")
+                                            .setPositiveButton("yes", new DialogInterface.OnClickListener() {
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    mFTPServerDAO.delete(iServerID);
+                                                    mAdapter.removeItem(iServerID);
+                                                }
+                                            })
+                                            .setNegativeButton("no", null)
+                                            .show();
+                                } else if (iWhich == 1)
+                                    startConfigureFTPServerActivity(iServerID);
+                            }
+                        });
+                builder.create();
+                builder.show();
             }
         });
 

@@ -94,11 +94,31 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         notifyItemRangeInserted(iPosition, 1);
     }
 
-    public void updateItem(FTPServer iNewItem) {
+    public void updateItem(FTPServer iItem) {
         for (FTPServer lItem : mItemList) {
-            if (lItem.getDataBaseId() == iNewItem.getDataBaseId()) {
-                lItem.updateContent(iNewItem);
-                notifyDataSetChanged();
+            if (lItem.getDataBaseId() == iItem.getDataBaseId()) {
+                notifyItemChanged(mItemList.indexOf(lItem));
+                lItem.updateContent(iItem);
+                return;
+            }
+        }
+    }
+
+    public void removeItem(FTPServer iItem) {
+        for (FTPServer lItem : mItemList) {
+            if (lItem.getDataBaseId() == iItem.getDataBaseId()) {
+                notifyItemRemoved(mItemList.indexOf(lItem));
+                mItemList.remove(lItem);
+                return;
+            }
+        }
+    }
+
+    public void removeItem(int iId) {
+        for (FTPServer lItem : mItemList) {
+            if (lItem.getDataBaseId() == iId) {
+                notifyItemRemoved(mItemList.indexOf(lItem));
+                mItemList.remove(lItem);
                 return;
             }
         }
