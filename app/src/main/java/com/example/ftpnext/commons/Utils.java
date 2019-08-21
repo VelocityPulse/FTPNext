@@ -3,6 +3,7 @@ package com.example.ftpnext.commons;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
@@ -11,6 +12,8 @@ import android.provider.DocumentsContract;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+
+import com.example.ftpnext.MainActivity;
 
 import java.io.File;
 import java.lang.reflect.Array;
@@ -38,5 +41,13 @@ public class Utils {
 
     public static boolean isNullOrEmpty(String iStr) {
         return iStr == null || iStr.trim().isEmpty();
+    }
+
+    public static AlertDialog createErrorAlertDialog(Context iContext, String iMessage) {
+        return new AlertDialog.Builder(iContext)
+                .setTitle("Error") // TODO string
+                .setMessage(iMessage)
+                .setPositiveButton("Ok", null)
+                .create();
     }
 }

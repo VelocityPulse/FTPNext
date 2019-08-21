@@ -1,14 +1,21 @@
 package com.example.ftpnext;
 
+import android.provider.ContactsContract;
+
 import com.example.ftpnext.core.LogManager;
+import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPListParseEngine;
 import org.apache.commons.net.ftp.FTPReply;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 // TODO : Download save when app is killed
@@ -23,11 +30,13 @@ public class FTPConnection {
     private FTPServerDAO mFTPServerDAO;
     private FTPServer mFTPServer;
     private FTPClient mFTPClient;
+    private Thread mThread;
 
     public FTPConnection(FTPServer iFTPServer) {
         if (sFTPConnectionInstances == null)
             sFTPConnectionInstances = new ArrayList<>();
 
+        mFTPServerDAO = DataBase.getFTPServerDAO();
         mFTPServer = iFTPServer;
         sFTPConnectionInstances.add(this);
     }
@@ -36,13 +45,25 @@ public class FTPConnection {
         if (sFTPConnectionInstances == null)
             sFTPConnectionInstances = new ArrayList<>();
 
+        mFTPServerDAO = DataBase.getFTPServerDAO();
         mFTPServer = mFTPServerDAO.fetchById(iServerId);
         sFTPConnectionInstances.add(this);
     }
 
+    public static FTPConnection getFTPConnection(int iServerId) {
+        if (sFTPConnectionInstances == null)
+            sFTPConnectionInstances = new ArrayList<>();
+
+        for (FTPConnection lConnection : sFTPConnectionInstances) {
+            if (lConnection.getFTPServerId() == iServerId)
+                return lConnection;
+        }
+        return null;
+    }
+
     public void killConnection() {
         sFTPConnectionInstances.remove(this);
-        // TODO test to kill the connection thread here to see if it exceptions
+        // TODO test to kill the connection mThread here to see if it exceptions
     }
 
     public FTPConnection getFTPConnectionIfExisting(int iServerId) {
@@ -58,8 +79,40 @@ public class FTPConnection {
         return null;
     }
 
-    public void ConnectToServer() {
-        Thread thread = new Thread(new Runnable() {
+    public void getFolders() {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (mFTPClient.isConnected()) {
+
+                    FTPListParseEngine engine = null;
+
+                    try {
+                        engine = mFTPClient.initiateListParsing(null, "/files/");
+                    } catch (IOException iE) {
+                        iE.printStackTrace();
+                    }
+
+                    try {
+                        LogManager.info(TAG, "" + engine.getFiles().length);
+                    } catch (IOException iE) {
+                        iE.printStackTrace();
+                    }
+
+                    while (engine.hasNext()) {
+                        FTPFile[] files = engine.getNext(25);
+                        LogManager.info(TAG, "line : " + Arrays.toString(files));
+                    }
+                }
+
+            }
+        }).start();
+
+    }
+
+    public void Connect(final OnConnectResult iOnConnectResult) {
+        mThread = new Thread(new Runnable() {
 
             @Override
             public void run() {
@@ -75,24 +128,42 @@ public class FTPConnection {
                     if (!FTPReply.isPositiveCompletion(mFTPClient.getReplyCode())) {
                         mFTPClient.disconnect();
                         LogManager.error(TAG, "FTP server refused connection."); // TODO return state
+                        iOnConnectResult.onFail(mFTPClient.getReplyString());
                     }
-
                     LogManager.info(TAG, "status : " + mFTPClient.getStatus());
+                    iOnConnectResult.onSuccess();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         });
 
-        thread.start();
+        mThread.start();
     }
+
+
 
     public FTPServer getFTPServer() {
         return mFTPServer;
+    }
+
+    public int getFTPServerId() {
+        return mFTPServer.getDataBaseId();
+    }
+
+    public boolean isConnected() {
+        return mFTPClient.isConnected();
     }
 
     private void printReplyCode() {
         int lReply = mFTPClient.getReplyCode();
         LogManager.info(TAG, "REPLY CODE :" + lReply);
     }
+
+    public interface OnConnectResult {
+        void onSuccess();
+
+        void onFail(String iErrorMessage);
+    }
+
 }

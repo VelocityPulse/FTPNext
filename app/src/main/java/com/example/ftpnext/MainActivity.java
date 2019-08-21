@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 import com.example.ftpnext.adapters.MainRecyclerViewAdapter;
+import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
@@ -26,9 +27,6 @@ import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.example.ftpnext.database.TableTest1.TableTest1;
 
-import org.apache.commons.net.ftp.FTPClient;
-
-import java.net.InetAddress;
 import java.util.List;
 
 /*
@@ -45,6 +43,12 @@ Ideas :
     - Multiple theme
     - Add a shortcut of a server on the desktop
     - A FTPTransferActivity for show / manage all the transfers
+    - Ask to show adds
+ */
+
+/*
+Parameters ideas :
+    - Download without internet
  */
 
 public class MainActivity extends AppCompatActivity {
@@ -196,48 +200,43 @@ public class MainActivity extends AppCompatActivity {
 
     private void startFTPNavigationActivity(final int iServerID) {
         final FTPServer lFTPServer = mFTPServerDAO.fetchById(iServerID);
+        final AlertDialog lLoadingAlertDialog;
 
         if (lFTPServer == null) {
-            new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Error")
-                    .setMessage("FTP Server cannot be found")
-                    .setPositiveButton("Ok", null)
-                    .show();
+            Utils.createErrorAlertDialog(this, "FTP Server cannot be found").show();
             return;
         }
 
-        new AlertDialog.Builder(MainActivity.this)
+        lLoadingAlertDialog = new AlertDialog.Builder(MainActivity.this)
                 .setTitle("Connection...")
                 .setView(R.layout.loading_icon)
                 .setNegativeButton("Cancel", null)
-                .show();
+                .create();
+        lLoadingAlertDialog.show();
 
-        Thread thread = new Thread(new Runnable() {
+        FTPConnection lNewFTPConnection = new FTPConnection(lFTPServer);
+        lNewFTPConnection.Connect(new FTPConnection.OnConnectResult() {
+            @Override
+            public void onSuccess() {
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        lLoadingAlertDialog.hide();
+                    }
+                });
+                Intent lIntent = new Intent(MainActivity.this, FTPNavigationActivity.class);
+                lIntent.putExtra(FTPNavigationActivity.KEY_DATABASE_ID, iServerID);
+                startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
+
+            }
 
             @Override
-            public void run() {
-                try {
-                    try {
-                        LogManager.error(TAG, lFTPServer.toString());
-
-                        FTPClient ftpClient = new FTPClient();
-                        ftpClient.connect(InetAddress.getByName(lFTPServer.getServer()));
-                        ftpClient.login(lFTPServer.getUser(), lFTPServer.getPass());
-                        System.out.println("status :: " + ftpClient.getStatus());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            public void onFail(String iErrorMessage) {
+                Utils.createErrorAlertDialog(MainActivity.this,
+                        "Connection has failed...\nCode : " + iErrorMessage).show();
             }
         });
-
-        thread.start();
-
-        Intent lIntent = new Intent(MainActivity.this, FTPNavigationActivity.class);
-
-        startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
     }
 
     private void startConfigureFTPServerActivity(int iFTPServerId) {
