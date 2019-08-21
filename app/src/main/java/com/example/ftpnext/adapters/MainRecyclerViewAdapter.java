@@ -26,7 +26,6 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     private OnClickListener mClickListener;
     private RecyclerView mRecyclerView;
     private Context mContext;
-    private int lastPosition = -1;
 
     public MainRecyclerViewAdapter(List<FTPServer> iItemList, RecyclerView iRecyclerView, Context iContext) {
         mItemList = iItemList;
@@ -43,7 +42,6 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     @NonNull
     @Override
     public CustomItemViewAdapter onCreateViewHolder(@NonNull ViewGroup iViewGroup, int iI) {
-
         LinearLayout lLayout = (LinearLayout) LayoutInflater.
                 from(iViewGroup.getContext()).inflate(R.layout.main_list_item, iViewGroup, false);
 
@@ -57,8 +55,6 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         final FTPServer lServer = mItemList.get(iPosition);
 
         iCustomItemViewAdapter.mMainText.setText(lServer.getName());
-//        if (!Utils.isNullOrEmpty(lServer.getUser()))
-//            iCustomItemViewAdapter.mSecondaryText.setText(lServer.getUser());
         iCustomItemViewAdapter.mSecondaryText.setText(lServer.getServer());
         iCustomItemViewAdapter.mMainLayout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -99,6 +95,8 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
             LogManager.error(TAG, "Cannot insert an item if the list of items isn't initialized.");
             return;
         }
+        if (iPosition > mItemList.size())
+            iPosition = mItemList.size();
         mItemList.add(iPosition, iItem);
         notifyItemRangeInserted(iPosition, 1);
     }
@@ -106,8 +104,8 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     public void updateItem(FTPServer iItem) {
         for (FTPServer lItem : mItemList) {
             if (lItem.getDataBaseId() == iItem.getDataBaseId()) {
-                notifyItemChanged(mItemList.indexOf(lItem));
                 lItem.updateContent(iItem);
+                notifyItemChanged(mItemList.indexOf(lItem));
                 return;
             }
         }
@@ -134,7 +132,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     }
 
     public void setData(List<FTPServer> iData) {
-        if (mItemList == null) {
+        if (iData == null) {
             LogManager.error(TAG, "Cannot set the data if the given parameter is null.");
             return;
         }

@@ -62,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
     private MainRecyclerViewAdapter mAdapter;
     private FloatingActionButton mFloatingActionButton;
     private boolean mIsBlockedScrollView;
-    private View mRootView;
 
     private FTPServerDAO mFTPServerDAO;
 
@@ -119,9 +118,6 @@ public class MainActivity extends AppCompatActivity {
                 startConfigureFTPServerActivity(ConfigureFTPServerActivity.NO_DATABASE_ID);
             }
         });
-
-
-        mRootView = findViewById(R.id.main_root_linear_layout);
     }
 
     private void initializeAdapter() {
@@ -221,13 +217,12 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        lLoadingAlertDialog.hide();
+                        lLoadingAlertDialog.dismiss();
                     }
                 });
                 Intent lIntent = new Intent(MainActivity.this, FTPNavigationActivity.class);
                 lIntent.putExtra(FTPNavigationActivity.KEY_DATABASE_ID, iServerID);
                 startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
-
             }
 
             @Override

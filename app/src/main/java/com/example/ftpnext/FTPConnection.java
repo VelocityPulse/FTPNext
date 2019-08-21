@@ -78,30 +78,19 @@ public class FTPConnection {
         return null;
     }
 
-    public void getFolders() {
-
+    public void fetchDirectoryContent(final String iPath, final OnFetchDirectoryResult iOnFetchDirectoryResult) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 if (mFTPClient.isConnected()) {
-
-                    FTPListParseEngine engine = null;
-
                     try {
-                        engine = mFTPClient.initiateListParsing(null, "/files/");
+                        FTPListParseEngine lDirectory = mFTPClient.initiateListParsing(null, iPath);
+                        iOnFetchDirectoryResult.onSuccess(lDirectory.getFiles());
                     } catch (IOException iE) {
                         iE.printStackTrace();
-                    }
-
-                    while (engine.hasNext()) {
-                        FTPFile[] files = engine.getNext(ITEM_FETCHED_BY_GROUP);
-                        for (FTPFile file : files) {
-                            LogManager.info(TAG, "name : " + file.getName());
-                            LogManager.info(TAG, "size : " + file.getSize());
-                        }
+                        iOnFetchDirectoryResult.onFail("Error unknown");
                     }
                 }
-
             }
         }).start();
 
@@ -113,7 +102,6 @@ public class FTPConnection {
             @Override
             public void run() {
                 try {
-
                     LogManager.info(TAG, "Will connect with : " + mFTPServer.toString());
 
                     mFTPClient = new FTPClient();
@@ -151,6 +139,12 @@ public class FTPConnection {
     private void printReplyCode() {
         int lReply = mFTPClient.getReplyCode();
         LogManager.info(TAG, "REPLY CODE :" + lReply);
+    }
+
+    public interface OnFetchDirectoryResult {
+        void onSuccess(FTPFile[] iFTPFiles);
+
+        void onFail(String iErrorMessage);
     }
 
     public interface OnConnectResult {
