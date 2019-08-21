@@ -2,6 +2,7 @@ package com.example.ftpnext;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.database.DataBase;
@@ -9,12 +10,10 @@ import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 
 public class FTPNavigationActivity extends AppCompatActivity {
-    private static String TAG = "FTP NAVIGATION ACTIVITY";
-
     public static final int ACTIVITY_REQUEST_CODE = 1;
     public static final int NO_DATABASE_ID = -1;
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
-
+    private static String TAG = "FTP NAVIGATION ACTIVITY";
     private FTPServer mFTPServer;
     private FTPConnection mFTPConnection;
     private FTPServerDAO mFTPServerDAO;
@@ -23,6 +22,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
     protected void onCreate(Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
         setContentView(R.layout.activity_ftp_navigation);
+
+        Toolbar lToolBar = findViewById(R.id.toolbar);
+        setSupportActionBar(lToolBar);
+
 
         mFTPServerDAO = DataBase.getFTPServerDAO();
 

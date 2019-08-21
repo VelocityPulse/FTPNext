@@ -34,6 +34,7 @@ TODO : Resume when screen change orientation
 TODO : Add a security network connection / network authorisation
 
 Ideas :
+    - Display to type of file/dir rights xxx-xxx-xxx or read
     - Remember the last folder used for create a server
     - Queues of file to download even if the connection fail
     - Wifi download/upload only
@@ -87,7 +88,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         super.onBackPressed();
     }
 
@@ -109,7 +109,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeGUI() {
-
         Toolbar lToolBar = findViewById(R.id.toolbar);
         setSupportActionBar(lToolBar);
 

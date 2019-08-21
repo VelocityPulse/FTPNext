@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navigation_recycler_item"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/list_item_height"
+    android:background="@drawable/ripple_effect_primary"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:onClick="OnClickServerItem"
+    android:orientation="horizontal"
+    android:paddingLeft="15dp"
+    android:paddingRight="13dp"
+    android:showDividers="middle"
+    tools:showIn="@layout/activity_ftp_navigation">
+
+    <ImageView
+        android:id="@+id/navigation_recycler_item_left_draw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/baseline_storage_gray" />
+
+    <!--<ImageView-->
+        <!--android:id="@+id/navigation_recycler_item_left_drw"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+         <!--/>-->
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="10dp"
+        android:layout_weight="2"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/navigation_recycler_item_main_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Main text"
+            android:textSize="25sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!--date -->
+            <TextView
+                android:id="@+id/navigation_recycler_item_secondary_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="(Date)"
+                android:textSize="15sp" />
+
+            <!--rights -->
+            <TextView
+                android:id="@+id/navigation_recycler_item_third_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="(rights)"
+                android:textAlignment="textEnd"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+
+</LinearLayout>

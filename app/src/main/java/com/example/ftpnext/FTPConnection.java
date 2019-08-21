@@ -1,7 +1,5 @@
 package com.example.ftpnext;
 
-import android.provider.ContactsContract;
-
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
@@ -15,7 +13,6 @@ import org.apache.commons.net.ftp.FTPReply;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 // TODO : Download save when app is killed
@@ -26,11 +23,13 @@ public class FTPConnection {
 
     private static String TAG = "FTP CONNECTION";
 
+    private static int ITEM_FETCHED_BY_GROUP = 25;
+
     private static List<FTPConnection> sFTPConnectionInstances;
     private FTPServerDAO mFTPServerDAO;
     private FTPServer mFTPServer;
     private FTPClient mFTPClient;
-    private Thread mThread;
+    private String mLocalization;
 
     public FTPConnection(FTPServer iFTPServer) {
         if (sFTPConnectionInstances == null)
@@ -94,15 +93,12 @@ public class FTPConnection {
                         iE.printStackTrace();
                     }
 
-                    try {
-                        LogManager.info(TAG, "" + engine.getFiles().length);
-                    } catch (IOException iE) {
-                        iE.printStackTrace();
-                    }
-
                     while (engine.hasNext()) {
-                        FTPFile[] files = engine.getNext(25);
-                        LogManager.info(TAG, "line : " + Arrays.toString(files));
+                        FTPFile[] files = engine.getNext(ITEM_FETCHED_BY_GROUP);
+                        for (FTPFile file : files) {
+                            LogManager.info(TAG, "name : " + file.getName());
+                            LogManager.info(TAG, "size : " + file.getSize());
+                        }
                     }
                 }
 
@@ -112,7 +108,7 @@ public class FTPConnection {
     }
 
     public void Connect(final OnConnectResult iOnConnectResult) {
-        mThread = new Thread(new Runnable() {
+        new Thread(new Runnable() {
 
             @Override
             public void run() {
@@ -136,11 +132,8 @@ public class FTPConnection {
                     e.printStackTrace();
                 }
             }
-        });
-
-        mThread.start();
+        }).start();
     }
-
 
 
     public FTPServer getFTPServer() {
