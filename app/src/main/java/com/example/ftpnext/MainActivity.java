@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -115,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startConfigureFTPServerActivity(ConfigureFTPServerActivity.NO_DATABASE_ID);
+                startConfigureFTPServerActivity(FTPConfigureServerActivity.NO_DATABASE_ID);
             }
         });
     }
@@ -178,14 +177,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onActivityResult(int iRequestCode, int iResultCode, Intent iResultData) {
-        if (iRequestCode == ConfigureFTPServerActivity.ACTIVITY_REQUEST_CODE) {
+        if (iRequestCode == FTPConfigureServerActivity.ACTIVITY_REQUEST_CODE) {
             if (iResultData != null) {
-                int lId = iResultData.getIntExtra(ConfigureFTPServerActivity.KEY_DATABASE_ID, -1);
+                int lId = iResultData.getIntExtra(FTPConfigureServerActivity.KEY_DATABASE_ID, -1);
 
                 if (lId != -1) {
-                    if (iResultCode == ConfigureFTPServerActivity.ACTIVITY_RESULT_ADD_SUCCESS)
+                    if (iResultCode == FTPConfigureServerActivity.ACTIVITY_RESULT_ADD_SUCCESS)
                         mAdapter.insertItem(mFTPServerDAO.fetchById(lId));
-                    else if (iResultCode == ConfigureFTPServerActivity.ACTIVITY_RESULT_UPDATE_SUCCESS)
+                    else if (iResultCode == FTPConfigureServerActivity.ACTIVITY_RESULT_UPDATE_SUCCESS)
                         LogManager.error("update success");
                     mAdapter.updateItem(mFTPServerDAO.fetchById(lId));
                 }
@@ -234,11 +233,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startConfigureFTPServerActivity(int iFTPServerId) {
-        Intent lIntent = new Intent(MainActivity.this, ConfigureFTPServerActivity.class);
+        Intent lIntent = new Intent(MainActivity.this, FTPConfigureServerActivity.class);
 
-        lIntent.putExtra(ConfigureFTPServerActivity.KEY_DATABASE_ID, iFTPServerId);
+        lIntent.putExtra(FTPConfigureServerActivity.KEY_DATABASE_ID, iFTPServerId);
         startActivityForResult(lIntent,
-                ConfigureFTPServerActivity.ACTIVITY_REQUEST_CODE,
+                FTPConfigureServerActivity.ACTIVITY_REQUEST_CODE,
                 ActivityOptions.makeSceneTransitionAnimation(MainActivity.this).toBundle());
     }
 
@@ -254,9 +253,5 @@ public class MainActivity extends AppCompatActivity {
 //        TextInputLayout lTextInputLayout = (TextInputLayout) findViewById(R.id.form_server_host);
 //        lTextInputLayout.setError("error");
 //        lTextInputLayout.setErrorTextColor(ColorStateList.valueOf(0xFFDE4255));
-    }
-
-    public void OnClickServerItem(View view) {
-        LogManager.info("click");
     }
 }

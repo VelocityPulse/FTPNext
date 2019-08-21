@@ -10,7 +10,6 @@
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
-    android:onClick="OnClickServerItem"
     android:orientation="horizontal"
     android:paddingLeft="15dp"
     android:paddingRight="13dp"

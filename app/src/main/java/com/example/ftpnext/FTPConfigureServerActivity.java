@@ -34,7 +34,7 @@ import java.io.File;
 // TODO : Set last local folder used
 // TODO : Don't save the metadata if there's already a connection
 
-public class ConfigureFTPServerActivity extends AppCompatActivity {
+public class FTPConfigureServerActivity extends AppCompatActivity {
 
     public static final int ACTIVITY_REQUEST_CODE = 1;
     public static final int ACTIVITY_RESULT_ADD_SUCCESS = 0;

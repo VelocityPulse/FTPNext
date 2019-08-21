@@ -6,6 +6,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -48,6 +51,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                 from(iViewGroup.getContext()).inflate(R.layout.navigation_list_item, iViewGroup, false);
 
         return new CustomItemViewAdapter(lLayout,
+                (ImageView) lLayout.findViewById(R.id.navigation_recycler_item_left_draw),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_main_text),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_secondary_text),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_third_text));
@@ -56,6 +60,29 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     @Override
     public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iI) {
         final FTPFile lFTPItem = mItemList.get(iI);
+
+        if (mClickListener != null) {
+            iCustomItemViewAdapter.mMainLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View iV) {
+                    mClickListener.onClick(lFTPItem);
+                }
+            });
+        }
+        if (mLongClickListener != null) {
+            iCustomItemViewAdapter.mMainLayout.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View iV) {
+                    mLongClickListener.onLongClick(lFTPItem);
+                    return true;
+                }
+            });
+        }
+
+        if (lFTPItem.isDirectory())
+            iCustomItemViewAdapter.mLeftImage.setImageResource(R.mipmap.baseline_folder_gray);
+        else
+            iCustomItemViewAdapter.mLeftImage.setImageResource(R.mipmap.baseline_file_gray);
 
         iCustomItemViewAdapter.mMainText.setText(lFTPItem.getName());
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy hh:mm", Locale.FRANCE);
@@ -72,6 +99,9 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         LogManager.error(TAG, lFTPItem.toFormattedString());
 //        iCustomItemViewAdapter.mThirdText.setText(lFTPItem.get);
         // TODO continue with the listeners
+
+        Animation animation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.item_animation_fall_down);
+        iCustomItemViewAdapter.itemView.startAnimation(animation);
     }
 
     @Override
@@ -146,14 +176,16 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
     public class CustomItemViewAdapter extends RecyclerView.ViewHolder {
         View mMainLayout;
+        ImageView mLeftImage;
         TextView mMainText;
         TextView mSecondaryText;
         TextView mThirdText;
 
-        public CustomItemViewAdapter(@NonNull View iMainView, TextView iMainText, TextView iSecondaryText,
+        public CustomItemViewAdapter(@NonNull View iMainView, ImageView iLeftImage, TextView iMainText, TextView iSecondaryText,
                                      TextView iThirdText) {
             super(iMainView);
             mMainLayout = iMainView;
+            mLeftImage = iLeftImage;
             mMainText = iMainText;
             mSecondaryText = iSecondaryText;
             mThirdText = iThirdText;
