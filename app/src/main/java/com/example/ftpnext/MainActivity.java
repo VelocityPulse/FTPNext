@@ -65,10 +65,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
         // TODO introduce animation / splash screen
-//        getWindow().requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS);
-//        Slide lSlide = new Slide();
-//        lSlide.setSlideEdge(Gravity.BOTTOM);
-//        getWindow().setEnterTransition(lSlide);
 
         setContentView(R.layout.activity_main);
 
@@ -88,22 +84,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
-//        LogManager.error(String.valueOf(mFormAnimationManager.isFormOpen()));
-
-//        if (drawer.isDrawerOpen(GravityCompat.START)) {
-//            drawer.closeDrawer(GravityCompat.START);
-//        } else if (mFormAnimationManager.isFormOpen()) {
-//            mFormAnimationManager.closeForm();
-//        } else {
         super.onBackPressed();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-//        if (!mFormAnimationManager.isFormOpen())
-//            getMenuInflater().inflate(R.menu.main, menu);
-//        else
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
@@ -128,10 +113,6 @@ public class MainActivity extends AppCompatActivity {
         mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Sample snackbar
-//                Snackbar.make(view, "You have to be connected.", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-
                 startConfigureFTPServerActivity(ConfigureFTPServerActivity.NO_DATABASE_ID);
             }
         });
