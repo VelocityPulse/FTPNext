@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import com.example.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
@@ -32,6 +33,7 @@ import java.util.List;
 
 /*
 TODO : Resume when screen change orientation
+TODO : Add a security network connection / network authorisation
 
 Ideas :
     - Remember the last folder used for create a server
@@ -252,10 +254,9 @@ public class MainActivity extends AppCompatActivity {
 
         thread.start();
 
+        Intent lIntent = new Intent(MainActivity.this, FTPNavigationActivity.class);
 
-//        Intent lIntent = new Intent(MainActivity.this, FTPNavigationActivity.class);
-//
-//        startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
+        startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
     }
 
     private void startConfigureFTPServerActivity(int iFTPServerId) {

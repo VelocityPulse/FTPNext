@@ -31,7 +31,8 @@ import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 
 import java.io.File;
 
-// TODO : remember the last local folder used
+// TODO : Set last local folder used
+// TODO : Don't save the metadata if there's already a connection
 
 public class ConfigureFTPServerActivity extends AppCompatActivity {
 

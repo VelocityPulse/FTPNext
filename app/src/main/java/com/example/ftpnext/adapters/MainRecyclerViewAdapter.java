@@ -1,4 +1,4 @@
-package com.example.ftpnext;
+package com.example.ftpnext.adapters;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -11,6 +11,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.example.ftpnext.R;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
