@@ -19,13 +19,13 @@
         android:id="@+id/navigation_recycler_item_left_draw"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/baseline_storage_gray" />
+        android:src="@drawable/baseline_folder_24" />
 
-    <!--<ImageView-->
-        <!--android:id="@+id/navigation_recycler_item_left_drw"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-         <!--/>-->
+    <ImageView
+        android:id="@+id/navigation_recycler_item_left_drw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+         />
 
     <LinearLayout
         android:layout_width="0dp"
