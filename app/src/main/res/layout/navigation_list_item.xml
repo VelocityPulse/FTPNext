@@ -19,12 +19,13 @@
         android:id="@+id/navigation_recycler_item_left_draw"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/baseline_folder_24" />
+        android:src="@mipmap/baseline_folder_gray" />
 
     <ImageView
         android:id="@+id/navigation_recycler_item_left_drw"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:src="@mipmap/baseline_file_gray"
          />
 
     <LinearLayout
