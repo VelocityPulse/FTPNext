@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.ftpnext.R;
+import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.LogManager;
 
 import org.apache.commons.net.ftp.FTPFile;
@@ -54,7 +55,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                 (ImageView) lLayout.findViewById(R.id.navigation_recycler_item_left_draw),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_main_text),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_secondary_text),
-                (TextView) lLayout.findViewById(R.id.navigation_recycler_item_third_text));
+                (TextView) lLayout.findViewById(R.id.navigation_recycler_item_third_text),
+                (TextView) lLayout.findViewById(R.id.navigation_recycler_item_fourth));
     }
 
     @Override
@@ -95,8 +97,12 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         else
             iCustomItemViewAdapter.mThirdText.setText("(No access)");
 
-        LogManager.error(TAG, lFTPItem.getRawListing());
-        LogManager.error(TAG, lFTPItem.toFormattedString());
+        if (lFTPItem.isDirectory())
+            iCustomItemViewAdapter.mFourthText.setText("DIR");
+        else
+            iCustomItemViewAdapter.mFourthText.setText(Utils.humanReadableByteCount(lFTPItem.getSize(), true));
+
+        LogManager.info(TAG, lFTPItem.getRawListing());
 //        iCustomItemViewAdapter.mThirdText.setText(lFTPItem.get);
         // TODO continue with the listeners
 
@@ -180,15 +186,17 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         TextView mMainText;
         TextView mSecondaryText;
         TextView mThirdText;
+        TextView mFourthText;
 
         public CustomItemViewAdapter(@NonNull View iMainView, ImageView iLeftImage, TextView iMainText, TextView iSecondaryText,
-                                     TextView iThirdText) {
+                                     TextView iThirdText, TextView iFourthText) {
             super(iMainView);
             mMainLayout = iMainView;
             mLeftImage = iLeftImage;
             mMainText = iMainText;
             mSecondaryText = iSecondaryText;
             mThirdText = iThirdText;
+            mFourthText = iFourthText;
         }
     }
 }

@@ -147,8 +147,7 @@ public class FTPServer extends ABaseTable {
     public String toString() {
         String oToString;
 
-        oToString = "FTP Server data :\n";
-        oToString += mName + "\n";
+        oToString = mName + "\n";
         oToString += mServer + "\n";
         oToString += mUser + "\n";
 

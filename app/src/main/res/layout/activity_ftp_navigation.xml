@@ -26,4 +26,5 @@
         android:orientation="vertical"
         tools:listitem="@layout/navigation_list_item" />
 
+
 </LinearLayout>

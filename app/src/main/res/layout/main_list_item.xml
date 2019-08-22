@@ -44,4 +44,6 @@
         android:layout_height="48dp"
         android:src="@drawable/ic_outline_storage" />
 
+    <!--todo linges sur navigation coupé sur le bas -->
+    <!--todo ajouter la tailles des fichiers-->
 </LinearLayout>

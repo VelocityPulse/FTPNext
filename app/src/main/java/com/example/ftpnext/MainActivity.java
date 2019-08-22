@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startConfigureFTPServerActivity(FTPConfigureServerActivity.NO_DATABASE_ID);
+                startFTPConfigureServerActivity(FTPConfigureServerActivity.NO_DATABASE_ID);
             }
         });
     }
@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
                                             .setNegativeButton("no", null)
                                             .show();
                                 } else if (iWhich == 1)
-                                    startConfigureFTPServerActivity(iServerID);
+                                    startFTPConfigureServerActivity(iServerID);
                             }
                         });
                 builder.create();
@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
         mAdapter.setOnClickListener(new MainRecyclerViewAdapter.OnClickListener() {
             @Override
             public void onClick(int iServerID) {
-                startFTPNavigationActivity(iServerID);
+                onServerClicked(iServerID);
             }
         });
     }
@@ -192,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void startFTPNavigationActivity(final int iServerID) {
+    private void onServerClicked(final int iServerID) {
         final FTPServer lFTPServer = mFTPServerDAO.fetchById(iServerID);
         final AlertDialog lLoadingAlertDialog;
 
@@ -212,27 +212,38 @@ public class MainActivity extends AppCompatActivity {
         lNewFTPConnection.Connect(new FTPConnection.OnConnectResult() {
             @Override
             public void onSuccess() {
+                Utils.dismissAlertDialogOnUIThread(MainActivity.this, lLoadingAlertDialog);
+
+                startFTPNavigationActivity(iServerID);
+            }
+
+            @Override
+            public void onFail(final int iErrorCode) {
+                Utils.dismissAlertDialogOnUIThread(MainActivity.this, lLoadingAlertDialog);
 
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        lLoadingAlertDialog.dismiss();
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("Error") // TODO string
+                                .setMessage("Connection has failed...\nCode : " + FTPConnection.getErrorMessage(iErrorCode))
+                                .setPositiveButton("Ok", null)
+                                .create()
+                                .show();
                     }
                 });
-                Intent lIntent = new Intent(MainActivity.this, FTPNavigationActivity.class);
-                lIntent.putExtra(FTPNavigationActivity.KEY_DATABASE_ID, iServerID);
-                startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
-            }
-
-            @Override
-            public void onFail(String iErrorMessage) {
-                Utils.createErrorAlertDialog(MainActivity.this,
-                        "Connection has failed...\nCode : " + iErrorMessage).show();
             }
         });
     }
 
-    private void startConfigureFTPServerActivity(int iFTPServerId) {
+    private void startFTPNavigationActivity(int iServerID) {
+        Intent lIntent = new Intent(MainActivity.this, FTPNavigationActivity.class);
+        lIntent.putExtra(FTPNavigationActivity.KEY_DATABASE_ID, iServerID);
+        lIntent.putExtra(FTPNavigationActivity.KEY_IS_ROOT_CONNECTION, true);
+        startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
+    }
+
+    private void startFTPConfigureServerActivity(int iFTPServerId) {
         Intent lIntent = new Intent(MainActivity.this, FTPConfigureServerActivity.class);
 
         lIntent.putExtra(FTPConfigureServerActivity.KEY_DATABASE_ID, iFTPServerId);
