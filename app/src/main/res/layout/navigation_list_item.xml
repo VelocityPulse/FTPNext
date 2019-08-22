@@ -16,9 +16,9 @@
 
     <ImageView
             android:id="@+id/navigation_recycler_item_left_draw"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@mipmap/baseline_folder_gray" />
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@drawable/ic_outline_file_24" />
 
     <LinearLayout
         android:layout_width="0dp"

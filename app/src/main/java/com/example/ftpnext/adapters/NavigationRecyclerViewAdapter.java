@@ -80,9 +80,9 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         }
 
         if (lFTPItem.isDirectory())
-            iCustomItemViewAdapter.mLeftImage.setImageResource(R.mipmap.baseline_folder_gray);
+            iCustomItemViewAdapter.mLeftImage.setImageResource(R.drawable.ic_outline_folder_24);
         else
-            iCustomItemViewAdapter.mLeftImage.setImageResource(R.mipmap.baseline_file_gray);
+            iCustomItemViewAdapter.mLeftImage.setImageResource(R.drawable.ic_outline_file_24);
 
         iCustomItemViewAdapter.mMainText.setText(lFTPItem.getName());
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy hh:mm", Locale.FRANCE);
