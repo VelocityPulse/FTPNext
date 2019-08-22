@@ -137,9 +137,9 @@ public class FTPConnection {
             @Override
             public void run() {
                 try {
-//                    LogManager.error(TAG, "1");
+                    mFTPClient.enterLocalPassiveMode();
                     FTPListParseEngine lDirectory = mFTPClient.initiateListParsing(null, iPath);
-//                    LogManager.error(TAG, "2");
+                    mFTPClient.enterLocalActiveMode();
                     if (Thread.interrupted())
                         return;
                     if (!FTPReply.isPositiveCompletion(mFTPClient.getReplyCode())) {
@@ -184,6 +184,7 @@ public class FTPConnection {
                         iOnConnectResult.onFail(ERROR);
                     }
                     LogManager.info(TAG, "FTPClient status : " + mFTPClient.getStatus());
+                    LogManager.info(TAG, "FTPClient code   : " + mFTPClient.getReplyCode());
 
                     iOnConnectResult.onSuccess();
                 } catch (UnknownHostException iE) {

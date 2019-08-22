@@ -19,7 +19,6 @@ import android.widget.LinearLayout;
 import com.example.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
-import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.DataBaseTests;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
@@ -185,8 +184,7 @@ public class MainActivity extends AppCompatActivity {
                     if (iResultCode == FTPConfigureServerActivity.ACTIVITY_RESULT_ADD_SUCCESS)
                         mAdapter.insertItem(mFTPServerDAO.fetchById(lId));
                     else if (iResultCode == FTPConfigureServerActivity.ACTIVITY_RESULT_UPDATE_SUCCESS)
-                        LogManager.error("update success");
-                    mAdapter.updateItem(mFTPServerDAO.fetchById(lId));
+                        mAdapter.updateItem(mFTPServerDAO.fetchById(lId));
                 }
             }
         }
@@ -226,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
                     public void run() {
                         new AlertDialog.Builder(MainActivity.this)
                                 .setTitle("Error") // TODO string
-                                .setMessage("Connection has failed...\nCode : " + FTPConnection.getErrorMessage(iErrorCode))
+                                .setMessage("Connection has failed...\nMessage : " + FTPConnection.getErrorMessage(iErrorCode))
                                 .setPositiveButton("Ok", null)
                                 .create()
                                 .show();
