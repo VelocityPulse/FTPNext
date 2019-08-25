@@ -2,6 +2,8 @@ package com.example.ftpnext;
 
 import android.app.ActivityOptions;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,6 +13,7 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,6 +22,7 @@ import android.widget.LinearLayout;
 import com.example.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
+import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.DataBaseTests;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
@@ -60,6 +64,10 @@ public class MainActivity extends AppCompatActivity {
     private MainRecyclerViewAdapter mAdapter;
     private FloatingActionButton mFloatingActionButton;
     private boolean mIsBlockedScrollView;
+    private boolean mIsRunning;
+    private boolean mIsBusy;
+
+    private Dialog mDialog;
 
     private FTPServerDAO mFTPServerDAO;
 
@@ -74,6 +82,9 @@ public class MainActivity extends AppCompatActivity {
         initializeAdapter();
         initialize();
 
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.loading_icon, null);
+
         runTests();
     }
 
@@ -81,6 +92,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         // TODO save the form for change orientation of phone
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mDialog != null && mDialog.isShowing())
+            mDialog.dismiss();
+        mIsRunning = false;
     }
 
     @Override
@@ -168,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
         mAppCore = new AppCore(this);
         mAppCore.startApplication();
         mFTPServerDAO = DataBase.getFTPServerDAO();
+        mIsRunning = true;
 
         List<FTPServer> lFTPServers = mFTPServerDAO.fetchAll();
         for (FTPServer lFTPServer : lFTPServers) {
@@ -191,43 +211,69 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onServerClicked(final int iServerID) {
+        if (mIsBusy) {
+            LogManager.error(TAG, "Already trying a connection");
+            return;
+        }
+
         final FTPServer lFTPServer = mFTPServerDAO.fetchById(iServerID);
-        final AlertDialog lLoadingAlertDialog;
+        final ProgressDialog lLoadingAlertDialog;
+        mIsBusy = true;
 
         if (lFTPServer == null) {
             Utils.createErrorAlertDialog(this, "FTP Server cannot be found").show();
             return;
         }
 
-        lLoadingAlertDialog = new AlertDialog.Builder(MainActivity.this)
-                .setTitle("Connection...")
-                .setView(R.layout.loading_icon)
-                .setNegativeButton("Cancel", null)
-                .create();
+        final FTPConnection lNewFTPConnection = new FTPConnection(lFTPServer);
+
+        lLoadingAlertDialog = Utils.initProgressDialog(this, new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                dialog.dismiss();
+                if (lNewFTPConnection.isConnecting())
+                    lNewFTPConnection.abortConnection();
+                lNewFTPConnection.destroyConnection();
+            }
+        });
+        lLoadingAlertDialog.setContentView(R.layout.loading_icon);
+        lLoadingAlertDialog.setTitle("Connection..."); // TODO : strings
+        lLoadingAlertDialog.create();
         lLoadingAlertDialog.show();
 
-        FTPConnection lNewFTPConnection = new FTPConnection(lFTPServer);
-        lNewFTPConnection.Connect(new FTPConnection.OnConnectResult() {
+        lNewFTPConnection.connect(new FTPConnection.OnConnectResult() {
             @Override
             public void onSuccess() {
                 Utils.dismissAlertDialogOnUIThread(MainActivity.this, lLoadingAlertDialog);
 
                 startFTPNavigationActivity(iServerID);
+                mIsBusy = false;
             }
 
             @Override
             public void onFail(final int iErrorCode) {
-                Utils.dismissAlertDialogOnUIThread(MainActivity.this, lLoadingAlertDialog);
-
+                if (iErrorCode == FTPConnection.ERROR_CONNECTION_INTERRUPTED)
+                    return;
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        new AlertDialog.Builder(MainActivity.this)
-                                .setTitle("Error") // TODO string
-                                .setMessage("Connection has failed...\nMessage : " + FTPConnection.getErrorMessage(iErrorCode))
-                                .setPositiveButton("Ok", null)
-                                .create()
-                                .show();
+                        if (mIsRunning) {
+                            lLoadingAlertDialog.dismiss();
+
+                            mDialog = new AlertDialog.Builder(MainActivity.this)
+                                    .setTitle("Error") // TODO string
+                                    .setMessage("Connection has failed...\nMessage : " + FTPConnection.getErrorMessage(iErrorCode))
+                                    .setPositiveButton("Ok", null)
+                                    .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                        @Override
+                                        public void onDismiss(DialogInterface dialog) {
+                                            mIsBusy = false;
+                                        }
+                                    })
+                                    .create();
+                            mDialog.show();
+                        }
+                        lNewFTPConnection.destroyConnection();
                     }
                 });
             }

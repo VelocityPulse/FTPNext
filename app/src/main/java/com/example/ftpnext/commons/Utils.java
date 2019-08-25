@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
@@ -78,12 +79,27 @@ public class Utils {
         return String.format(Locale.FRANCE, "%.1f %sB", iBytes / Math.pow(lUnit, lExp), lPre);
     }
 
-    public static ProgressDialog initProgressDialog(Context iContext) {
+    public static ProgressDialog initProgressDialog(Context iContext, final ProgressDialog.OnCancelListener iOnCancelListeners) {
         ProgressDialog lProgressDialog;
         lProgressDialog = new ProgressDialog(iContext);
-        lProgressDialog.setContentView(R.layout.loading_icon);
+//        lProgressDialog.setContentView(R.layout.loading_icon);
         lProgressDialog.setCancelable(true);
         lProgressDialog.setCanceledOnTouchOutside(false);
+        lProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                if (iOnCancelListeners != null)
+                    iOnCancelListeners.onCancel(dialog);
+            }
+        });
+        lProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (iOnCancelListeners != null)
+                    iOnCancelListeners.onCancel(dialog);
+            }
+        });
+//        lProgressDialog.onDismiss ?
         return lProgressDialog;
     }
 }

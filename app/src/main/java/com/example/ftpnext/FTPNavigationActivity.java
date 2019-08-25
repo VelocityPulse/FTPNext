@@ -62,6 +62,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        LogManager.error(TAG, "PASS");
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         mIsRunning = false;
@@ -138,22 +144,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         // Large directory loading
         if (lBundle.getBoolean(KEY_IS_LARGE_DIRECTORY)) {
-            mLargeDirDialog = Utils.initProgressDialog(this);
-            mLargeDirDialog.setTitle("Large directory"); // TODO : strings
-            mLargeDirDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            mLargeDirDialog = Utils.initProgressDialog(this, new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
                     dialog.dismiss();
                     onBackPressed();
                 }
             });
-            mLargeDirDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                    onBackPressed();
-                }
-            });
+            mLargeDirDialog.setTitle("Large directory"); // TODO : strings
             mLargeDirDialog.create();
             mLargeDirDialog.show();
         }
@@ -163,22 +161,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
             @Override
             public void run() {
                 if (!mDirectoryFetchFinished && mLargeDirDialog == null) { // in case if dialog has been canceled
-                    mBadConnectionDialog = Utils.initProgressDialog(FTPNavigationActivity.this);
-                    mBadConnectionDialog.setTitle("Connection..."); //TODO : strings
-                    mBadConnectionDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    mBadConnectionDialog = Utils.initProgressDialog(FTPNavigationActivity.this, new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
                             dialog.dismiss();
                             onBackPressed();
                         }
                     });
-                    mBadConnectionDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            onBackPressed();
-                        }
-                    });
+                    mBadConnectionDialog.setTitle("Connection..."); //TODO : strings
                     mBadConnectionDialog.create();
                     mBadConnectionDialog.show();
                 }
