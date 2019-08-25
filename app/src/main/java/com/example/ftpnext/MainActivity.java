@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.loading_icon, null);
 
-        runTests();
+//        runTests();
     }
 
     @Override

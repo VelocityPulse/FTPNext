@@ -50,6 +50,10 @@ public class DataBase {
 
     }
 
+    public static boolean isDataBaseIsOpen() {
+        return sDataBaseIsOpen;
+    }
+
     /**
      * @param iContext Context of the app
      * @return True if DataBase is opened.
@@ -74,9 +78,5 @@ public class DataBase {
         sFTPServerDAO = new FTPServerDAO(lDataBase);
 
         return (sDataBaseIsOpen = true);
-    }
-
-    public static boolean isDataBaseIsOpen() {
-        return sDataBaseIsOpen;
     }
 }

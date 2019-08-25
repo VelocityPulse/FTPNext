@@ -8,6 +8,7 @@ public class AppCore {
 
     private Context mContext;
     private DataBase mDataBase;
+    private NetworkManager mNetworkManager;
 
     public AppCore(Context iContext) {
         mContext = iContext;
@@ -16,5 +17,8 @@ public class AppCore {
     public void startApplication() {
         mDataBase = DataBase.getInstance();
         mDataBase.open(mContext);
+
+        mNetworkManager = new NetworkManager(mContext);
+        mNetworkManager.startMonitoring();
     }
 }
