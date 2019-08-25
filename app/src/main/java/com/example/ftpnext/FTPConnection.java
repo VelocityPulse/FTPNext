@@ -115,11 +115,6 @@ public class FTPConnection {
 
         if (isFetchingFolders()) {
             mDirectoryFetchThread.interrupt();
-            try {
-                mFTPClient.abort();
-            } catch (IOException iE) {
-                iE.printStackTrace();
-            }
         }
     }
 
@@ -146,6 +141,8 @@ public class FTPConnection {
                     if (!FTPReply.isPositiveCompletion(mFTPClient.getReplyCode())) {
                         throw new TimeoutException(mFTPClient.getReplyString());
                     }
+                    if (Thread.interrupted())
+                        return;
                     iOnFetchDirectoryResult.onSuccess(lDirectory.getFiles());
                 } catch (TimeoutException iE) {
                     if (!Thread.interrupted())

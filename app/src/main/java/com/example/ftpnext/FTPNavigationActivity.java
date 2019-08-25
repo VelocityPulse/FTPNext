@@ -1,9 +1,11 @@
 package com.example.ftpnext;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -58,18 +60,17 @@ public class FTPNavigationActivity extends AppCompatActivity {
         initializeGUI();
         initializeAdapter();
         initialize();
-        initializeConnection();
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        LogManager.error(TAG, "PASS");
+        LogManager.info(TAG, "On resume");
     }
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         mIsRunning = false;
 
         if (mErrorAlertDialog != null)
@@ -83,6 +84,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mFTPConnection.disconnect();
         } else if (mFTPConnection.isFetchingFolders())
             mFTPConnection.abortFetchDirectoryContent();
+        super.onDestroy();
     }
 
     @Override
@@ -121,6 +123,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
     }
 
+    @SuppressLint("StaticFieldLeak")
     private void initialize() {
         mFTPServerDAO = DataBase.getFTPServerDAO();
 
@@ -168,7 +171,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             onBackPressed();
                         }
                     });
-                    mBadConnectionDialog.setTitle("Connection..."); //TODO : strings
+                    mBadConnectionDialog.setTitle("Loading..."); //TODO : strings
                     mBadConnectionDialog.create();
                     mBadConnectionDialog.show();
                 }
@@ -180,6 +183,24 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         // FTP Connection
         mFTPConnection = FTPConnection.getFTPConnection(lServerId);
+
+        if (mFTPConnection.isFetchingFolders()) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (mFTPConnection.isFetchingFolders()) {
+                        try {
+                            LogManager.info(TAG, "Waiting fetch stopping");
+                            Thread.sleep(150);
+                        } catch (InterruptedException iE) {
+                            iE.printStackTrace();
+                        }
+                    }
+                    initializeConnection();
+                }
+            }).start();
+        } else
+            initializeConnection();
     }
 
     private void initializeConnection() {

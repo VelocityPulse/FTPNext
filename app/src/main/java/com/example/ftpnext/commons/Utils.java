@@ -82,7 +82,7 @@ public class Utils {
     public static ProgressDialog initProgressDialog(Context iContext, final ProgressDialog.OnCancelListener iOnCancelListeners) {
         ProgressDialog lProgressDialog;
         lProgressDialog = new ProgressDialog(iContext);
-//        lProgressDialog.setContentView(R.layout.loading_icon);
+        lProgressDialog.setContentView(R.layout.loading_icon);
         lProgressDialog.setCancelable(true);
         lProgressDialog.setCanceledOnTouchOutside(false);
         lProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -99,7 +99,6 @@ public class Utils {
                     iOnCancelListeners.onCancel(dialog);
             }
         });
-//        lProgressDialog.onDismiss ?
         return lProgressDialog;
     }
 }
