@@ -21,4 +21,8 @@ public class AppCore {
         mNetworkManager = new NetworkManager(mContext);
         mNetworkManager.startMonitoring();
     }
+
+    public NetworkManager getNetworkManager() {
+        return mNetworkManager;
+    }
 }

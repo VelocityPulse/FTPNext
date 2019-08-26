@@ -7,12 +7,14 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,12 +25,17 @@ import com.example.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LogManager;
+import com.example.ftpnext.core.NetworkManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.DataBaseTests;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.example.ftpnext.database.TableTest1.TableTest1;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 /*
@@ -47,6 +54,9 @@ Ideas :
     - Add a shortcut of a server on the desktop
     - A FTPTransferActivity for show / manage all the transfers
     - Ask to show adds
+    - Stop download after download
+    - Airplane mode after download
+    - Song after download...
  */
 
 /*

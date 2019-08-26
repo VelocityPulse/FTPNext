@@ -96,7 +96,8 @@ public class FTPConnection {
     public void disconnect() {
         LogManager.info(TAG, "Disconnect");
         if (isConnected()) {
-            abortFetchDirectoryContent();
+            if (isFetchingFolders())
+                abortFetchDirectoryContent();
             try {
                 mFTPClient.disconnect();
             } catch (IOException iE) {
