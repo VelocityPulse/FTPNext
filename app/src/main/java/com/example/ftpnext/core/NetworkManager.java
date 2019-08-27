@@ -16,7 +16,7 @@ public class NetworkManager {
     public static final String ANY = "Any";
     public static final String TAG = "NETWORK MANAGER";
 
-    public static NetworkManager sSingleton = null;
+    private static NetworkManager sSingleton = null;
     private static boolean sStarted = false;
 
     private List<OnNetworkAvailable> mOnNetworkAvailableList;
@@ -69,6 +69,10 @@ public class NetworkManager {
                 mNetworkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
     }
 
+    public Network getAvailableNetwork() {
+        return mAvailableNetwork;
+    }
+
     private void initializeNetworkCallback(Context iContext) {
         if (sStarted)
             return;
@@ -101,7 +105,7 @@ public class NetworkManager {
                     mAvailableNetworkFired = false;
                     mNetworkCapabilities = lConnectivityManager.getNetworkCapabilities(iNetwork);
                     if (mNetworkCapabilities != null && mNetworkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-                        fireNetworkAvailable(mNetworkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI));
+                        fireNetworkAvailable(mNetworkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI), iNetwork);
                         mAvailableNetworkFired = true;
                     }
                 }
@@ -131,7 +135,7 @@ public class NetworkManager {
                         return;
 
                     if (mAvailableNetwork.equals(iNetwork) && iNetworkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-                        fireNetworkAvailable(iNetworkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI));
+                        fireNetworkAvailable(iNetworkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI), iNetwork);
                         mAvailableNetworkFired = true;
                     }
                 }
@@ -139,10 +143,10 @@ public class NetworkManager {
         }
     }
 
-    private void fireNetworkAvailable(boolean iIsWifi) {
+    private void fireNetworkAvailable(boolean iIsWifi, Network iNewNetwork) {
         LogManager.info(TAG, "Fire new network available. Wifi : " + iIsWifi);
         for (OnNetworkAvailable lCallback : mOnNetworkAvailableList)
-            lCallback.onNetworkAvailable(iIsWifi);
+            lCallback.onNetworkAvailable(iIsWifi, iNewNetwork);
     }
 
     private void fireNetworkLost() {
@@ -152,7 +156,7 @@ public class NetworkManager {
     }
 
     public interface OnNetworkAvailable {
-        void onNetworkAvailable(boolean iIsWifi);
+        void onNetworkAvailable(boolean iIsWifi, Network iNewNetwork);
     }
 
     public interface OnNetworkLost {

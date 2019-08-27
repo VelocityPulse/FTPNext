@@ -81,7 +81,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         if (mIsRootConnection) {
             mFTPConnection.destroyConnection();
-        } else if (mFTPConnection  != null && mFTPConnection.isFetchingFolders())
+        } else if (mFTPConnection != null && mFTPConnection.isFetchingFolders())
             mFTPConnection.abortFetchDirectoryContent();
         super.onDestroy();
     }
@@ -165,6 +165,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             new AlertDialog.Builder(FTPNavigationActivity.this)
                     .setTitle("Error") // TODO string
                     .setMessage("Error unknown")
+                    .setCancelable(false)
                     .setPositiveButton("Terminate", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -241,6 +242,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                 new AlertDialog.Builder(FTPNavigationActivity.this)
                                         .setTitle("Reconnection denied") // TODO string
                                         .setMessage("Reconnection has failed...\nCode : " + iErrorCode.name())
+                                        .setCancelable(false)
                                         .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
@@ -323,10 +325,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
                                     .setTitle("Error") // TODO string
                                     .setMessage("Connection has failed...\nCode : " + iErrorCode.name())
+                                    .setCancelable(false)
                                     .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                         @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
+                                        public void onClick(DialogInterface iDialog, int iWhich) {
+                                            iDialog.dismiss();
                                             finish();
                                             // TODO : why not on activity result?
                                             // If connection is lost during fetch, fetch returns error
@@ -334,6 +337,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                     })
                                     .create();
                             mErrorAlertDialog.show();
+
                         }
                     }
                 });

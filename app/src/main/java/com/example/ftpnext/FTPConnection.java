@@ -1,5 +1,7 @@
 package com.example.ftpnext;
 
+import android.net.Network;
+
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.core.NetworkManager;
@@ -91,8 +93,10 @@ public class FTPConnection {
         LogManager.info(TAG, "Initialize network monitoring");
         mOnNetworkAvailableCallback = new NetworkManager.OnNetworkAvailable() {
             @Override
-            public void onNetworkAvailable(boolean iIsWifi) {
+            public void onNetworkAvailable(boolean iIsWifi, Network iNewNetwork) {
                 LogManager.info(TAG, "On network available");
+                mFTPClient.setSocketFactory(iNewNetwork.getSocketFactory());
+
                 if (isReconnecting()) {
                     LogManager.info(TAG, "Already reconnecting");
                     return;
@@ -107,14 +111,14 @@ public class FTPConnection {
             @Override
             public void onNetworkLost() {
                 LogManager.info(TAG, "On network lost");
-//                if (isReconnecting()) {
-//                    LogManager.info(TAG, "Already reconnecting");
-//                    return;
-//                }
-//                if (isConnected())
-//                    disconnect();
-//                if (mOnConnectionLost != null)
-//                    mOnConnectionLost.onConnectionLost();
+                if (isReconnecting()) {
+                    LogManager.info(TAG, "Already reconnecting");
+                    return;
+                }
+                if (isConnected())
+                    disconnect();
+                if (mOnConnectionLost != null)
+                    mOnConnectionLost.onConnectionLost();
             }
         };
         AppCore.getNetworkManager().subscribeNetworkAvailable(mOnNetworkAvailableCallback);
@@ -132,30 +136,32 @@ public class FTPConnection {
         mReconnectThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (!isConnected() && !isConnecting() && !mAbortReconnect) {
-//                    try {
-//                        LogManager.error(TAG, "thread sleep");
-//                        Thread.sleep(3000);
-//                    } catch (InterruptedException iE) {
-//                        iE.printStackTrace();
-//                    }
-                    connect(new OnConnectResult() {
-                        @Override
-                        public void onSuccess() {
-                            LogManager.info(TAG, "Reconnect success");
-                            if (iOnConnectionRecover != null)
-                                iOnConnectionRecover.onConnectionRecover();
-                        }
-
-                        @Override
-                        public void onFail(CONNECTION_STATUS iErrorCode) {
-                            LogManager.info(TAG, "Reconnect fail");
-                            if (iErrorCode == CONNECTION_STATUS.ERROR_FAILED_LOGIN) {
-                                iOnConnectionRecover.onConnectionDenied(iErrorCode);
-                                mAbortReconnect = true;
+                while (!isConnected() && !mAbortReconnect) {
+                    if (!isConnecting()) {
+                        connect(new OnConnectResult() {
+                            @Override
+                            public void onSuccess() {
+                                LogManager.info(TAG, "Reconnect success");
+                                if (iOnConnectionRecover != null)
+                                    iOnConnectionRecover.onConnectionRecover();
                             }
+
+                            @Override
+                            public void onFail(CONNECTION_STATUS iErrorCode) {
+                                LogManager.info(TAG, "Reconnect fail");
+                                if (iErrorCode == CONNECTION_STATUS.ERROR_FAILED_LOGIN) {
+                                    iOnConnectionRecover.onConnectionDenied(iErrorCode);
+                                    mAbortReconnect = true;
+                                }
+                            }
+                        });
+                        try {
+                            LogManager.error(TAG, "Reconnection waiting...");
+                            Thread.sleep(400);
+                        } catch (InterruptedException iE) {
+                            iE.printStackTrace();
                         }
-                    });
+                    }
                 }
             }
         });
@@ -292,7 +298,7 @@ public class FTPConnection {
                         return;
                     } else {
                         LogManager.info(TAG, "FTPClient status : " + mFTPClient.getStatus());
-                        LogManager.info(TAG, "FTPClient code   : " + mFTPClient.getReplyCode());
+                        LogManager.info(TAG, "FTPClient code : " + mFTPClient.getReplyCode());
                     }
 
                     if (isConnected()) {
@@ -301,8 +307,12 @@ public class FTPConnection {
                                 @Override
                                 public void run() {
                                     try {
+                                        int lLastCode = -1;
                                         while (!Thread.interrupted()) {
-                                            LogManager.error(TAG, "code reply : " + mFTPClient.getReplyCode());
+                                            if (lLastCode != mFTPClient.getReplyCode()) {
+                                                lLastCode = mFTPClient.getReplyCode();
+                                                LogManager.error(TAG, "code reply : " + lLastCode);
+                                            }
                                             Thread.sleep(10);
                                         }
                                     } catch (InterruptedException iE) {
@@ -310,7 +320,7 @@ public class FTPConnection {
                                     }
                                 }
                             });
-//                            mReplyStatusThread.start();
+                            mReplyStatusThread.start();
                         }
                         LogManager.info(TAG, "FTPClient connected");
                         iOnConnectResult.onSuccess();
