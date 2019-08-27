@@ -199,8 +199,7 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
         mAbsolutePath = iEditedFTPServer.getAbsolutePath();
         mFolderName = iEditedFTPServer.getFolderName();
 
-//        LogManager.error(getExternalStorageDirectory().getAbsolutePath());
-        LogManager.error(iEditedFTPServer.getAbsolutePath());
+        LogManager.info(TAG, iEditedFTPServer.getAbsolutePath());
         File f = new File(iEditedFTPServer.getAbsolutePath());
         mFolderNameEditText.setText(iEditedFTPServer.getFolderName());
 
@@ -315,7 +314,7 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
             if (mEditedFTPServer != null) {
                 mEditedFTPServer.updateContent(lNewFTPServer);
                 mFTPServerDAO.update(mEditedFTPServer);
-                LogManager.error("updated id " + mEditedFTPServer.getDataBaseId());
+                LogManager.info(TAG, "Updated id " + mEditedFTPServer.getDataBaseId());
                 lIntent.putExtra(KEY_DATABASE_ID, mEditedFTPServer.getDataBaseId());
                 setResult(ACTIVITY_RESULT_UPDATE_SUCCESS, lIntent);
             } else if ((lId = mFTPServerDAO.add(lNewFTPServer)) != -1) {

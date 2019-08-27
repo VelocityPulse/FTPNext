@@ -7,35 +7,29 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import com.example.ftpnext.FTPConnection.CONNECTION_STATUS;
 import com.example.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LogManager;
-import com.example.ftpnext.core.NetworkManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.DataBaseTests;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.example.ftpnext.database.TableTest1.TableTest1;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 /*
@@ -43,6 +37,7 @@ TODO : Resume when screen change orientation
 TODO : Add a security network connection / network authorisation
 
 Ideas :
+    - Ask to respawn to the last folder visited if diff than root
     - Display to type of file/dir rights xxx-xxx-xxx or read
     - Remember the last folder used for create a server
     - Queues of file to download even if the connection fail
@@ -54,14 +49,14 @@ Ideas :
     - Add a shortcut of a server on the desktop
     - A FTPTransferActivity for show / manage all the transfers
     - Ask to show adds
-    - Stop download after download
+    - Stop phone(?) after download
     - Airplane mode after download
     - Song after download...
  */
 
 /*
 Parameters ideas :
-    - Download without internet
+    - Download without wifi
  */
 
 public class MainActivity extends AppCompatActivity {
@@ -261,8 +256,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFail(final int iErrorCode) {
-                if (iErrorCode == FTPConnection.ERROR_CONNECTION_INTERRUPTED)
+            public void onFail(final CONNECTION_STATUS iErrorCode) {
+                if (iErrorCode == CONNECTION_STATUS.ERROR_CONNECTION_INTERRUPTED)
                     return;
                 runOnUiThread(new Runnable() {
                     @Override
@@ -272,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
 
                             mDialog = new AlertDialog.Builder(MainActivity.this)
                                     .setTitle("Error") // TODO string
-                                    .setMessage("Connection has failed...\nMessage : " + FTPConnection.getErrorMessage(iErrorCode))
+                                    .setMessage("Connection has failed...\nMessage : " + iErrorCode.name())
                                     .setPositiveButton("Ok", null)
                                     .setOnDismissListener(new DialogInterface.OnDismissListener() {
                                         @Override

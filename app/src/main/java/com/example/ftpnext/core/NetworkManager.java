@@ -14,28 +14,33 @@ public class NetworkManager {
 
     public static final String WIFI = "Wi-Fi";
     public static final String ANY = "Any";
-    public static final String TAG = "NETWORK BROADCAST RECEIVER";
+    public static final String TAG = "NETWORK MANAGER";
 
-    private Context mContext;
-    private boolean mStarted;
+    public static NetworkManager sSingleton = null;
+    private static boolean sStarted = false;
 
     private List<OnNetworkAvailable> mOnNetworkAvailableList;
     private List<OnNetworkLost> mOnNetworkLostList;
 
     private Network mAvailableNetwork;
+    private NetworkCapabilities mNetworkCapabilities;
     private boolean mAvailableNetworkFired;
 
     //TODO : Airplane mode
 
-    public NetworkManager(Context iContext) {
-        mContext = iContext;
+    public static NetworkManager getInstance() {
+        if (sSingleton != null)
+            return sSingleton;
+        return (sSingleton = new NetworkManager());
+    }
 
+    private NetworkManager() {
         mOnNetworkAvailableList = new ArrayList<>();
         mOnNetworkLostList = new ArrayList<>();
     }
 
-    public void startMonitoring() {
-        initializeNetworkCallback();
+    public void startMonitoring(Context iContext) {
+        initializeNetworkCallback(iContext);
     }
 
     public void subscribeNetworkAvailable(OnNetworkAvailable iOnNetworkAvailable) {
@@ -54,13 +59,23 @@ public class NetworkManager {
         mOnNetworkLostList.remove(iOnNetworkLost);
     }
 
-    private void initializeNetworkCallback() {
-        if (mStarted)
+    public boolean isNetworkAvailable() {
+        return mAvailableNetwork != null && mNetworkCapabilities != null &&
+                mNetworkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+    }
+
+    public boolean isCurrentNetworkIsWifi() {
+        return mNetworkCapabilities != null &&
+                mNetworkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+    }
+
+    private void initializeNetworkCallback(Context iContext) {
+        if (sStarted)
             return;
-        mStarted = true;
+        sStarted = true;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            final ConnectivityManager lConnectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+            final ConnectivityManager lConnectivityManager = (ConnectivityManager) iContext.getSystemService(Context.CONNECTIVITY_SERVICE);
 
             NetworkRequest lNetworkRequest = new NetworkRequest.Builder()
                     .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
@@ -69,39 +84,56 @@ public class NetworkManager {
                     .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
                     .build();
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                mAvailableNetwork = lConnectivityManager.getActiveNetwork();
+                if (mAvailableNetwork != null) {
+                    LogManager.info(TAG, "Network fetched : " + mAvailableNetwork.toString());
+                    mNetworkCapabilities = lConnectivityManager.getNetworkCapabilities(mAvailableNetwork);
+                }
+            }
+
             lConnectivityManager.registerNetworkCallback(lNetworkRequest, new ConnectivityManager.NetworkCallback() {
                 @Override
                 public void onAvailable(Network iNetwork) {
                     super.onAvailable(iNetwork);
+                    LogManager.error(TAG, "On available");
                     mAvailableNetwork = iNetwork;
                     mAvailableNetworkFired = false;
-                    LogManager.error(TAG, "On available");
+                    mNetworkCapabilities = lConnectivityManager.getNetworkCapabilities(iNetwork);
+                    if (mNetworkCapabilities != null && mNetworkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                        fireNetworkAvailable(mNetworkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI));
+                        mAvailableNetworkFired = true;
+                    }
                 }
 
                 @Override
                 public void onLost(Network iNetwork) {
                     super.onLost(iNetwork);
-
-                    if (iNetwork == mAvailableNetwork)
-                        fireNetworkLost();
                     LogManager.error(TAG, "On lost " + iNetwork.toString());
+
+//                    fireNetworkLost();
+
+                    if (iNetwork.equals(mAvailableNetwork)) {
+                        mAvailableNetwork = null;
+                        fireNetworkLost();
+                    }
                 }
 
                 @Override
                 public void onCapabilitiesChanged(Network iNetwork, NetworkCapabilities iNetworkCapabilities) {
                     super.onCapabilitiesChanged(iNetwork, iNetworkCapabilities);
                     LogManager.debug(TAG, "On capabilities changed");
-                    LogManager.debug(TAG, String.valueOf(iNetworkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)));
-                    LogManager.debug(TAG, String.valueOf(iNetworkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)));
-                    LogManager.debug(TAG, String.valueOf(iNetworkCapabilities.getLinkDownstreamBandwidthKbps()));
-                    LogManager.debug(TAG, String.valueOf(iNetworkCapabilities.getLinkUpstreamBandwidthKbps()));
+
+                    if (mAvailableNetwork.equals(iNetwork))
+                        mNetworkCapabilities = iNetworkCapabilities;
 
                     if (mAvailableNetworkFired)
                         return;
 
-                    if (mAvailableNetwork == iNetwork && iNetworkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET))
+                    if (mAvailableNetwork.equals(iNetwork) && iNetworkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
                         fireNetworkAvailable(iNetworkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI));
-
+                        mAvailableNetworkFired = true;
+                    }
                 }
             });
         }
@@ -116,7 +148,7 @@ public class NetworkManager {
     private void fireNetworkLost() {
         LogManager.info(TAG, "Fire network lost.");
         for (OnNetworkLost lCallback : mOnNetworkLostList)
-            lCallback.onUsedNetworkLost();
+            lCallback.onNetworkLost();
     }
 
     public interface OnNetworkAvailable {
@@ -124,6 +156,6 @@ public class NetworkManager {
     }
 
     public interface OnNetworkLost {
-        void onUsedNetworkLost();
+        void onNetworkLost();
     }
 }

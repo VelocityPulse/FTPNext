@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -48,11 +47,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private boolean mDirectoryFetchFinished;
     private ProgressDialog mBadConnectionDialog;
     private ProgressDialog mLargeDirDialog;
-    //    private AlertDialog mLargeDirDialog;
+    private ProgressDialog mReconnectDialog;
     private AlertDialog mErrorAlertDialog;
+    private FTPConnection.OnConnectionLost mOnConnectionLostCallback;
+    private Bundle mBundle;
 
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
+        LogManager.info(TAG, "On create");
         super.onCreate(iSavedInstanceState);
         setContentView(R.layout.activity_ftp_navigation);
 
@@ -60,29 +62,26 @@ public class FTPNavigationActivity extends AppCompatActivity {
         initializeGUI();
         initializeAdapter();
         initialize();
-
+        runFetchProcedures();
     }
 
     @Override
     protected void onResume() {
-        super.onResume();
         LogManager.info(TAG, "On resume");
+        super.onResume();
+        mFTPConnection.setOnConnectionLost(mOnConnectionLostCallback);
     }
 
     @Override
     protected void onDestroy() {
+        LogManager.info(TAG, "On destroy");
         mIsRunning = false;
 
-        if (mErrorAlertDialog != null)
-            mErrorAlertDialog.dismiss();
-        if (mBadConnectionDialog != null)
-            mBadConnectionDialog.dismiss();
-        if (mLargeDirDialog != null)
-            mLargeDirDialog.dismiss();
+        dismissAllDialogs();
 
         if (mIsRootConnection) {
-            mFTPConnection.disconnect();
-        } else if (mFTPConnection.isFetchingFolders())
+            mFTPConnection.destroyConnection();
+        } else if (mFTPConnection  != null && mFTPConnection.isFetchingFolders())
             mFTPConnection.abortFetchDirectoryContent();
         super.onDestroy();
     }
@@ -90,7 +89,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-//        onDestroy();
     }
 
     private void initializeGUI() {
@@ -127,16 +125,18 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private void initialize() {
         mFTPServerDAO = DataBase.getFTPServerDAO();
 
-        Bundle lBundle = this.getIntent().getExtras();
+        mBundle = this.getIntent().getExtras();
 
         // Server ID
-        int lServerId = lBundle.getInt(KEY_DATABASE_ID);
+        int lServerId = mBundle.getInt(KEY_DATABASE_ID);
         if (lServerId != NO_DATABASE_ID) {
             mFTPServer = mFTPServerDAO.fetchById(lServerId);
+        } else {
+            LogManager.error(TAG, "Server id is not initialized");
         }
 
         //Is root directory
-        mIsRootConnection = lBundle.getBoolean(KEY_IS_ROOT_CONNECTION, false);
+        mIsRootConnection = mBundle.getBoolean(KEY_IS_ROOT_CONNECTION, false);
 
         // FTPServer fetch
         mFTPServer = mFTPServerDAO.fetchById(lServerId);
@@ -145,13 +145,126 @@ public class FTPNavigationActivity extends AppCompatActivity {
             return;
         }
 
+        // Directory path
+        mDirectoryPath = mBundle.getString(KEY_DIRECTORY_PATH, ROOT_DIRECTORY);
+
+        // FTP Connection
+        mFTPConnection = FTPConnection.getFTPConnection(lServerId);
+    }
+
+    private void runFetchProcedures() {
+        dismissAllDialogs();
+        mReconnectDialog = null;
+        mLargeDirDialog = null;
+        mBadConnectionDialog = null;
+        mErrorAlertDialog = null;
+        mDirectoryFetchFinished = false;
+
+        if (mFTPConnection == null) {
+            LogManager.error(TAG, "FTPConnection instance is null");
+            new AlertDialog.Builder(FTPNavigationActivity.this)
+                    .setTitle("Error") // TODO string
+                    .setMessage("Error unknown")
+                    .setPositiveButton("Terminate", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            finishAllNavigationActivities();
+                        }
+                    })
+                    .create()
+                    .show();
+            return;
+        }
+
+        // Bad connection, Large dir, Reconnect dialog
+        initializeDialogs();
+
+        // Waiting fetch stop
+        if (mFTPConnection.isFetchingFolders()) { // if another activity didn't stop its fetch yet
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (mFTPConnection.isFetchingFolders()) {
+                        try {
+                            LogManager.info(TAG, "Waiting fetch stopping");
+                            Thread.sleep(150);
+                        } catch (InterruptedException iE) {
+                            iE.printStackTrace();
+                        }
+                    }
+                    initializeFetchDirectory();
+                }
+            }).start();
+        } else
+            initializeFetchDirectory();
+    }
+
+    private void initializeDialogs() {
+        // Reconnect dialog
+        mOnConnectionLostCallback = new FTPConnection.OnConnectionLost() {
+            @Override
+            public void onConnectionLost() {
+                if (!mIsRunning)
+                    return;
+                mFTPConnection.abortFetchDirectoryContent();
+                dismissAllDialogs();
+
+                mReconnectDialog = Utils.initProgressDialog(FTPNavigationActivity.this,
+                        new DialogInterface.OnCancelListener() {
+                            @Override
+                            public void onCancel(DialogInterface dialog) {
+                                dialog.dismiss();
+                                mFTPConnection.abortConnection();
+                                finishAllNavigationActivities();
+                            }
+                        });
+                mReconnectDialog.setTitle("Reconnection..."); // TODO : strings
+                mReconnectDialog.create();
+                mReconnectDialog.show();
+                mFTPConnection.reconnect(new FTPConnection.OnConnectionRecover() {
+                    @Override
+                    public void onConnectionRecover() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                runFetchProcedures();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onConnectionDenied(final FTPConnection.CONNECTION_STATUS iErrorCode) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                new AlertDialog.Builder(FTPNavigationActivity.this)
+                                        .setTitle("Reconnection denied") // TODO string
+                                        .setMessage("Reconnection has failed...\nCode : " + iErrorCode.name())
+                                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                dialog.dismiss();
+                                                finishAllNavigationActivities();
+                                            }
+                                        })
+                                        .create()
+                                        .show();
+                            }
+                        });
+                    }
+                });
+            }
+        };
+        mFTPConnection.setOnConnectionLost(mOnConnectionLostCallback);
+
         // Large directory loading
-        if (lBundle.getBoolean(KEY_IS_LARGE_DIRECTORY)) {
+        if (mBundle.getBoolean(KEY_IS_LARGE_DIRECTORY)) {
             mLargeDirDialog = Utils.initProgressDialog(this, new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
                     dialog.dismiss();
-                    onBackPressed();
+                    finish();
                 }
             });
             mLargeDirDialog.setTitle("Large directory"); // TODO : strings
@@ -168,7 +281,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         @Override
                         public void onCancel(DialogInterface dialog) {
                             dialog.dismiss();
-                            onBackPressed();
+                            finish();
                         }
                     });
                     mBadConnectionDialog.setTitle("Loading..."); //TODO : strings
@@ -177,33 +290,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 }
             }
         }, BAD_CONNECTION_TIME);
-
-        // Directory path
-        mDirectoryPath = lBundle.getString(KEY_DIRECTORY_PATH, ROOT_DIRECTORY);
-
-        // FTP Connection
-        mFTPConnection = FTPConnection.getFTPConnection(lServerId);
-
-        if (mFTPConnection.isFetchingFolders()) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (mFTPConnection.isFetchingFolders()) {
-                        try {
-                            LogManager.info(TAG, "Waiting fetch stopping");
-                            Thread.sleep(150);
-                        } catch (InterruptedException iE) {
-                            iE.printStackTrace();
-                        }
-                    }
-                    initializeConnection();
-                }
-            }).start();
-        } else
-            initializeConnection();
     }
 
-    private void initializeConnection() {
+    private void initializeFetchDirectory() {
         mFTPConnection.fetchDirectoryContent(mDirectoryPath, new FTPConnection.OnFetchDirectoryResult() {
             @Override
             public void onSuccess(final FTPFile[] iFTPFiles) {
@@ -221,7 +310,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFail(final int iErrorCode) {
+            public void onFail(final FTPConnection.CONNECTION_STATUS iErrorCode) {
                 mDirectoryFetchFinished = true;
                 if (mBadConnectionDialog != null)
                     mBadConnectionDialog.dismiss();
@@ -230,11 +319,19 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (mIsRunning) {
+                        if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
                             mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
                                     .setTitle("Error") // TODO string
-                                    .setMessage("Connection has failed...\nCode : " + FTPConnection.getErrorMessage(iErrorCode))
-                                    .setPositiveButton("Ok", null)
+                                    .setMessage("Connection has failed...\nCode : " + iErrorCode.name())
+                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            finish();
+                                            // TODO : why not on activity result?
+                                            // If connection is lost during fetch, fetch returns error
+                                        }
+                                    })
                                     .create();
                             mErrorAlertDialog.show();
                         }
@@ -242,6 +339,28 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    private void dismissAllDialogs() {
+        if (mReconnectDialog != null)
+            mReconnectDialog.dismiss();
+        if (mLargeDirDialog != null)
+            mLargeDirDialog.dismiss();
+        if (mBadConnectionDialog != null)
+            mBadConnectionDialog.dismiss();
+        if (mErrorAlertDialog != null)
+            mErrorAlertDialog.dismiss();
+    }
+
+    private void finishAllNavigationActivities() {
+        mIsRunning = false;
+        dismissAllDialogs();
+        if (mFTPConnection != null)
+            mFTPConnection.destroyConnection();
+
+        Intent lIntent = new Intent(this, MainActivity.class);
+        lIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(lIntent);
     }
 
     @Override
