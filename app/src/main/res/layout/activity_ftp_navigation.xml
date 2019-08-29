@@ -1,30 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_ftp_navigation"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <android.support.design.widget.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
-
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary" />
-
-    </android.support.design.widget.AppBarLayout>
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/navigation_recycler_view"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        tools:listitem="@layout/navigation_list_item" />
+        android:orientation="vertical">
+
+        <android.support.design.widget.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/AppTheme.AppBarOverlay">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary" />
+
+        </android.support.design.widget.AppBarLayout>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/navigation_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            tools:listitem="@layout/navigation_list_item" />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="90dp"
+        android:layout_height="300dp"
+        android:layout_gravity="end|bottom">
+
+        <!--<android.support.design.widget.FloatingActionButton-->
+            <!--android:id="@+id/fab3"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="center|bottom"-->
+            <!--android:layout_marginBottom="@dimen/sub_floating_button_margin"-->
+            <!--android:visibility="gone"-->
+            <!--app:fabCustomSize="@dimen/sub_floating_button_size"-->
+            <!--app:fabSize="mini"-->
+            <!--app:srcCompat="@android:drawable/ic_menu_camera" />-->
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|bottom"
+            android:layout_marginBottom="@dimen/sub_floating_button_margin"
+            android:visibility="gone"
+            app:fabCustomSize="@dimen/sub_floating_button_size"
+            app:fabSize="mini"
+            app:srcCompat="@drawable/icon_cloud_upload_filled" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|bottom"
+            android:layout_marginBottom="@dimen/sub_floating_button_margin"
+            android:visibility="gone"
+            app:fabCustomSize="@dimen/sub_floating_button_size"
+            app:fabSize="mini"
+            app:srcCompat="@drawable/icon_create_folder_filled" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/navigation_floating_action_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|bottom"
+            android:layout_marginBottom="@dimen/floating_button_margin"
+            android:visibility="visible"
+            app:fabCustomSize="@dimen/floating_button_size"
+            app:srcCompat="@drawable/icon_add" />
+
+    </FrameLayout>
 
 
-</LinearLayout>
+</FrameLayout>

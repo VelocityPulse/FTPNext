@@ -36,11 +36,11 @@
     </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/floating_action_button"
+        android:id="@+id/navigation_floating_action_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/floating_button_margin"
-        app:srcCompat="@drawable/baseline_add_black_48" />
+        app:srcCompat="@drawable/icon_add" />
 
 </FrameLayout>

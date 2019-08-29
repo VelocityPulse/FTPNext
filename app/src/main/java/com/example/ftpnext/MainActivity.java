@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar lToolBar = findViewById(R.id.toolbar);
         setSupportActionBar(lToolBar);
 
-        mFloatingActionButton = findViewById(R.id.floating_action_button);
+        mFloatingActionButton = findViewById(R.id.navigation_floating_action_button);
         mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

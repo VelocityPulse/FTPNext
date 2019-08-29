@@ -181,7 +181,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:cursorVisible="false"
-                    android:drawableEnd="@drawable/baseline_folder_24"
+                    android:drawableEnd="@drawable/icon_folder_filled"
                     android:hint="Local Folder"
                     android:inputType="text"
                     android:onClick="OnClickLocalFolder" />

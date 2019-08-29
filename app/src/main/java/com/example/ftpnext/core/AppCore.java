@@ -6,6 +6,8 @@ import com.example.ftpnext.database.DataBase;
 
 public class AppCore {
 
+    public static float FLOATING_ACTION_BUTTON_INTERPOLATOR = 2.3F;
+
     private static DataBase mDataBase = null;
     private static NetworkManager mNetworkManager = null;
 

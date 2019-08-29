@@ -8,21 +8,29 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.animation.BounceInterpolator;
+import android.view.animation.DecelerateInterpolator;
 
 import com.example.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
+import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 
 import org.apache.commons.net.ftp.FTPFile;
+
+import java.util.Arrays;
 
 public class FTPNavigationActivity extends AppCompatActivity {
     public static final int ACTIVITY_REQUEST_CODE = 1;
@@ -52,6 +60,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private AlertDialog mErrorAlertDialog;
     private FTPConnection.OnConnectionLost mOnConnectionLostCallback;
     private Bundle mBundle;
+    private boolean mIsFABOpen;
+    private FloatingActionButton mFAB;
+    private FloatingActionButton mFAB1;
+    private FloatingActionButton mFAB2;
+//    private FloatingActionButton mFAB3;
 
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
@@ -70,7 +83,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
     protected void onResume() {
         LogManager.info(TAG, "On resume");
         super.onResume();
-        mFTPConnection.setOnConnectionLost(mOnConnectionLostCallback);
+        if (mFTPConnection != null)
+            mFTPConnection.setOnConnectionLost(mOnConnectionLostCallback);
+        else {
+            initialize();
+            runFetchProcedures();
+        }
     }
 
     @Override
@@ -80,15 +98,19 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         dismissAllDialogs();
 
-        if (mIsRootConnection) {
+        if (mIsRootConnection && mFTPConnection != null)
             mFTPConnection.destroyConnection();
-        } else if (mFTPConnection != null && mFTPConnection.isFetchingFolders())
+        else if (mFTPConnection != null && mFTPConnection.isFetchingFolders())
             mFTPConnection.abortFetchDirectoryContent();
         super.onDestroy();
     }
 
     @Override
     public void onBackPressed() {
+        if (mIsFABOpen) {
+            closeFABMenu();
+            return;
+        }
         super.onBackPressed();
     }
 
@@ -99,7 +121,69 @@ public class FTPNavigationActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-        // TODO add a floating button
+        mFAB = findViewById(R.id.navigation_floating_action_button);
+        mFAB1 = findViewById(R.id.fab1);
+        mFAB2 = findViewById(R.id.fab2);
+//        mFAB3 = findViewById(R.id.fab3);
+        mFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!mIsFABOpen) {
+                    openFABMenu();
+                } else {
+                    closeFABMenu();
+                }
+            }
+        });
+    }
+
+    private void openFABMenu() {
+        mIsFABOpen = true;
+        ViewCompat.animate(mFAB)
+                .rotation(45F)
+                .withLayer()
+                .setDuration(500L)
+                .setInterpolator(new BounceInterpolator())
+                .start();
+
+        ((View) mFAB1).setVisibility(View.VISIBLE);
+        ((View) mFAB2).setVisibility(View.VISIBLE);
+//        ((View) mFAB3).setVisibility(View.VISIBLE);
+        mFAB1.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_1)).
+                setInterpolator(new DecelerateInterpolator(AppCore.FLOATING_ACTION_BUTTON_INTERPOLATOR));
+        mFAB2.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_2)).
+                setInterpolator(new DecelerateInterpolator(AppCore.FLOATING_ACTION_BUTTON_INTERPOLATOR));
+//        mFAB3.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_3)).
+//                setInterpolator(new DecelerateInterpolator(AppCore.FLOATING_ACTION_BUTTON_INTERPOLATOR));
+    }
+
+    private void closeFABMenu() {
+        mIsFABOpen = false;
+        ViewCompat.animate(mFAB)
+                .rotation(0.0F)
+                .withLayer()
+                .setDuration(500L)
+                .setInterpolator(new BounceInterpolator())
+                .start();
+
+        mFAB1.animate().translationY(0).withEndAction(new Runnable() {
+            @Override
+            public void run() {
+                ((View) mFAB1).setVisibility(View.GONE);
+            }
+        });
+        mFAB2.animate().translationY(0).withEndAction(new Runnable() {
+            @Override
+            public void run() {
+                ((View) mFAB2).setVisibility(View.GONE);
+            }
+        });
+//        mFAB3.animate().translationY(0).withEndAction(new Runnable() {
+//            @Override
+//            public void run() {
+//                ((View) mFAB3).setVisibility(View.GONE);
+//            }
+//        });
     }
 
     @Override
@@ -172,6 +256,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         if (mFTPConnection == null) {
             LogManager.error(TAG, "FTPConnection instance is null");
+            LogManager.error(TAG, Arrays.toString(new Exception("FTPConnection instance is null").getStackTrace()));
             new AlertDialog.Builder(FTPNavigationActivity.this)
                     .setTitle("Error") // TODO string
                     .setMessage("Error unknown")
