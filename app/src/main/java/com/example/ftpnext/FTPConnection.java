@@ -311,7 +311,7 @@ public class FTPConnection {
                                         while (!Thread.interrupted()) {
                                             if (lLastCode != mFTPClient.getReplyCode()) {
                                                 lLastCode = mFTPClient.getReplyCode();
-                                                LogManager.error(TAG, "code reply : " + lLastCode);
+                                                LogManager.debug(TAG, "code reply : " + lLastCode);
                                             }
                                             Thread.sleep(10);
                                         }

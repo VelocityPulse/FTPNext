@@ -13,6 +13,7 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 
 import com.example.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
@@ -95,7 +96,16 @@ public class FTPNavigationActivity extends AppCompatActivity {
         Toolbar lToolBar = findViewById(R.id.toolbar);
         setSupportActionBar(lToolBar);
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
         // TODO add a floating button
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        finish();
+        return super.onOptionsItemSelected(item);
     }
 
     private void initializeAdapter() {
@@ -331,8 +341,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                         public void onClick(DialogInterface iDialog, int iWhich) {
                                             iDialog.dismiss();
                                             finish();
-                                            // TODO : why not on activity result?
-                                            // If connection is lost during fetch, fetch returns error
                                         }
                                     })
                                     .create();
