@@ -64,7 +64,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private FloatingActionButton mFAB;
     private FloatingActionButton mFAB1;
     private FloatingActionButton mFAB2;
-//    private FloatingActionButton mFAB3;
 
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
@@ -124,7 +123,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mFAB = findViewById(R.id.navigation_floating_action_button);
         mFAB1 = findViewById(R.id.fab1);
         mFAB2 = findViewById(R.id.fab2);
-//        mFAB3 = findViewById(R.id.fab3);
         mFAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -148,13 +146,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         ((View) mFAB1).setVisibility(View.VISIBLE);
         ((View) mFAB2).setVisibility(View.VISIBLE);
-//        ((View) mFAB3).setVisibility(View.VISIBLE);
         mFAB1.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_1)).
                 setInterpolator(new DecelerateInterpolator(AppCore.FLOATING_ACTION_BUTTON_INTERPOLATOR));
         mFAB2.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_2)).
                 setInterpolator(new DecelerateInterpolator(AppCore.FLOATING_ACTION_BUTTON_INTERPOLATOR));
-//        mFAB3.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_3)).
-//                setInterpolator(new DecelerateInterpolator(AppCore.FLOATING_ACTION_BUTTON_INTERPOLATOR));
     }
 
     private void closeFABMenu() {
@@ -178,12 +173,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 ((View) mFAB2).setVisibility(View.GONE);
             }
         });
-//        mFAB3.animate().translationY(0).withEndAction(new Runnable() {
-//            @Override
-//            public void run() {
-//                ((View) mFAB3).setVisibility(View.GONE);
-//            }
-//        });
     }
 
     @Override
