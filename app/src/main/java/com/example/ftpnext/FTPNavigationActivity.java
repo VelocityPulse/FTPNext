@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.FrameLayout;
 
 import com.example.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
@@ -35,31 +35,35 @@ import java.util.Arrays;
 public class FTPNavigationActivity extends AppCompatActivity {
     public static final int ACTIVITY_REQUEST_CODE = 1;
     public static final int NO_DATABASE_ID = -1;
+    public static final String ROOT_DIRECTORY = "/";
+
 
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
     public static final String KEY_DIRECTORY_PATH = "KEY_DIRECTORY_PATH";
-    public static final String KEY_IS_LARGE_DIRECTORY = "KEY_IS_LARGE_DIRECTORY";
-    public static final String KEY_IS_ROOT_CONNECTION = "KEY_IS_ROOT_CONNECTION";
 
     private static final String TAG = "FTP NAVIGATION ACTIVITY";
     private static final int LARGE_DIRECTORY_SIZE = 30000;
     private static final int BAD_CONNECTION_TIME = 600;
-    private static final String ROOT_DIRECTORY = "/";
 
-    private boolean mIsRootConnection;
     private boolean mIsRunning;
+
     private FTPServer mFTPServer;
     private FTPConnection mFTPConnection;
     private FTPServerDAO mFTPServerDAO;
-    private NavigationRecyclerViewAdapter mAdapter;
+
+    private NavigationRecyclerViewAdapter mCurrentAdapter;
+    private FrameLayout mRecyclerSection;
     private String mDirectoryPath;
     private boolean mDirectoryFetchFinished;
+    private boolean mIsLargeDirectory;
+
     private ProgressDialog mBadConnectionDialog;
     private ProgressDialog mLargeDirDialog;
     private ProgressDialog mReconnectDialog;
     private AlertDialog mErrorAlertDialog;
-    private FTPConnection.OnConnectionLost mOnConnectionLostCallback;
+
     private Bundle mBundle;
+
     private boolean mIsFABOpen;
     private FloatingActionButton mFAB;
     private FloatingActionButton mFAB1;
@@ -73,20 +77,17 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         mIsRunning = true;
         initializeGUI();
-        initializeAdapter();
         initialize();
-        runFetchProcedures();
+        runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
     }
 
     @Override
     protected void onResume() {
         LogManager.info(TAG, "On resume");
         super.onResume();
-        if (mFTPConnection != null)
-            mFTPConnection.setOnConnectionLost(mOnConnectionLostCallback);
-        else {
+        if (mFTPConnection == null) {
             initialize();
-            runFetchProcedures();
+            runFetchProcedures(mDirectoryPath, false, true);
         }
     }
 
@@ -97,7 +98,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         dismissAllDialogs();
 
-        if (mIsRootConnection && mFTPConnection != null)
+        if (mFTPConnection != null)
             mFTPConnection.destroyConnection();
         else if (mFTPConnection != null && mFTPConnection.isFetchingFolders())
             mFTPConnection.abortFetchDirectoryContent();
@@ -110,6 +111,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
             closeFABMenu();
             return;
         }
+
+        if (mCurrentAdapter.getPreviousAdapter() != null) {
+            destroyCurrentAdapter();
+            return;
+        }
+
         super.onBackPressed();
     }
 
@@ -133,6 +140,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 }
             }
         });
+
+        mRecyclerSection = findViewById(R.id.navigation_recycler_section);
     }
 
     private void openFABMenu() {
@@ -181,31 +190,62 @@ public class FTPNavigationActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void initializeAdapter() {
-        RecyclerView lRecyclerView = findViewById(R.id.navigation_recycler_view);
-        lRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new NavigationRecyclerViewAdapter(lRecyclerView, this);
-        lRecyclerView.setAdapter(mAdapter);
+    private void destroyCurrentAdapter() {
+        final NavigationRecyclerViewAdapter lDeprecatedAdapter = mCurrentAdapter;
+        lDeprecatedAdapter.disappearOnRightAndDestroy(new Runnable() {
+            @Override
+            public void run() {
+                lDeprecatedAdapter.getRecyclerView().setAdapter(null);
+                mRecyclerSection.removeView(lDeprecatedAdapter.getRecyclerView());
+            }
+        });
+        lDeprecatedAdapter.getPreviousAdapter().appearOnLeft();
+        mCurrentAdapter = lDeprecatedAdapter.getPreviousAdapter();
+        mCurrentAdapter.setNextAdapter(null);
+    }
+
+    private void inflateNewAdapter(FTPFile[] iFTPFiles, String iDirectoryPath, boolean iForceVerticalAppear) {
+        RecyclerView lNewRecyclerView = (RecyclerView) View.inflate(this, R.layout.navigation_recycler_view, null);
+        mRecyclerSection.addView(lNewRecyclerView);
+
+        lNewRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        NavigationRecyclerViewAdapter lNewAdapter = new NavigationRecyclerViewAdapter(lNewRecyclerView, this, iDirectoryPath, false);
+        if (mCurrentAdapter != null) {
+            lNewAdapter.setPreviousAdapter(mCurrentAdapter);
+            mCurrentAdapter.setNextAdapter(lNewAdapter);
+            mCurrentAdapter.disappearOnLeft();
+        }
+
+        if (mCurrentAdapter != null && !iForceVerticalAppear)
+            lNewAdapter.appearOnRight();
+        else
+            lNewAdapter.appearVertically();
+
+        lNewRecyclerView.setAdapter(lNewAdapter);
 
         DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
-        lRecyclerView.addItemDecoration(mDividerItemDecoration);
+        lNewRecyclerView.addItemDecoration(mDividerItemDecoration);
 
-        mAdapter.setOnClickListener(new NavigationRecyclerViewAdapter.OnClickListener() {
+        lNewAdapter.setOnClickListener(new NavigationRecyclerViewAdapter.OnClickListener() {
             @Override
             public void onClick(FTPFile iFTPFile) {
                 if (iFTPFile.isDirectory()) {
                     if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
-                            || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION))
-                        startFTPNavigationActivity(iFTPFile);
-                    else
+                            || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
+                        mDirectoryPath = mDirectoryPath + "/" + iFTPFile.getName();
+                        mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
+                        runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
+                    } else
                         Utils.createErrorAlertDialog(FTPNavigationActivity.this, "You don't have enough permission");
                 }
             }
         });
+
+        lNewAdapter.setData(iFTPFiles);
+        mCurrentAdapter = lNewAdapter;
     }
 
-    @SuppressLint("StaticFieldLeak")
-    private void initialize() {
+    private void  initialize() {
         mFTPServerDAO = DataBase.getFTPServerDAO();
 
         mBundle = this.getIntent().getExtras();
@@ -217,9 +257,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
         } else {
             LogManager.error(TAG, "Server id is not initialized");
         }
-
-        //Is root directory
-        mIsRootConnection = mBundle.getBoolean(KEY_IS_ROOT_CONNECTION, false);
 
         // FTPServer fetch
         mFTPServer = mFTPServerDAO.fetchById(lServerId);
@@ -235,7 +272,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mFTPConnection = FTPConnection.getFTPConnection(lServerId);
     }
 
-    private void runFetchProcedures() {
+    private void runFetchProcedures(String iDirectoryPath, boolean iIsLargeDirectory, final boolean iRecovering) {
         dismissAllDialogs();
         mReconnectDialog = null;
         mLargeDirDialog = null;
@@ -263,7 +300,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
 
         // Bad connection, Large dir, Reconnect dialog
-        initializeDialogs();
+        initializeDialogs(iIsLargeDirectory);
 
         // Waiting fetch stop
         if (mFTPConnection.isFetchingFolders()) { // if another activity didn't stop its fetch yet
@@ -278,16 +315,16 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             iE.printStackTrace();
                         }
                     }
-                    initializeFetchDirectory();
+                    initializeFetchDirectory(iRecovering);
                 }
             }).start();
         } else
-            initializeFetchDirectory();
+            initializeFetchDirectory(iRecovering);
     }
 
-    private void initializeDialogs() {
+    private void initializeDialogs(boolean iIsLargeDirectory) {
         // Reconnect dialog
-        mOnConnectionLostCallback = new FTPConnection.OnConnectionLost() {
+        mFTPConnection.setOnConnectionLost(new FTPConnection.OnConnectionLost() {
             @Override
             public void onConnectionLost() {
                 if (!mIsRunning)
@@ -313,7 +350,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                runFetchProcedures();
+                                runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
                             }
                         });
                     }
@@ -341,11 +378,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     }
                 });
             }
-        };
-        mFTPConnection.setOnConnectionLost(mOnConnectionLostCallback);
+        });
 
         // Large directory loading
-        if (mBundle.getBoolean(KEY_IS_LARGE_DIRECTORY)) {
+        if (iIsLargeDirectory) {
             mLargeDirDialog = Utils.initProgressDialog(this, new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
@@ -362,6 +398,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
+                LogManager.error(TAG, "check for loading dialog");
                 if (!mDirectoryFetchFinished && mLargeDirDialog == null) { // in case if dialog has been canceled
                     mBadConnectionDialog = Utils.initProgressDialog(FTPNavigationActivity.this, new DialogInterface.OnCancelListener() {
                         @Override
@@ -372,25 +409,30 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     });
                     mBadConnectionDialog.setTitle("Loading..."); //TODO : strings
                     mBadConnectionDialog.create();
-                    mBadConnectionDialog.show();
+                    LogManager.error(TAG, "showing for loading dialog");
+                    if (!mDirectoryFetchFinished)
+                        mBadConnectionDialog.show();
+                    else
+                        mBadConnectionDialog = null;
                 }
             }
         }, BAD_CONNECTION_TIME);
     }
 
-    private void initializeFetchDirectory() {
+    private void initializeFetchDirectory(final boolean iRecovering) {
         mFTPConnection.fetchDirectoryContent(mDirectoryPath, new FTPConnection.OnFetchDirectoryResult() {
             @Override
             public void onSuccess(final FTPFile[] iFTPFiles) {
                 mDirectoryFetchFinished = true;
-                if (mBadConnectionDialog != null)
+                LogManager.error(TAG, "mDirectoryFetchFinished == true");
+                if (mBadConnectionDialog != null && mBadConnectionDialog.isShowing())
                     mBadConnectionDialog.dismiss();
                 if (mLargeDirDialog != null)
                     mLargeDirDialog.dismiss();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mAdapter.setData(iFTPFiles);
+                        inflateNewAdapter(iFTPFiles, mDirectoryPath, iRecovering);
                     }
                 });
             }
@@ -449,17 +491,19 @@ public class FTPNavigationActivity extends AppCompatActivity {
         startActivity(lIntent);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-    }
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//    }
+//
 
-    private void startFTPNavigationActivity(FTPFile iFTPFile) {
-        Intent lIntent = new Intent(FTPNavigationActivity.this, FTPNavigationActivity.class);
-        lIntent.putExtra(FTPNavigationActivity.KEY_DATABASE_ID, mFTPServer.getDataBaseId());
-        lIntent.putExtra(FTPNavigationActivity.KEY_DIRECTORY_PATH, mDirectoryPath + "/" + iFTPFile.getName());
-        if (iFTPFile.getSize() > LARGE_DIRECTORY_SIZE)
-            lIntent.putExtra(FTPNavigationActivity.KEY_IS_LARGE_DIRECTORY, true);
-        startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
-    }
+//    private void startFTPNavigationActivity(FTPFile iFTPFile) {
+//        Intent lIntent = new Intent(FTPNavigationActivity.this, FTPNavigationActivity.class);
+//        lIntent.putExtra(FTPNavigationActivity.KEY_DATABASE_ID, mFTPServer.getDataBaseId());
+//        lIntent.putExtra(FTPNavigationActivity.KEY_DIRECTORY_PATH, mDirectoryPath + "/" + iFTPFile.getName());
+//        if (iFTPFile.getSize() > LARGE_DIRECTORY_SIZE)
+//            lIntent.putExtra(FTPNavigationActivity.KEY_IS_LARGE_DIRECTORY, true);
+//        startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
+//    }
+
 }

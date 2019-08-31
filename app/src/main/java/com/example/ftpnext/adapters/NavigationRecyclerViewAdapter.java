@@ -28,21 +28,50 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
     private static final String TAG = "NAVIGATION RECYCLER VIEW ADAPTER";
     private List<FTPFile> mItemList;
+    private List<CustomItemViewAdapter> mCustomItems;
+    private Animation.AnimationListener mDisappearAnimationListener;
     private OnLongClickListener mLongClickListener;
     private OnClickListener mClickListener;
     private RecyclerView mRecyclerView;
     private Context mContext;
+    private String mDirectoryPath;
 
-    public NavigationRecyclerViewAdapter(List<FTPFile> iItemList, RecyclerView iRecyclerView, Context iContext) {
+    private NavigationRecyclerViewAdapter mNextAdapter;
+    private NavigationRecyclerViewAdapter mPreviousAdapter;
+
+    public NavigationRecyclerViewAdapter(List<FTPFile> iItemList, RecyclerView iRecyclerView, Context iContext, String iDirectoryPath, boolean iVisible) {
         mItemList = iItemList;
         mRecyclerView = iRecyclerView;
         mContext = iContext;
+        mDirectoryPath = iDirectoryPath;
+        mRecyclerView.setVisibility(iVisible ? View.VISIBLE : View.GONE);
+        mCustomItems = new ArrayList<>();
     }
 
-    public NavigationRecyclerViewAdapter(RecyclerView iRecyclerView, Context iContext) {
+    public NavigationRecyclerViewAdapter(RecyclerView iRecyclerView, Context iContext, String iDirectoryPath, boolean iVisible) {
         mItemList = new ArrayList<>();
         mRecyclerView = iRecyclerView;
         mContext = iContext;
+        mDirectoryPath = iDirectoryPath;
+        mRecyclerView.setVisibility(iVisible ? View.VISIBLE : View.GONE);
+        mCustomItems = new ArrayList<>();
+    }
+
+    private void initialize() {
+        mDisappearAnimationListener = new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                mRecyclerView.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+        };
     }
 
     @NonNull
@@ -51,12 +80,16 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         LinearLayout lLayout = (LinearLayout) LayoutInflater.
                 from(iViewGroup.getContext()).inflate(R.layout.navigation_list_item, iViewGroup, false);
 
-        return new CustomItemViewAdapter(lLayout,
+        CustomItemViewAdapter oViewHolder = new CustomItemViewAdapter(lLayout,
                 (ImageView) lLayout.findViewById(R.id.navigation_recycler_item_left_draw),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_main_text),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_secondary_text),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_third_text),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_fourth));
+
+        mCustomItems.add(oViewHolder);
+
+        return oViewHolder;
     }
 
     @Override
@@ -103,11 +136,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             iCustomItemViewAdapter.mFourthText.setText(Utils.humanReadableByteCount(lFTPItem.getSize(), true));
 
         LogManager.info(TAG, lFTPItem.getRawListing());
-//        iCustomItemViewAdapter.mThirdText.setText(lFTPItem.get);
         // TODO continue with the listeners
-
-        Animation animation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.item_animation_fall_down);
-        iCustomItemViewAdapter.itemView.startAnimation(animation);
     }
 
     @Override
@@ -156,6 +185,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     }
 
     public void setData(FTPFile[] iData) {
+        LogManager.info(TAG, "Set data");
         if (iData == null) {
             LogManager.error(TAG, "Cannot set the data if the given parameter is null.");
             return;
@@ -164,8 +194,149 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         notifyDataSetChanged();
     }
 
+    public String getDirectoryPath() {
+        return mDirectoryPath;
+    }
+
+    public void appearVertically() {
+        Animation lAnimation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.recycler_animation_appear_vertically);
+        lAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                setItemsTransparent();
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                setItemsRipple();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        mRecyclerView.startAnimation(lAnimation);
+        mRecyclerView.setVisibility(View.VISIBLE);
+    }
+
+    public void appearOnRight() {
+        Animation lAnimation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.recycler_animation_appear_on_right);
+        lAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                setItemsTransparent();
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                setItemsRipple();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        mRecyclerView.startAnimation(lAnimation);
+        mRecyclerView.setVisibility(View.VISIBLE);
+    }
+
+    public void appearOnLeft() {
+        Animation lAnimation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.recycler_animation_appear_on_left);
+        lAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                setItemsTransparent();
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                setItemsRipple();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+        });
+        mRecyclerView.startAnimation(lAnimation);
+        mRecyclerView.setVisibility(View.VISIBLE);
+    }
+
+    public void disappearOnRightAndDestroy(final Runnable iOnAnimationEnd) {
+        Animation lAnimation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.recycler_animation_disappear_on_right);
+        lAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                setItemsTransparent();
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                iOnAnimationEnd.run();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+        });
+        mRecyclerView.startAnimation(lAnimation);
+    }
+
+    public void disappearOnLeft() {
+        Animation lAnimation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.recycler_animation_disappear_on_left);
+        lAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                setItemsTransparent();
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                mRecyclerView.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+        });
+        mRecyclerView.startAnimation(lAnimation);
+    }
+
+    public NavigationRecyclerViewAdapter getNextAdapter() {
+        return mNextAdapter;
+    }
+
+    public void setNextAdapter(NavigationRecyclerViewAdapter iNextAdapter) {
+        mNextAdapter = iNextAdapter;
+    }
+
+    public NavigationRecyclerViewAdapter getPreviousAdapter() {
+        return mPreviousAdapter;
+    }
+
+    public void setPreviousAdapter(NavigationRecyclerViewAdapter iPreviousAdapter) {
+        mPreviousAdapter = iPreviousAdapter;
+    }
+
     public void setOnLongClickListener(OnLongClickListener iListener) {
         mLongClickListener = iListener;
+    }
+
+    public RecyclerView getRecyclerView() {
+        return mRecyclerView;
+    }
+
+    private void setItemsTransparent() {
+        for (CustomItemViewAdapter lItem : mCustomItems) {
+            lItem.mMainLayout.setBackgroundResource(android.R.color.transparent);
+        }
+    }
+
+    private void setItemsRipple() {
+        for (CustomItemViewAdapter lItem : mCustomItems) {
+            lItem.mMainLayout.setBackgroundResource(R.drawable.ripple_effect_primary);
+        }
     }
 
     public void setOnClickListener(OnClickListener iListener) {

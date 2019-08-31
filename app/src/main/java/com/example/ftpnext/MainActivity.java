@@ -288,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
     private void startFTPNavigationActivity(int iServerID) {
         Intent lIntent = new Intent(MainActivity.this, FTPNavigationActivity.class);
         lIntent.putExtra(FTPNavigationActivity.KEY_DATABASE_ID, iServerID);
-        lIntent.putExtra(FTPNavigationActivity.KEY_IS_ROOT_CONNECTION, true);
+        lIntent.putExtra(FTPNavigationActivity.KEY_DIRECTORY_PATH, FTPNavigationActivity.ROOT_DIRECTORY);
         startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
     }
 

@@ -12,10 +12,10 @@
     android:paddingLeft="15dp"
     android:paddingRight="13dp"
     android:showDividers="middle"
-    tools:showIn="@layout/activity_ftp_navigation">
+    tools:showIn="@layout/navigation_recycler_view">
 
     <ImageView
-            android:id="@+id/navigation_recycler_item_left_draw"
+        android:id="@+id/navigation_recycler_item_left_draw"
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:src="@drawable/ic_outline_file_24" />
@@ -28,19 +28,19 @@
         android:orientation="vertical">
 
         <TextView
-            android:layout_weight="2"
             android:id="@+id/navigation_recycler_item_main_text"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:maxLines="2"
             android:layout_marginTop="4dp"
+            android:layout_weight="2"
+            android:maxLines="2"
             android:text="Main text"
             android:textSize="19sp" />
 
         <LinearLayout
-            android:paddingBottom="3dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:paddingBottom="3dp">
 
             <!--date -->
             <TextView
