@@ -19,7 +19,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 // TODO : Download save when app is killed
 
@@ -214,18 +213,19 @@ public class FTPConnection {
                     if (Thread.interrupted())
                         return;
                     if (!FTPReply.isPositiveCompletion(mFTPClient.getReplyCode())) {
-                        throw new TimeoutException(mFTPClient.getReplyString());
+                        throw new IOException(mFTPClient.getReplyString());
                     }
                     if (Thread.interrupted())
                         return;
                     iOnFetchDirectoryResult.onSuccess(lDirectory.getFiles());
-                } catch (TimeoutException iE) {
-                    if (!Thread.interrupted())
-                        iOnFetchDirectoryResult.onFail(CONNECTION_STATUS.ERROR_CONNECTION_TIMEOUT);
                 } catch (IOException iE) {
                     iE.printStackTrace();
-                    if (!Thread.interrupted())
-                        iOnFetchDirectoryResult.onFail(CONNECTION_STATUS.ERROR);
+                    if (!Thread.interrupted()) {
+                        if (mFTPClient.getReplyCode() == 450)
+                            iOnFetchDirectoryResult.onFail(CONNECTION_STATUS.ERROR_NOT_REACHABLE);
+                        else
+                            iOnFetchDirectoryResult.onFail(CONNECTION_STATUS.ERROR);
+                    }
                 }
             }
         });
@@ -375,6 +375,7 @@ public class FTPConnection {
         ERROR_CONNECTION_INTERRUPTED,
         ERROR_NO_INTERNET,
         ERROR_FAILED_LOGIN,
+        ERROR_NOT_REACHABLE,
     }
 
     public interface OnFetchDirectoryResult {

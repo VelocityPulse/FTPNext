@@ -202,6 +202,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         lDeprecatedAdapter.getPreviousAdapter().appearOnLeft();
         mCurrentAdapter = lDeprecatedAdapter.getPreviousAdapter();
         mCurrentAdapter.setNextAdapter(null);
+        mDirectoryPath = mCurrentAdapter.getDirectoryPath();
     }
 
     private void inflateNewAdapter(FTPFile[] iFTPFiles, String iDirectoryPath, boolean iForceVerticalAppear) {
