@@ -346,6 +346,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private void initializeDialogs(boolean iIsLargeDirectory) {
         // Reconnect dialog
+        // TODO : This on connection lost will be re-set each runProcedures
         mFTPConnection.setOnConnectionLost(new FTPConnection.OnConnectionLost() {
             @Override
             public void onConnectionLost() {
@@ -635,6 +636,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mErrorAlertDialog.dismiss();
     }
 
+    // TODO : remove this code
     private void finishAllNavigationActivities() {
         mIsRunning = false;
         dismissAllDialogs();
