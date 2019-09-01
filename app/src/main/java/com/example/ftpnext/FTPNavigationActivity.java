@@ -1,23 +1,27 @@
 package com.example.ftpnext;
 
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.AutoCompleteTextView;
 import android.widget.FrameLayout;
 
 import com.example.ftpnext.adapters.NavigationRecyclerViewAdapter;
@@ -36,7 +40,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
     public static final int ACTIVITY_REQUEST_CODE = 1;
     public static final int NO_DATABASE_ID = -1;
     public static final String ROOT_DIRECTORY = "/";
-
 
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
     public static final String KEY_DIRECTORY_PATH = "KEY_DIRECTORY_PATH";
@@ -61,13 +64,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private ProgressDialog mLargeDirDialog;
     private ProgressDialog mReconnectDialog;
     private AlertDialog mErrorAlertDialog;
+    private AlertDialog mCreateFolderDialog;
 
     private Bundle mBundle;
 
     private boolean mIsFABOpen;
-    private FloatingActionButton mFAB;
-    private FloatingActionButton mFAB1;
-    private FloatingActionButton mFAB2;
+    private FloatingActionButton mMainFAB;
+    private FloatingActionButton mCreateFolderFAB;
+    private FloatingActionButton mUploadFileFAB;
 
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
@@ -127,10 +131,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-        mFAB = findViewById(R.id.navigation_floating_action_button);
-        mFAB1 = findViewById(R.id.fab1);
-        mFAB2 = findViewById(R.id.fab2);
-        mFAB.setOnClickListener(new View.OnClickListener() {
+        mMainFAB = findViewById(R.id.navigation_floating_action_button);
+        mCreateFolderFAB = findViewById(R.id.navigation_fab_create_folder);
+        mUploadFileFAB = findViewById(R.id.navigation_fab_upload_file);
+        mMainFAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (!mIsFABOpen) {
@@ -141,53 +145,66 @@ public class FTPNavigationActivity extends AppCompatActivity {
             }
         });
 
+        mCreateFolderFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                createDialogFolderClicked();
+            }
+        });
+        mUploadFileFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onUploadFileClicked();
+            }
+        });
+
         mRecyclerSection = findViewById(R.id.navigation_recycler_section);
     }
 
     private void openFABMenu() {
         mIsFABOpen = true;
-        ViewCompat.animate(mFAB)
+        ViewCompat.animate(mMainFAB)
                 .rotation(45F)
                 .withLayer()
                 .setDuration(500L)
                 .setInterpolator(new BounceInterpolator())
                 .start();
 
-        ((View) mFAB1).setVisibility(View.VISIBLE);
-        ((View) mFAB2).setVisibility(View.VISIBLE);
-        mFAB1.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_1)).
+        ((View) mCreateFolderFAB).setVisibility(View.VISIBLE);
+        ((View) mUploadFileFAB).setVisibility(View.VISIBLE);
+        mCreateFolderFAB.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_1)).
                 setInterpolator(new DecelerateInterpolator(AppCore.FLOATING_ACTION_BUTTON_INTERPOLATOR));
-        mFAB2.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_2)).
+        mUploadFileFAB.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_2)).
                 setInterpolator(new DecelerateInterpolator(AppCore.FLOATING_ACTION_BUTTON_INTERPOLATOR));
     }
 
     private void closeFABMenu() {
         mIsFABOpen = false;
-        ViewCompat.animate(mFAB)
+        ViewCompat.animate(mMainFAB)
                 .rotation(0.0F)
                 .withLayer()
                 .setDuration(500L)
                 .setInterpolator(new BounceInterpolator())
                 .start();
 
-        mFAB1.animate().translationY(0).withEndAction(new Runnable() {
+        mCreateFolderFAB.animate().translationY(0).withEndAction(new Runnable() {
             @Override
             public void run() {
-                ((View) mFAB1).setVisibility(View.GONE);
+                ((View) mCreateFolderFAB).setVisibility(View.GONE);
             }
         });
-        mFAB2.animate().translationY(0).withEndAction(new Runnable() {
+        mUploadFileFAB.animate().translationY(0).withEndAction(new Runnable() {
             @Override
             public void run() {
-                ((View) mFAB2).setVisibility(View.GONE);
+                ((View) mUploadFileFAB).setVisibility(View.GONE);
             }
         });
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        finish();
-        return super.onOptionsItemSelected(item);
+        onBackPressed();
+        return true;
     }
 
     private void destroyCurrentAdapter() {
@@ -216,17 +233,15 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mCurrentAdapter.setNextAdapter(lNewAdapter);
             mCurrentAdapter.disappearOnLeft();
         }
-
         if (mCurrentAdapter != null && !iForceVerticalAppear)
             lNewAdapter.appearOnRight();
         else
             lNewAdapter.appearVertically();
 
-        lNewRecyclerView.setAdapter(lNewAdapter);
-
         DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
-        lNewRecyclerView.addItemDecoration(mDividerItemDecoration);
 
+        lNewRecyclerView.addItemDecoration(mDividerItemDecoration);
+        lNewRecyclerView.setAdapter(lNewAdapter);
         lNewAdapter.setOnClickListener(new NavigationRecyclerViewAdapter.OnClickListener() {
             @Override
             public void onClick(FTPFile iFTPFile) {
@@ -246,7 +261,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mCurrentAdapter = lNewAdapter;
     }
 
-    private void  initialize() {
+    private void initialize() {
         mFTPServerDAO = DataBase.getFTPServerDAO();
 
         mBundle = this.getIntent().getExtras();
@@ -468,6 +483,71 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    private void createDialogFolderClicked() {
+        final AlertDialog.Builder lBuilder = new AlertDialog.Builder(this);
+        lBuilder.setTitle("Create new folder"); // TODO : strings
+
+        View lTextSection = View.inflate(this, R.layout.dialog_create_folder, null);
+        final TextInputLayout lTextInputLayout = lTextSection.findViewById(R.id.name_edit_text_layout);
+        final AutoCompleteTextView lEditTextView = lTextSection.findViewById(R.id.name_edit_text);
+
+        lEditTextView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence iS, int iStart, int iCount, int iAfter) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence iS, int iStart, int iBefore, int iCount) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable iEditable) {
+                if (iEditable != null) {
+                    String lString = iEditable.toString();
+                    if (!Utils.isNullOrEmpty(lString.trim())) {
+                        lTextInputLayout.setErrorEnabled(false);
+                        mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(true);
+
+                    } else {
+                        lTextInputLayout.setError("Obligatory");
+                        mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+                    }
+                }
+            }
+        });
+
+        lBuilder.setView(lTextSection);
+        lBuilder.setCancelable(false);
+        lBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String lName = lTextInputLayout.getEditText().getText().toString().trim();
+                if (!Utils.isNullOrEmpty(lName)) {
+                    dialog.dismiss();
+                    createFolder(lName);
+                }
+            }
+        });
+        lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        mCreateFolderDialog = lBuilder.create();
+        mCreateFolderDialog.show();
+        mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+    }
+
+    private void createFolder(String iName) {
+
+    }
+
+    private void onUploadFileClicked() {
+
     }
 
     private void dismissAllDialogs() {

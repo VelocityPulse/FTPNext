@@ -3,8 +3,7 @@
 
     <integer name="configure_ftp_server_animation_slide_time">700</integer>
 
-    <integer name="recycler_animation_time_to_right">400</integer>
+    <integer name="recycler_animation_time_to_right">300</integer>
     <integer name="recycler_animation_time_to_left">300</integer>
-
 
 </resources>

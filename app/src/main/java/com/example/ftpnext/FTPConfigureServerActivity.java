@@ -150,15 +150,19 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
                     String lString = iEditable.toString();
 
                     if (mFTPServerDAO.fetchByName(lString) != null &&
-                            (mEditedFTPServer != null && !lString.equals(mEditedFTPServer.getName()))) {// TODO use resources
+                            (mEditedFTPServer != null && !lString.equals(mEditedFTPServer.getName()))) {// TODO : use resources
                         if (!lString.equals(mEditedFTPServer.getName()))
                             ((TextInputLayout) mNameEditText.getTag()).setError("Name already used");
                         return;
                     }
-                    if (iEditable != null && !Utils.isNullOrEmpty(lString))
+                    if (iEditable != null && !Utils.isNullOrEmpty(lString)) {
+                        LogManager.debug(TAG, "Editable != null passing");
                         ((TextInputLayout) mNameEditText.getTag()).setErrorEnabled(false);
-                    else if (Utils.isNullOrEmpty(lString))
+                    }
+                    else if (Utils.isNullOrEmpty(lString)) {
+                        LogManager.debug(TAG, "Editable != null not useless");
                         ((TextInputLayout) mNameEditText.getTag()).setError("Obligatory");
+                    }
 
                 }
             }

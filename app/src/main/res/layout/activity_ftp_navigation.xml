@@ -37,7 +37,7 @@
         android:layout_gravity="end|bottom">
 
         <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab2"
+            android:id="@+id/navigation_fab_upload_file"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center|bottom"
@@ -48,7 +48,7 @@
             app:srcCompat="@drawable/icon_cloud_upload_filled" />
 
         <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab1"
+            android:id="@+id/navigation_fab_create_folder"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center|bottom"
