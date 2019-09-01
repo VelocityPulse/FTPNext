@@ -11,7 +11,6 @@ import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
-import org.apache.commons.net.ftp.FTPListParseEngine;
 import org.apache.commons.net.ftp.FTPReply;
 
 import java.io.IOException;
@@ -32,15 +31,17 @@ public class FTPConnection {
     private FTPServerDAO mFTPServerDAO;
     private FTPServer mFTPServer;
     private FTPClient mFTPClient;
+    private FTPFile mCurrentDirectory;
     private String mLocalization;
     private Thread mConnectionThread;
     private Thread mReconnectThread;
     private Thread mDirectoryFetchThread;
+    private Thread mReplyStatusThread;
+    private Thread mCreateDirectoryThread;
     private NetworkManager.OnNetworkAvailable mOnNetworkAvailableCallback;
     private NetworkManager.OnNetworkLost mOnNetworkLostCallback;
     private OnConnectionLost mOnConnectionLost;
     private boolean mAbortReconnect;
-    private Thread mReplyStatusThread;
 
     public FTPConnection(FTPServer iFTPServer) {
         if (sFTPConnectionInstances == null)
@@ -195,7 +196,6 @@ public class FTPConnection {
         LogManager.info(TAG, "Fetch directory contents");
         if (!isConnected()) {
             LogManager.error(TAG, "Connection not established");
-
             return;
         }
         if (isFetchingFolders()) {
@@ -208,7 +208,9 @@ public class FTPConnection {
             public void run() {
                 try {
                     mFTPClient.enterLocalPassiveMode();
-                    FTPListParseEngine lDirectory = mFTPClient.initiateListParsing(null, iPath);
+                    mFTPClient.changeWorkingDirectory(iPath);
+                    FTPFile[] files = mFTPClient.listFiles();
+                    mCurrentDirectory = mFTPClient.mlistFile(iPath);
                     mFTPClient.enterLocalActiveMode();
                     if (Thread.interrupted())
                         return;
@@ -217,7 +219,7 @@ public class FTPConnection {
                     }
                     if (Thread.interrupted())
                         return;
-                    iOnFetchDirectoryResult.onSuccess(lDirectory.getFiles());
+                    iOnFetchDirectoryResult.onSuccess(files);
                 } catch (IOException iE) {
                     iE.printStackTrace();
                     if (!Thread.interrupted()) {
@@ -248,12 +250,14 @@ public class FTPConnection {
         if (isConnected()) {
             LogManager.error(TAG, "Trying a connection but is already connected");
             new Exception("already connected").printStackTrace();
-            iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_ALREADY_CONNECTED);
+            if (iOnConnectResult != null)
+                iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_ALREADY_CONNECTED);
             return;
         } else if (isConnecting()) {
             LogManager.error(TAG, "Trying a connection but is already connecting");
             new Exception("already connecting").printStackTrace();
-            iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_ALREADY_CONNECTING);
+            if (iOnConnectResult != null)
+                iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_ALREADY_CONNECTING);
             return;
         }
 
@@ -261,7 +265,8 @@ public class FTPConnection {
                 AppCore.getNetworkManager().isNetworkAvailable());
 
         if (!AppCore.getNetworkManager().isNetworkAvailable()) {
-            iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_NO_INTERNET);
+            if (iOnConnectResult != null)
+                iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_NO_INTERNET);
             return;
         }
 
@@ -276,14 +281,16 @@ public class FTPConnection {
                     mFTPClient.setSoTimeout(15000); // 15s
                     if (Thread.interrupted()) {
                         mFTPClient.disconnect();
-                        iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_CONNECTION_INTERRUPTED);
+                        if (iOnConnectResult != null)
+                            iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_CONNECTION_INTERRUPTED);
                         return;
                     }
 
                     mFTPClient.login(mFTPServer.getUser(), mFTPServer.getPass());
                     if (Thread.interrupted()) {
                         mFTPClient.disconnect();
-                        iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_CONNECTION_INTERRUPTED);
+                        if (iOnConnectResult != null)
+                            iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_CONNECTION_INTERRUPTED);
                         return;
                     }
 
@@ -291,10 +298,12 @@ public class FTPConnection {
                         LogManager.info(TAG, "FTPClient code : " + mFTPClient.getReplyCode());
                         mFTPClient.disconnect();
                         LogManager.error(TAG, "FTP server refused connection.");
-                        if (mFTPClient.getReplyCode() == FTPReply.NOT_LOGGED_IN)
-                            iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_FAILED_LOGIN);
-                        else
-                            iOnConnectResult.onFail(CONNECTION_STATUS.ERROR);
+                        if (iOnConnectResult != null) {
+                            if (mFTPClient.getReplyCode() == FTPReply.NOT_LOGGED_IN)
+                                iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_FAILED_LOGIN);
+                            else
+                                iOnConnectResult.onFail(CONNECTION_STATUS.ERROR);
+                        }
                         return;
                     } else {
                         LogManager.info(TAG, "FTPClient status : " + mFTPClient.getStatus());
@@ -302,40 +311,62 @@ public class FTPConnection {
                     }
 
                     if (isConnected()) {
-                        if (mReplyStatusThread == null) {
-                            mReplyStatusThread = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        int lLastCode = -1;
-                                        while (!Thread.interrupted()) {
-                                            if (lLastCode != mFTPClient.getReplyCode()) {
-                                                lLastCode = mFTPClient.getReplyCode();
-                                                LogManager.debug(TAG, "code reply : " + lLastCode);
-                                            }
-                                            Thread.sleep(10);
-                                        }
-                                    } catch (InterruptedException iE) {
-                                        iE.printStackTrace();
-                                    }
-                                }
-                            });
-                            mReplyStatusThread.start();
-                        }
+                        startReplyStatusThread();
                         LogManager.info(TAG, "FTPClient connected");
-                        iOnConnectResult.onSuccess();
+                        if (iOnConnectResult != null)
+                            iOnConnectResult.onSuccess();
                     } else
                         LogManager.error(TAG, "FTPClient not connected");
                 } catch (UnknownHostException iE) {
-                    iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_UNKNOWN_HOST);
                     iE.printStackTrace();
+                    if (iOnConnectResult != null)
+                        iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_UNKNOWN_HOST);
                 } catch (Exception iE) {
-                    iOnConnectResult.onFail(CONNECTION_STATUS.ERROR);
                     iE.printStackTrace();
+                    if (iOnConnectResult != null)
+                        iOnConnectResult.onFail(CONNECTION_STATUS.ERROR);
                 }
             }
         });
         mConnectionThread.start();
+    }
+
+    public void createDirectory(final String iPath, final String iName, final OnCreateDirectoryResult iOnCreateDirectoryResult) {
+        if (!isConnected()) {
+            LogManager.error(TAG, "Connection not established");
+            return;
+        } else if (isCreatingFolder()) {
+            LogManager.error(TAG, "Is already creating directory");
+            return;
+        }
+
+        mCreateDirectoryThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    FTPFile lExistingFile = mFTPClient.mlistFile(iPath + "/" + iName);
+                    if (lExistingFile != null && lExistingFile.isDirectory()) {
+                        if (iOnCreateDirectoryResult != null)
+                            iOnCreateDirectoryResult.onFail(CONNECTION_STATUS.ERROR_DIRECTORY_ALREADY_EXISTING);
+                        return;
+                    }
+
+                    if (!mFTPClient.makeDirectory(iPath + "/" + iName))
+                        throw new IOException("Creation failed.");
+                    mFTPClient.enterLocalPassiveMode();
+                    FTPFile lCreatedFile = mFTPClient.mlistFile(iPath + "/" + iName);
+                    mFTPClient.enterLocalActiveMode();
+                    lCreatedFile.setName(iName);
+                    if (iOnCreateDirectoryResult != null)
+                        iOnCreateDirectoryResult.onSuccess(lCreatedFile);
+                } catch (IOException iE) {
+                    iE.printStackTrace();
+                    if (iOnCreateDirectoryResult != null)
+                        iOnCreateDirectoryResult.onFail(CONNECTION_STATUS.ERROR);
+                }
+            }
+        });
+        mCreateDirectoryThread.start();
     }
 
     public FTPServer getFTPServer() {
@@ -344,6 +375,10 @@ public class FTPConnection {
 
     public int getFTPServerId() {
         return mFTPServer.getDataBaseId();
+    }
+
+    public FTPFile getCurrentDirectory() {
+        return mCurrentDirectory;
     }
 
     public boolean isConnected() {
@@ -362,8 +397,35 @@ public class FTPConnection {
         return isConnected() && mDirectoryFetchThread != null && mDirectoryFetchThread.isAlive();
     }
 
+    public boolean isCreatingFolder() {
+        return isConnected() && mCreateDirectoryThread != null && mCreateDirectoryThread.isAlive();
+    }
+
     public void setOnConnectionLost(OnConnectionLost iOnConnectionLost) {
         mOnConnectionLost = iOnConnectionLost;
+    }
+
+    private void startReplyStatusThread() {
+        if (mReplyStatusThread == null) {
+            mReplyStatusThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        int lLastCode = -1;
+                        while (!Thread.interrupted()) {
+                            if (lLastCode != mFTPClient.getReplyCode()) {
+                                lLastCode = mFTPClient.getReplyCode();
+                                LogManager.debug(TAG, "code reply : " + lLastCode);
+                            }
+                            Thread.sleep(100);
+                        }
+                    } catch (InterruptedException iE) {
+                        iE.printStackTrace();
+                    }
+                }
+            });
+            mReplyStatusThread.start();
+        }
     }
 
     public enum CONNECTION_STATUS {
@@ -373,6 +435,7 @@ public class FTPConnection {
         ERROR_ALREADY_CONNECTED,
         ERROR_ALREADY_CONNECTING,
         ERROR_CONNECTION_INTERRUPTED,
+        ERROR_DIRECTORY_ALREADY_EXISTING,
         ERROR_NO_INTERNET,
         ERROR_FAILED_LOGIN,
         ERROR_NOT_REACHABLE,
@@ -380,6 +443,12 @@ public class FTPConnection {
 
     public interface OnFetchDirectoryResult {
         void onSuccess(FTPFile[] iFTPFiles);
+
+        void onFail(CONNECTION_STATUS iErrorCode);
+    }
+
+    public interface OnCreateDirectoryResult {
+        void onSuccess(FTPFile iNewDirectory);
 
         void onFail(CONNECTION_STATUS iErrorCode);
     }

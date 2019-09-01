@@ -1,7 +1,6 @@
 package com.example.ftpnext;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -19,6 +18,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AutoCompleteTextView;
@@ -60,7 +60,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private boolean mDirectoryFetchFinished;
     private boolean mIsLargeDirectory;
 
-    private ProgressDialog mBadConnectionDialog;
+    private ProgressDialog mLoadingDialog;
     private ProgressDialog mLargeDirDialog;
     private ProgressDialog mReconnectDialog;
     private AlertDialog mErrorAlertDialog;
@@ -162,43 +162,47 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void openFABMenu() {
-        mIsFABOpen = true;
-        ViewCompat.animate(mMainFAB)
-                .rotation(45F)
-                .withLayer()
-                .setDuration(500L)
-                .setInterpolator(new BounceInterpolator())
-                .start();
+        if (!mIsFABOpen) {
+            mIsFABOpen = true;
+            ViewCompat.animate(mMainFAB)
+                    .rotation(45F)
+                    .withLayer()
+                    .setDuration(500L)
+                    .setInterpolator(new BounceInterpolator())
+                    .start();
 
-        ((View) mCreateFolderFAB).setVisibility(View.VISIBLE);
-        ((View) mUploadFileFAB).setVisibility(View.VISIBLE);
-        mCreateFolderFAB.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_1)).
-                setInterpolator(new DecelerateInterpolator(AppCore.FLOATING_ACTION_BUTTON_INTERPOLATOR));
-        mUploadFileFAB.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_2)).
-                setInterpolator(new DecelerateInterpolator(AppCore.FLOATING_ACTION_BUTTON_INTERPOLATOR));
+            ((View) mCreateFolderFAB).setVisibility(View.VISIBLE);
+            ((View) mUploadFileFAB).setVisibility(View.VISIBLE);
+            mCreateFolderFAB.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_1)).
+                    setInterpolator(new DecelerateInterpolator(AppCore.FLOATING_ACTION_BUTTON_INTERPOLATOR));
+            mUploadFileFAB.animate().translationY(-getResources().getDimension(R.dimen.sub_fab_floor_2)).
+                    setInterpolator(new DecelerateInterpolator(AppCore.FLOATING_ACTION_BUTTON_INTERPOLATOR));
+        }
     }
 
     private void closeFABMenu() {
-        mIsFABOpen = false;
-        ViewCompat.animate(mMainFAB)
-                .rotation(0.0F)
-                .withLayer()
-                .setDuration(500L)
-                .setInterpolator(new BounceInterpolator())
-                .start();
+        if (mIsFABOpen) {
+            mIsFABOpen = false;
+            ViewCompat.animate(mMainFAB)
+                    .rotation(0.0F)
+                    .withLayer()
+                    .setDuration(500L)
+                    .setInterpolator(new BounceInterpolator())
+                    .start();
 
-        mCreateFolderFAB.animate().translationY(0).withEndAction(new Runnable() {
-            @Override
-            public void run() {
-                ((View) mCreateFolderFAB).setVisibility(View.GONE);
-            }
-        });
-        mUploadFileFAB.animate().translationY(0).withEndAction(new Runnable() {
-            @Override
-            public void run() {
-                ((View) mUploadFileFAB).setVisibility(View.GONE);
-            }
-        });
+            mCreateFolderFAB.animate().translationY(0).withEndAction(new Runnable() {
+                @Override
+                public void run() {
+                    ((View) mCreateFolderFAB).setVisibility(View.GONE);
+                }
+            });
+            mUploadFileFAB.animate().translationY(0).withEndAction(new Runnable() {
+                @Override
+                public void run() {
+                    ((View) mUploadFileFAB).setVisibility(View.GONE);
+                }
+            });
+        }
     }
 
     @Override
@@ -227,7 +231,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mRecyclerSection.addView(lNewRecyclerView);
 
         lNewRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        NavigationRecyclerViewAdapter lNewAdapter = new NavigationRecyclerViewAdapter(lNewRecyclerView, this, iDirectoryPath, false);
+        final NavigationRecyclerViewAdapter lNewAdapter = new NavigationRecyclerViewAdapter(lNewRecyclerView, this, iDirectoryPath, false);
         if (mCurrentAdapter != null) {
             lNewAdapter.setPreviousAdapter(mCurrentAdapter);
             mCurrentAdapter.setNextAdapter(lNewAdapter);
@@ -245,6 +249,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
         lNewAdapter.setOnClickListener(new NavigationRecyclerViewAdapter.OnClickListener() {
             @Override
             public void onClick(FTPFile iFTPFile) {
+                closeFABMenu();
+
                 if (iFTPFile.isDirectory()) {
                     if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
                             || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
@@ -292,7 +298,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         dismissAllDialogs();
         mReconnectDialog = null;
         mLargeDirDialog = null;
-        mBadConnectionDialog = null;
+        mLoadingDialog = null;
         mErrorAlertDialog = null;
         mDirectoryFetchFinished = false;
 
@@ -414,22 +420,20 @@ public class FTPNavigationActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                LogManager.error(TAG, "check for loading dialog");
                 if (!mDirectoryFetchFinished && mLargeDirDialog == null) { // in case if dialog has been canceled
-                    mBadConnectionDialog = Utils.initProgressDialog(FTPNavigationActivity.this, new DialogInterface.OnCancelListener() {
+                    mLoadingDialog = Utils.initProgressDialog(FTPNavigationActivity.this, new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
                             dialog.dismiss();
                             finish();
                         }
                     });
-                    mBadConnectionDialog.setTitle("Loading..."); //TODO : strings
-                    mBadConnectionDialog.create();
-                    LogManager.error(TAG, "showing for loading dialog");
+                    mLoadingDialog.setTitle("Loading..."); //TODO : strings
+                    mLoadingDialog.create();
                     if (!mDirectoryFetchFinished)
-                        mBadConnectionDialog.show();
+                        mLoadingDialog.show();
                     else
-                        mBadConnectionDialog = null;
+                        mLoadingDialog = null;
                 }
             }
         }, BAD_CONNECTION_TIME);
@@ -440,15 +444,17 @@ public class FTPNavigationActivity extends AppCompatActivity {
             @Override
             public void onSuccess(final FTPFile[] iFTPFiles) {
                 mDirectoryFetchFinished = true;
-                LogManager.error(TAG, "mDirectoryFetchFinished == true");
-                if (mBadConnectionDialog != null && mBadConnectionDialog.isShowing())
-                    mBadConnectionDialog.dismiss();
+                if (mLoadingDialog != null && mLoadingDialog.isShowing())
+                    mLoadingDialog.dismiss();
                 if (mLargeDirDialog != null)
                     mLargeDirDialog.dismiss();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        inflateNewAdapter(iFTPFiles, mDirectoryPath, iRecovering);
+                        if (iRecovering)
+                            mCurrentAdapter.setData(iFTPFiles);
+                        else
+                            inflateNewAdapter(iFTPFiles, mDirectoryPath, iRecovering);
                     }
                 });
             }
@@ -456,8 +462,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             @Override
             public void onFail(final FTPConnection.CONNECTION_STATUS iErrorCode) {
                 mDirectoryFetchFinished = true;
-                if (mBadConnectionDialog != null)
-                    mBadConnectionDialog.dismiss();
+                if (mLoadingDialog != null)
+                    mLoadingDialog.dismiss();
                 if (mLargeDirDialog != null)
                     mLargeDirDialog.dismiss();
                 runOnUiThread(new Runnable() {
@@ -477,7 +483,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                     })
                                     .create();
                             mErrorAlertDialog.show();
-
                         }
                     }
                 });
@@ -486,6 +491,33 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void createDialogFolderClicked() {
+        FTPFile lEnclosingDirectory = mFTPConnection.getCurrentDirectory();
+        if (lEnclosingDirectory != null && !lEnclosingDirectory.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
+            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+                    .setTitle("Error") // TODO string
+                    .setMessage("Creation has failed...\nYou need permissions")
+                    .setCancelable(false)
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface iDialog, int iWhich) {
+                            iDialog.dismiss();
+                        }
+                    })
+                    .create();
+            mErrorAlertDialog.show();
+            return;
+        }
+
+        mLoadingDialog = Utils.initProgressDialog(FTPNavigationActivity.this, new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                dialog.dismiss();
+                finish();
+            }
+        });
+        mLoadingDialog.setTitle("Loading..."); //TODO : strings
+        mLoadingDialog.create();
+
         final AlertDialog.Builder lBuilder = new AlertDialog.Builder(this);
         lBuilder.setTitle("Create new folder"); // TODO : strings
 
@@ -533,21 +565,63 @@ public class FTPNavigationActivity extends AppCompatActivity {
         lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
+                dialog.dismiss();
+            }
+        });
+        lBuilder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                closeFABMenu();
             }
         });
 
         mCreateFolderDialog = lBuilder.create();
+        mCreateFolderDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         mCreateFolderDialog.show();
         mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
     }
 
     private void createFolder(String iName) {
+        mFTPConnection.createDirectory(mDirectoryPath, iName, new FTPConnection.OnCreateDirectoryResult() {
+            @Override
+            public void onSuccess(final FTPFile iNewDirectory) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mLoadingDialog.dismiss();
+                        mCurrentAdapter.insertItem(iNewDirectory, 0);
+                    }
+                });
+            }
 
+            @Override
+            public void onFail(final FTPConnection.CONNECTION_STATUS iErrorCode) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mLoadingDialog.dismiss();
+                        if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
+                            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+                                    .setTitle("Error") // TODO string
+                                    .setMessage("Creation has failed...\nCode : " + iErrorCode.name())
+                                    .setCancelable(false)
+                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface iDialog, int iWhich) {
+                                            iDialog.dismiss();
+                                        }
+                                    })
+                                    .create();
+                            mErrorAlertDialog.show();
+                        }
+                    }
+                });
+            }
+        });
     }
 
     private void onUploadFileClicked() {
-
+        // TODO : upload file
     }
 
     private void dismissAllDialogs() {
@@ -555,8 +629,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mReconnectDialog.dismiss();
         if (mLargeDirDialog != null)
             mLargeDirDialog.dismiss();
-        if (mBadConnectionDialog != null)
-            mBadConnectionDialog.dismiss();
+        if (mLoadingDialog != null)
+            mLoadingDialog.dismiss();
         if (mErrorAlertDialog != null)
             mErrorAlertDialog.dismiss();
     }
