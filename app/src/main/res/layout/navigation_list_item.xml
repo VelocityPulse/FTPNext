@@ -12,7 +12,7 @@
     android:paddingLeft="15dp"
     android:paddingRight="13dp"
     android:showDividers="middle"
-    tools:showIn="@layout/navigation_recycler_view">
+    tools:showIn="@layout/navigation_recycler_layout">
 
     <ImageView
         android:id="@+id/navigation_recycler_item_left_draw"

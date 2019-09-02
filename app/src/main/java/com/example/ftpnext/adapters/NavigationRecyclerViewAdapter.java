@@ -2,6 +2,7 @@ package com.example.ftpnext.adapters;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,49 +30,36 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     private static final String TAG = "NAVIGATION RECYCLER VIEW ADAPTER";
     private List<FTPFile> mItemList;
     private List<CustomItemViewAdapter> mCustomItems;
-    private Animation.AnimationListener mDisappearAnimationListener;
     private OnLongClickListener mLongClickListener;
     private OnClickListener mClickListener;
     private RecyclerView mRecyclerView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private Context mContext;
     private String mDirectoryPath;
 
     private NavigationRecyclerViewAdapter mNextAdapter;
     private NavigationRecyclerViewAdapter mPreviousAdapter;
 
-    public NavigationRecyclerViewAdapter(List<FTPFile> iItemList, RecyclerView iRecyclerView, Context iContext, String iDirectoryPath, boolean iVisible) {
+    public NavigationRecyclerViewAdapter(Context iContext, List<FTPFile> iItemList, RecyclerView iRecyclerView,
+                                         SwipeRefreshLayout iSwipeRefreshLayout, String iDirectoryPath, boolean iVisible) {
+        mContext = iContext;
         mItemList = iItemList;
         mRecyclerView = iRecyclerView;
-        mContext = iContext;
+        mSwipeRefreshLayout = iSwipeRefreshLayout;
         mDirectoryPath = iDirectoryPath;
-        mRecyclerView.setVisibility(iVisible ? View.VISIBLE : View.GONE);
+        mSwipeRefreshLayout.setVisibility(iVisible ? View.VISIBLE : View.GONE);
         mCustomItems = new ArrayList<>();
     }
 
-    public NavigationRecyclerViewAdapter(RecyclerView iRecyclerView, Context iContext, String iDirectoryPath, boolean iVisible) {
+    public NavigationRecyclerViewAdapter(Context iContext, RecyclerView iRecyclerView,
+                                         SwipeRefreshLayout iSwipeRefreshLayout, String iDirectoryPath, boolean iVisible) {
+        mContext = iContext;
         mItemList = new ArrayList<>();
         mRecyclerView = iRecyclerView;
-        mContext = iContext;
+        mSwipeRefreshLayout = iSwipeRefreshLayout;
         mDirectoryPath = iDirectoryPath;
-        mRecyclerView.setVisibility(iVisible ? View.VISIBLE : View.GONE);
+        mSwipeRefreshLayout.setVisibility(iVisible ? View.VISIBLE : View.GONE);
         mCustomItems = new ArrayList<>();
-    }
-
-    private void initialize() {
-        mDisappearAnimationListener = new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                mRecyclerView.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        };
     }
 
     @NonNull
@@ -199,7 +187,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     }
 
     public void appearVertically() {
-        Animation lAnimation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.recycler_animation_appear_vertically);
+        Animation lAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_appear_vertically);
         lAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
@@ -216,12 +204,12 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
             }
         });
-        mRecyclerView.startAnimation(lAnimation);
-        mRecyclerView.setVisibility(View.VISIBLE);
+        mSwipeRefreshLayout.startAnimation(lAnimation);
+        mSwipeRefreshLayout.setVisibility(View.VISIBLE);
     }
 
     public void appearOnRight() {
-        Animation lAnimation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.recycler_animation_appear_on_right);
+        Animation lAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_appear_on_right);
         lAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
@@ -238,12 +226,12 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
             }
         });
-        mRecyclerView.startAnimation(lAnimation);
-        mRecyclerView.setVisibility(View.VISIBLE);
+        mSwipeRefreshLayout.startAnimation(lAnimation);
+        mSwipeRefreshLayout.setVisibility(View.VISIBLE);
     }
 
     public void appearOnLeft() {
-        Animation lAnimation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.recycler_animation_appear_on_left);
+        Animation lAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_appear_on_left);
         lAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
@@ -259,12 +247,12 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             public void onAnimationRepeat(Animation animation) {
             }
         });
-        mRecyclerView.startAnimation(lAnimation);
-        mRecyclerView.setVisibility(View.VISIBLE);
+        mSwipeRefreshLayout.startAnimation(lAnimation);
+        mSwipeRefreshLayout.setVisibility(View.VISIBLE);
     }
 
     public void disappearOnRightAndDestroy(final Runnable iOnAnimationEnd) {
-        Animation lAnimation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.recycler_animation_disappear_on_right);
+        Animation lAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_disappear_on_right);
         lAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
@@ -280,11 +268,11 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             public void onAnimationRepeat(Animation animation) {
             }
         });
-        mRecyclerView.startAnimation(lAnimation);
+        mSwipeRefreshLayout.startAnimation(lAnimation);
     }
 
     public void disappearOnLeft() {
-        Animation lAnimation = AnimationUtils.loadAnimation(mRecyclerView.getContext(), R.anim.recycler_animation_disappear_on_left);
+        Animation lAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_disappear_on_left);
         lAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
@@ -293,14 +281,14 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                mRecyclerView.setVisibility(View.GONE);
+                mSwipeRefreshLayout.setVisibility(View.GONE);
             }
 
             @Override
             public void onAnimationRepeat(Animation animation) {
             }
         });
-        mRecyclerView.startAnimation(lAnimation);
+        mSwipeRefreshLayout.startAnimation(lAnimation);
     }
 
     public NavigationRecyclerViewAdapter getNextAdapter() {
@@ -325,6 +313,10 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
     public RecyclerView getRecyclerView() {
         return mRecyclerView;
+    }
+
+    public SwipeRefreshLayout getSwipeRefreshLayout() {
+        return mSwipeRefreshLayout;
     }
 
     private void setItemsTransparent() {

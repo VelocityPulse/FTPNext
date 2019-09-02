@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <color name="colorPrimaryLight">#5eb8ff</color>
     <color name="colorPrimary">#0288d1</color>
     <color name="colorPrimaryDark">#005b9f</color>
-    <color name="colorPrimaryLight">#5eb8ff</color>
     <color name="colorSecondary">#DE4255</color>
+    <color name="colorSecondaryLight">#ff7681</color>
     <color name="colorBackground">#ffffff</color>
+
+    <color name="androidColorGray">#ff888888</color>
 
     <!--<color name="mtrl_textinput_default_box_stroke_color" tools:override="true">#fff</color>-->
 

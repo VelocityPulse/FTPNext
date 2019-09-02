@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.view.ViewCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -233,11 +234,31 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void inflateNewAdapter(FTPFile[] iFTPFiles, String iDirectoryPath, boolean iForceVerticalAppear) {
-        RecyclerView lNewRecyclerView = (RecyclerView) View.inflate(this, R.layout.navigation_recycler_view, null);
-        mRecyclerSection.addView(lNewRecyclerView);
+        SwipeRefreshLayout lSwipeRefreshLayout = (SwipeRefreshLayout) View.inflate(this, R.layout.navigation_recycler_layout, null);
+        lSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                runFetchProcedures(mDirectoryPath, false, true);
+            }
+        });
+
+        lSwipeRefreshLayout.setColorSchemeResources(
+                R.color.colorPrimaryLight,
+                R.color.colorSecondaryLight,
+                R.color.colorPrimaryDark);
+
+        mRecyclerSection.addView(lSwipeRefreshLayout);
+
+        RecyclerView lNewRecyclerView = lSwipeRefreshLayout.findViewById(R.id.navigation_recycler_view);
 
         lNewRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        final NavigationRecyclerViewAdapter lNewAdapter = new NavigationRecyclerViewAdapter(lNewRecyclerView, this, iDirectoryPath, false);
+        final NavigationRecyclerViewAdapter lNewAdapter = new NavigationRecyclerViewAdapter(
+                this,
+                lNewRecyclerView,
+                lSwipeRefreshLayout,
+                iDirectoryPath,
+                false);
+
         if (mCurrentAdapter != null) {
             lNewAdapter.setPreviousAdapter(mCurrentAdapter);
             mCurrentAdapter.setNextAdapter(lNewAdapter);
@@ -429,6 +450,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
             @Override
             public void run() {
                 if (!mDirectoryFetchFinished && mLargeDirDialog == null) { // in case if dialog has been canceled
+                    if (mCurrentAdapter != null && mCurrentAdapter.getSwipeRefreshLayout().isRefreshing())
+                        return;
+
                     mLoadingDialog = Utils.initProgressDialog(FTPNavigationActivity.this, new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
@@ -459,8 +483,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (iRecovering)
+                        if (iRecovering) {
                             mCurrentAdapter.setData(iFTPFiles);
+                            mCurrentAdapter.appearVertically();
+                            mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);
+                        }
                         else
                             inflateNewAdapter(iFTPFiles, mDirectoryPath, iRecovering);
                     }
