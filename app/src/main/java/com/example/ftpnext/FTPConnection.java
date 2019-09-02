@@ -23,6 +23,7 @@ import java.util.List;
 
 public class FTPConnection {
 
+    private static final int RECONNECTION_WAITING_TIME = 700;
     private static String TAG = "FTP CONNECTION";
 
     private static int ITEM_FETCHED_BY_GROUP = 25;
@@ -156,8 +157,8 @@ public class FTPConnection {
                             }
                         });
                         try {
-                            LogManager.error(TAG, "Reconnection waiting...");
-                            Thread.sleep(400);
+                            LogManager.info(TAG, "Reconnection waiting...");
+                            Thread.sleep(RECONNECTION_WAITING_TIME);
                         } catch (InterruptedException iE) {
                             iE.printStackTrace();
                         }

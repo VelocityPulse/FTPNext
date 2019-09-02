@@ -82,7 +82,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mIsRunning = true;
         initializeGUI();
         initialize();
-        runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
+        if (mFTPConnection == null)
+            buildFTPConnection(true, true);
+        else
+            runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
     }
 
     @Override
@@ -91,7 +94,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
         super.onResume();
         if (mFTPConnection == null) {
             initialize();
-            runFetchProcedures(mDirectoryPath, false, true);
+            if (mFTPConnection == null)
+                buildFTPConnection(true, true);
+            else
+                runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
         }
     }
 
@@ -288,7 +294,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
 
         // Directory path
-        mDirectoryPath = mBundle.getString(KEY_DIRECTORY_PATH, ROOT_DIRECTORY);
+        if (mDirectoryPath == null)
+            mDirectoryPath = mBundle.getString(KEY_DIRECTORY_PATH, ROOT_DIRECTORY);
 
         // FTP Connection
         mFTPConnection = FTPConnection.getFTPConnection(lServerId);
@@ -634,6 +641,77 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mLoadingDialog.dismiss();
         if (mErrorAlertDialog != null)
             mErrorAlertDialog.dismiss();
+    }
+
+    private void buildFTPConnection(final boolean iIsRecovering, final boolean iRunFetchOnSuccess) {
+        LogManager.info(TAG, "Rebuild FTP Connection");
+        if (mFTPServer == null) {
+            LogManager.error(TAG, "mFTPServer is null");
+            LogManager.error(TAG, Arrays.toString(new Exception("mFTPServer instance is null").getStackTrace()));
+        }
+
+        mFTPConnection = new FTPConnection(mFTPServer);
+
+        mLoadingDialog = Utils.initProgressDialog(this, new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                dialog.dismiss();
+                if (mFTPConnection.isConnecting())
+                    mFTPConnection.abortConnection();
+                mFTPConnection.destroyConnection();
+            }
+        });
+        mLoadingDialog.setContentView(R.layout.loading_icon);
+        if (iIsRecovering)
+            mLoadingDialog.setTitle("Reconnection..."); // TODO : strings
+        else
+            mLoadingDialog.setTitle("Connection..."); // TODO : strings
+        mLoadingDialog.create();
+        mLoadingDialog.show();
+
+        mFTPConnection.connect(new FTPConnection.OnConnectResult() {
+            @Override
+            public void onSuccess() {
+                dismissAllDialogs();
+                if (iRunFetchOnSuccess) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFail(final FTPConnection.CONNECTION_STATUS iErrorCode) {
+                if (iErrorCode == FTPConnection.CONNECTION_STATUS.ERROR_CONNECTION_INTERRUPTED)
+                    return;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mIsRunning) {
+                            mLoadingDialog.dismiss();
+
+                            new AlertDialog.Builder(FTPNavigationActivity.this)
+                                    .setTitle("Error") // TODO string
+                                    .setMessage((iIsRecovering ? "Reconnection" : "Connection") + " failed...\nCode : " + iErrorCode)
+                                    .setCancelable(false)
+                                    .setPositiveButton("Terminate", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            finishAllNavigationActivities();
+                                        }
+                                    })
+                                    .create()
+                                    .show();
+                        }
+                        mFTPConnection.destroyConnection();
+                    }
+                });
+            }
+        });
     }
 
     // TODO : remove this code
