@@ -234,7 +234,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
         lDeprecatedAdapter.getPreviousAdapter().appearOnLeft();
         mCurrentAdapter = lDeprecatedAdapter.getPreviousAdapter();
-        lDeprecatedAdapter.setNextAdapter(null);
+        mCurrentAdapter.setNextAdapter(null);
         mDirectoryPath = mCurrentAdapter.getDirectoryPath();
     }
 
@@ -259,6 +259,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         lNewRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         final NavigationRecyclerViewAdapter lNewAdapter = new NavigationRecyclerViewAdapter(
                 this,
+                mRecyclerSection,
                 lNewRecyclerView,
                 lSwipeRefreshLayout,
                 iDirectoryPath,

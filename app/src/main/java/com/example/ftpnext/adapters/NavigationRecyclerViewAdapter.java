@@ -12,6 +12,7 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Transformation;
 import android.widget.CheckBox;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -36,6 +37,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     private OnLongClickListener mLongClickListener;
     private OnClickListener mClickListener;
     private RecyclerView mRecyclerView;
+    private FrameLayout mRecyclerSection;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private Context mContext;
     private String mDirectoryPath;
@@ -44,10 +46,11 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     private NavigationRecyclerViewAdapter mNextAdapter;
     private NavigationRecyclerViewAdapter mPreviousAdapter;
 
-    public NavigationRecyclerViewAdapter(Context iContext, List<FTPFile> iItemList, RecyclerView iRecyclerView,
+    public NavigationRecyclerViewAdapter(Context iContext, List<FTPFile> iItemList, FrameLayout iRecyclerSection, RecyclerView iRecyclerView,
                                          SwipeRefreshLayout iSwipeRefreshLayout, String iDirectoryPath, boolean iVisible) {
         mContext = iContext;
         mItemList = iItemList;
+        mRecyclerSection = iRecyclerSection;
         mRecyclerView = iRecyclerView;
         mSwipeRefreshLayout = iSwipeRefreshLayout;
         mDirectoryPath = iDirectoryPath;
@@ -55,10 +58,11 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         mCustomItems = new ArrayList<>();
     }
 
-    public NavigationRecyclerViewAdapter(Context iContext, RecyclerView iRecyclerView,
+    public NavigationRecyclerViewAdapter(Context iContext, FrameLayout iRecyclerSection, RecyclerView iRecyclerView,
                                          SwipeRefreshLayout iSwipeRefreshLayout, String iDirectoryPath, boolean iVisible) {
         mContext = iContext;
         mItemList = new ArrayList<>();
+        mRecyclerSection = iRecyclerSection;
         mRecyclerView = iRecyclerView;
         mSwipeRefreshLayout = iSwipeRefreshLayout;
         mDirectoryPath = iDirectoryPath;
@@ -335,21 +339,28 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
             if (iInSelectionMode && !mIsInSelectionMode) {
 
-                for (final CustomItemViewAdapter lItem : mCustomItems) {
-                    LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(
-                            lItem.mLeftSection, lItem.mCheckBox, true, lLeftSectionShift);
+//                for (final CustomItemViewAdapter lItem : mCustomItems) {
+//                    LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(
+//                            lItem.mLeftSection, lItem.mCheckBox, true, lLeftSectionShift);
+//
+//                    lItem.mLeftSection.startAnimation(lLeftSectionAnimation);
+//                }
 
-                    lItem.mLeftSection.startAnimation(lLeftSectionAnimation);
-                }
+                LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(true, lLeftSectionShift);
+                mRecyclerSection.startAnimation(lLeftSectionAnimation);
+
                 mIsInSelectionMode = true;
             } else if (mIsInSelectionMode) {
 
-                for (final CustomItemViewAdapter lItem : mCustomItems) {
-                    LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(
-                            lItem.mLeftSection, lItem.mCheckBox, false, lLeftSectionShift);
+//                for (final CustomItemViewAdapter lItem : mCustomItems) {
+//                    LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(
+//                            lItem.mLeftSection, lItem.mCheckBox, false, lLeftSectionShift);
+//
+//                    lItem.mLeftSection.startAnimation(lLeftSectionAnimation);
+//                }
 
-                    lItem.mLeftSection.startAnimation(lLeftSectionAnimation);
-                }
+                LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(false, lLeftSectionShift);
+                mRecyclerSection.startAnimation(lLeftSectionAnimation);
                 mIsInSelectionMode = false;
             }
 
@@ -385,27 +396,28 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     private class LeftSectionAnimation extends Animation {
 
         private float mLeftSectionShift;
-        private View mCheckBox;
-        private View mLeftSection;
         private boolean mIsAppearing;
 
-        public LeftSectionAnimation(View iLeftSection, View iCheckBox, boolean iIsAppearing, float iLeftSectionShift) {
+        public LeftSectionAnimation(boolean iIsAppearing, float iLeftSectionShift) {
             mLeftSectionShift = -iLeftSectionShift;
-            mCheckBox = iCheckBox;
-            mLeftSection = iLeftSection;
             mIsAppearing = iIsAppearing;
 
             this.setAnimationListener(new AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
-                    if (mIsAppearing)
-                        mCheckBox.setVisibility(View.VISIBLE);
+                    LogManager.debug(TAG, "On animation start");
+                    if (mIsAppearing) {
+                        for (CustomItemViewAdapter lItem : mCustomItems)
+                            lItem.mCheckBox.setVisibility(View.VISIBLE);
+                    }
                 }
 
                 @Override
                 public void onAnimationEnd(Animation animation) {
-                    if (!mIsAppearing)
-                        mCheckBox.setVisibility(View.INVISIBLE);
+                    if (!mIsAppearing) {
+                        for (CustomItemViewAdapter lItem : mCustomItems)
+                            lItem.mCheckBox.setVisibility(View.INVISIBLE);
+                    }
                 }
 
                 @Override
@@ -419,21 +431,31 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         }
 
         @Override
+        public void start() {
+            LogManager.info(TAG, "Start");
+            super.start();
+        }
+
+        @Override
         protected void applyTransformation(float iInterpolatedTime, Transformation iTransformation) {
-            ViewGroup.MarginLayoutParams lSectionLayoutParams = (ViewGroup.MarginLayoutParams) mLeftSection.getLayoutParams();
             float lMarginLeft;
+            float lCheckBoxAlpha;
 
             // Formula: (mToWidth - mFromWidth) * interpolatedTime + mFromWidth;
             if (mIsAppearing) {
                 lMarginLeft = (0 - mLeftSectionShift) * iInterpolatedTime + mLeftSectionShift;
-                mCheckBox.setAlpha(iInterpolatedTime);
+                lCheckBoxAlpha = iInterpolatedTime;
             } else {
                 lMarginLeft = mLeftSectionShift * iInterpolatedTime;
-                mCheckBox.setAlpha(1 - iInterpolatedTime);
+                lCheckBoxAlpha = 1 - iInterpolatedTime;
             }
 
-            lSectionLayoutParams.leftMargin = (int) lMarginLeft;
-            mCheckBox.requestLayout();
+            for (CustomItemViewAdapter lItem : mCustomItems) {
+                ViewGroup.MarginLayoutParams lSectionLayoutParams = (ViewGroup.MarginLayoutParams) lItem.mLeftSection.getLayoutParams();
+                lSectionLayoutParams.leftMargin = (int) lMarginLeft;
+                lItem.mLeftSection.requestLayout();
+                lItem.mCheckBox.setAlpha(lCheckBoxAlpha);
+            }
 
             super.applyTransformation(iInterpolatedTime, iTransformation);
         }
