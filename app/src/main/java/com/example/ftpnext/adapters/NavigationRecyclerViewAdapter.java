@@ -1,5 +1,6 @@
 package com.example.ftpnext.adapters;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -9,8 +10,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.Transformation;
+import android.widget.CheckBox;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.ftpnext.R;
@@ -25,6 +29,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+
 public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<NavigationRecyclerViewAdapter.CustomItemViewAdapter> {
 
     private static final String TAG = "NAVIGATION RECYCLER VIEW ADAPTER";
@@ -36,6 +42,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private Context mContext;
     private String mDirectoryPath;
+    private boolean mIsInSelectionMode;
 
     private NavigationRecyclerViewAdapter mNextAdapter;
     private NavigationRecyclerViewAdapter mPreviousAdapter;
@@ -65,7 +72,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     @NonNull
     @Override
     public CustomItemViewAdapter onCreateViewHolder(@NonNull ViewGroup iViewGroup, int iI) {
-        LinearLayout lLayout = (LinearLayout) LayoutInflater.
+        RelativeLayout lLayout = (RelativeLayout) LayoutInflater.
                 from(iViewGroup.getContext()).inflate(R.layout.navigation_list_item, iViewGroup, false);
 
         CustomItemViewAdapter oViewHolder = new CustomItemViewAdapter(lLayout,
@@ -73,7 +80,9 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_main_text),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_secondary_text),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_third_text),
-                (TextView) lLayout.findViewById(R.id.navigation_recycler_item_fourth));
+                (TextView) lLayout.findViewById(R.id.navigation_recycler_item_fourth),
+                (CheckBox) lLayout.findViewById(R.id.navigation_recycler_item_checkbox),
+                lLayout.findViewById(R.id.navigation_recycler_item_void));
 
         mCustomItems.add(oViewHolder);
 
@@ -319,6 +328,77 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         return mSwipeRefreshLayout;
     }
 
+    public boolean isInSelectionMode() {
+        return mIsInSelectionMode;
+    }
+
+    public void setSelectionMode(boolean iInSelectionMode) {
+        if (mCustomItems.size() > 0) {
+
+            mCustomItems.get(0).mCheckBox.measure(WRAP_CONTENT, WRAP_CONTENT);
+            final int lWrapContentSize = mCustomItems.get(0).mCheckBox.getMeasuredWidth();
+
+            if (iInSelectionMode && !mIsInSelectionMode) {
+                Animation lCheckBoxAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_checkbox_appear);
+//                lCheckBoxAnimation.setFillEnabled(true);
+//                lCheckBoxAnimation.setFillAfter(true);
+//                lCheckBoxAnimation.setFillBefore(true);
+
+                for (final CustomItemViewAdapter lItem : mCustomItems) {
+                    ValueAnimator lValueAnimator = ValueAnimator
+                            .ofInt(0, lWrapContentSize)
+                            .setDuration(mContext.getResources().getInteger(R.integer.recycler_animation_time));
+                    lValueAnimator.setInterpolator(new DecelerateInterpolator());
+
+                    lValueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                        @Override
+                        public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                            int lWidth = (int) valueAnimator.getAnimatedValue();
+                            ViewGroup.LayoutParams lP = lItem.mVoidView.getLayoutParams();
+                            lP.width = lWidth;
+                            lItem.mVoidView.requestLayout();
+                        }
+                    });
+
+                    lValueAnimator.start();
+                    lItem.mCheckBox.startAnimation(lCheckBoxAnimation);
+                    lItem.mCheckBox.setVisibility(View.VISIBLE);
+                    mIsInSelectionMode = true;
+                }
+            } else if (mIsInSelectionMode) {
+                Animation lCheckBoxAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_checkbox_disappear);
+//                lCheckBoxAnimation.setFillEnabled(true);
+//                lCheckBoxAnimation.setFillAfter(true);
+//                lCheckBoxAnimation.setFillBefore(true);
+
+                for (final CustomItemViewAdapter lItem : mCustomItems) {
+
+                    ValueAnimator lValueAnimator = ValueAnimator
+                            .ofInt(lWrapContentSize, 0)
+                            .setDuration(mContext.getResources().getInteger(R.integer.recycler_animation_time));
+                    lValueAnimator.setInterpolator(new DecelerateInterpolator());
+
+                    lValueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                        @Override
+                        public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                            int lWidth = (int) valueAnimator.getAnimatedValue();
+                            ViewGroup.LayoutParams lP = lItem.mVoidView.getLayoutParams();
+                            lP.width = lWidth;
+                            lItem.mVoidView.requestLayout();
+                        }
+                    });
+
+                    lValueAnimator.start();
+                    lItem.mCheckBox.startAnimation(lCheckBoxAnimation);
+                    lItem.mCheckBox.setVisibility(View.INVISIBLE);
+                    mIsInSelectionMode = false;
+
+                }
+            }
+
+        }
+    }
+
     private void setItemsTransparent() {
         for (CustomItemViewAdapter lItem : mCustomItems) {
             lItem.mMainLayout.setBackgroundResource(android.R.color.transparent);
@@ -343,16 +423,47 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         void onClick(FTPFile iFTPFile);
     }
 
-    public class CustomItemViewAdapter extends RecyclerView.ViewHolder {
+    private class CheckBoxAnimation extends Animation {
+
+        private int mWrapContentWidth;
+        private View mCheckBox;
+        private boolean mIsAppearing;
+
+        public void init(View iCheckBox, boolean iIsAppearing, int iWrapContentWidth) {
+            mWrapContentWidth = iWrapContentWidth;
+            mCheckBox = iCheckBox;
+            mIsAppearing = iIsAppearing;
+        }
+
+        @Override
+        protected void applyTransformation(float iInterpolatedTime, Transformation iTransformation) {
+            if (mIsAppearing) {
+                float lWidth = mWrapContentWidth * iInterpolatedTime;
+                ViewGroup.LayoutParams lP = mCheckBox.getLayoutParams();
+                lP.width = (int) lWidth;
+                mCheckBox.requestLayout();
+            } else {
+                float lWidth = (0 - mWrapContentWidth) * iInterpolatedTime + mWrapContentWidth;
+                ViewGroup.LayoutParams lP = mCheckBox.getLayoutParams();
+                lP.width = (int) lWidth;
+                mCheckBox.requestLayout();
+            }
+            super.applyTransformation(iInterpolatedTime, iTransformation);
+        }
+    }
+
+    protected class CustomItemViewAdapter extends RecyclerView.ViewHolder {
         View mMainLayout;
         ImageView mLeftImage;
         TextView mMainText;
         TextView mSecondaryText;
         TextView mThirdText;
         TextView mFourthText;
+        CheckBox mCheckBox;
+        View mVoidView;
 
         public CustomItemViewAdapter(@NonNull View iMainView, ImageView iLeftImage, TextView iMainText, TextView iSecondaryText,
-                                     TextView iThirdText, TextView iFourthText) {
+                                     TextView iThirdText, TextView iFourthText, CheckBox iCheckBox, View iVoidView) {
             super(iMainView);
             mMainLayout = iMainView;
             mLeftImage = iLeftImage;
@@ -360,6 +471,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             mSecondaryText = iSecondaryText;
             mThirdText = iThirdText;
             mFourthText = iFourthText;
+            mCheckBox = iCheckBox;
+            mVoidView = iVoidView;
         }
     }
 }

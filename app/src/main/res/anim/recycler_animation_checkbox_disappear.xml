@@ -3,13 +3,13 @@
     android:duration="@integer/recycler_animation_time">
 
     <translate
-        android:fromXDelta="15%"
+        android:fromXDelta="0%"
         android:interpolator="@android:anim/decelerate_interpolator"
-        android:toXDelta="0" />
+        android:toXDelta="-60%" />
 
     <alpha
-        android:fromAlpha="0"
+        android:fromAlpha="1"
         android:interpolator="@android:anim/decelerate_interpolator"
-        android:toAlpha="1" />
+        android:toAlpha="0" />
 
 </set>

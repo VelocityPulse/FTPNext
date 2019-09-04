@@ -3,7 +3,7 @@
     android:duration="@integer/recycler_animation_time">
 
     <translate
-        android:fromXDelta="15%"
+        android:fromXDelta="-60%"
         android:interpolator="@android:anim/decelerate_interpolator"
         android:toXDelta="0" />
 

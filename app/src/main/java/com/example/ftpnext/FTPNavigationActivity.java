@@ -123,6 +123,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
             return;
         }
 
+        if (mCurrentAdapter.isInSelectionMode()) {
+            mCurrentAdapter.setSelectionMode(false);
+            return;
+        }
+
         if (mCurrentAdapter.getPreviousAdapter() != null) {
             destroyCurrentAdapter();
             return;
@@ -286,6 +291,15 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
                     } else
                         Utils.createErrorAlertDialog(FTPNavigationActivity.this, "You don't have enough permission");
+                }
+            }
+        });
+
+        lNewAdapter.setOnLongClickListener(new NavigationRecyclerViewAdapter.OnLongClickListener() {
+            @Override
+            public void onLongClick(FTPFile iFTPFile) {
+                if (!lNewAdapter.isInSelectionMode()) {
+                    lNewAdapter.setSelectionMode(true);
                 }
             }
         });
@@ -487,8 +501,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             mCurrentAdapter.setData(iFTPFiles);
                             mCurrentAdapter.appearVertically();
                             mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);
-                        }
-                        else
+                        } else
                             inflateNewAdapter(iFTPFiles, mDirectoryPath, iRecovering);
                     }
                 });
