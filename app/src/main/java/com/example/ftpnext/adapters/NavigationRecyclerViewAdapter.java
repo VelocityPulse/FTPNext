@@ -13,6 +13,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Transformation;
 import android.widget.CheckBox;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.ftpnext.R;
@@ -68,7 +69,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     @NonNull
     @Override
     public CustomItemViewAdapter onCreateViewHolder(@NonNull ViewGroup iViewGroup, int iI) {
-        View lLayout = LayoutInflater.
+        LinearLayout lLayout = (LinearLayout) LayoutInflater.
                 from(iViewGroup.getContext()).inflate(R.layout.navigation_list_item, iViewGroup, false);
 
         CustomItemViewAdapter oViewHolder = new CustomItemViewAdapter(lLayout,
@@ -356,12 +357,14 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     }
 
     private void setItemsTransparent() {
+        LogManager.info(TAG, "Set item transparent");
         for (CustomItemViewAdapter lItem : mCustomItems) {
             lItem.mMainLayout.setBackgroundResource(android.R.color.transparent);
         }
     }
 
     private void setItemsRipple() {
+        LogManager.info(TAG, "Set item ripple");
         for (CustomItemViewAdapter lItem : mCustomItems) {
             lItem.mMainLayout.setBackgroundResource(R.drawable.ripple_effect_primary);
         }
@@ -437,7 +440,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     }
 
     protected class CustomItemViewAdapter extends RecyclerView.ViewHolder {
-        View mMainLayout;
+        LinearLayout mMainLayout;
         View mLeftSection;
         ImageView mLeftImage;
         TextView mMainText;
@@ -446,7 +449,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         TextView mFourthText;
         CheckBox mCheckBox;
 
-        public CustomItemViewAdapter(@NonNull View iMainView, View iLeftSection, ImageView iLeftImage, TextView iMainText, TextView iSecondaryText,
+        public CustomItemViewAdapter(@NonNull LinearLayout iMainView, View iLeftSection, ImageView iLeftImage, TextView iMainText, TextView iSecondaryText,
                                      TextView iThirdText, TextView iFourthText, CheckBox iCheckBox) {
             super(iMainView);
             mMainLayout = iMainView;

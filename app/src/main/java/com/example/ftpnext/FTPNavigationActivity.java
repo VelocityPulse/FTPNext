@@ -234,7 +234,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
         lDeprecatedAdapter.getPreviousAdapter().appearOnLeft();
         mCurrentAdapter = lDeprecatedAdapter.getPreviousAdapter();
-        mCurrentAdapter.setNextAdapter(null);
+        lDeprecatedAdapter.setNextAdapter(null);
         mDirectoryPath = mCurrentAdapter.getDirectoryPath();
     }
 
