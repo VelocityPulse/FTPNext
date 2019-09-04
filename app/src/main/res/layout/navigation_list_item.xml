@@ -1,43 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/navigation_recycler_item"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_navigation_item_height"
     android:background="@drawable/ripple_effect_primary"
+    android:baselineAligned="false"
     android:clickable="true"
     android:focusable="true"
-    android:paddingStart="0dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="6dp"
     android:paddingEnd="13dp"
     android:showDividers="middle">
 
     <LinearLayout
+        android:id="@+id/navigation_recycler_item_left_section"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:gravity="center">
+        android:layout_height="wrap_content"
+        android:layout_marginStart="-32dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+        <!--        android:layout_marginStart="15dp"
+            put positive to negative
+        -->
 
         <CheckBox
             android:id="@+id/navigation_recycler_item_checkbox"
             android:layout_width="wrap_content"
-            android:layout_marginStart="11dp"
-            android:layout_height="wrap_content"
-            android:visibility="gone" />
+            android:layout_height="match_parent"
+            android:layout_marginEnd="6dp"
+            android:visibility="visible" />
 
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="15dp"
-        android:paddingEnd="0dp">
-
-        <View
-            android:id="@+id/navigation_recycler_item_void"
-            android:layout_width="0dp"
-            android:layout_height="0dp" />
-
+        <!--TODO : resources sizes -->
         <ImageView
             android:id="@+id/navigation_recycler_item_left_draw"
             android:layout_width="36dp"
@@ -45,58 +40,59 @@
             android:src="@drawable/ic_outline_file_24"
             tools:ignore="ContentDescription" />
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="10dp"
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/navigation_recycler_item_main_text"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
             android:layout_weight="2"
-            android:orientation="vertical">
+            android:maxLines="2"
+            android:text="Main text"
+            android:textSize="19sp" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="3dp">
+
+            <!--date -->
             <TextView
-                android:id="@+id/navigation_recycler_item_main_text"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginTop="4dp"
-                android:layout_weight="2"
-                android:maxLines="2"
-                android:text="Main text"
-                android:textSize="19sp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/navigation_recycler_item_secondary_text"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:paddingBottom="3dp">
+                android:layout_weight="1"
+                android:text="(Date)"
+                android:textSize="13sp" />
 
-                <!--date -->
-                <TextView
-                    android:id="@+id/navigation_recycler_item_secondary_text"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:text="(Date)"
-                    android:textSize="13sp" />
+            <!--rights -->
+            <TextView
+                android:id="@+id/navigation_recycler_item_third_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="(rights)"
+                android:textAlignment="textEnd"
+                android:textSize="15sp" />
 
-                <!--rights -->
-                <TextView
-                    android:id="@+id/navigation_recycler_item_third_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="(rights)"
-                    android:textAlignment="textEnd"
-                    android:textSize="15sp" />
-
-                <TextView
-                    android:id="@+id/navigation_recycler_item_fourth"
-                    android:layout_width="65dp"
-                    android:layout_height="wrap_content"
-                    android:text="(size)"
-                    android:textAlignment="textEnd"
-                    android:textSize="15sp" />
-
-            </LinearLayout>
+            <!--size -->
+            <TextView
+                android:id="@+id/navigation_recycler_item_fourth"
+                android:layout_width="65dp"
+                android:layout_height="wrap_content"
+                android:text="(size)"
+                android:textAlignment="textEnd"
+                android:textSize="15sp" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-</RelativeLayout>
+</LinearLayout>
