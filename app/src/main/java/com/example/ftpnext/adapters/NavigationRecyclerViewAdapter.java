@@ -348,7 +348,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
                 LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(true, lLeftSectionShift);
                 mRecyclerSection.startAnimation(lLeftSectionAnimation);
-
+// TODO : Bug in the adapters : cannot click after destroyrecycler
                 mIsInSelectionMode = true;
             } else if (mIsInSelectionMode) {
 

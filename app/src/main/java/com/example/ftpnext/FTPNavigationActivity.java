@@ -118,6 +118,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        LogManager.info(TAG, "On back pressed" );
         if (mIsFABOpen) {
             closeFABMenu();
             return;
@@ -224,21 +225,23 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void destroyCurrentAdapter() {
+        LogManager.info(TAG, "Destroy current adapter");
         final NavigationRecyclerViewAdapter lDeprecatedAdapter = mCurrentAdapter;
         lDeprecatedAdapter.disappearOnRightAndDestroy(new Runnable() {
             @Override
             public void run() {
                 lDeprecatedAdapter.getRecyclerView().setAdapter(null);
-                mRecyclerSection.removeView(lDeprecatedAdapter.getRecyclerView());
+                mRecyclerSection.removeView(lDeprecatedAdapter.getSwipeRefreshLayout());
             }
         });
-        lDeprecatedAdapter.getPreviousAdapter().appearOnLeft();
         mCurrentAdapter = lDeprecatedAdapter.getPreviousAdapter();
+        mCurrentAdapter.appearOnLeft();
         mCurrentAdapter.setNextAdapter(null);
         mDirectoryPath = mCurrentAdapter.getDirectoryPath();
     }
 
     private void inflateNewAdapter(FTPFile[] iFTPFiles, String iDirectoryPath, boolean iForceVerticalAppear) {
+        LogManager.info(TAG, "Inflate new adapter");
         SwipeRefreshLayout lSwipeRefreshLayout = (SwipeRefreshLayout) View.inflate(this, R.layout.navigation_recycler_layout, null);
         lSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
