@@ -124,6 +124,8 @@ public class FTPServer extends ABaseTable {
 
     @Override
     public boolean equals(Object iObj) {
+        if (iObj == null)
+            return false;
         if (iObj == this)
             return true;
         if (!(iObj instanceof FTPServer))

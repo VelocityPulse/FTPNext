@@ -25,15 +25,14 @@ import org.apache.commons.net.ftp.FTPFile;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
 public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<NavigationRecyclerViewAdapter.CustomItemViewAdapter> {
 
     private static final String TAG = "NAVIGATION RECYCLER VIEW ADAPTER";
-    private List<FTPFile> mItemList;
-    private List<CustomItemViewAdapter> mCustomItems;
+    private List<FTPFileItem> mFTPFileItems;
+    private List<CustomItemViewAdapter> mCustomViewItems;
     private OnLongClickListener mLongClickListener;
     private OnClickListener mClickListener;
     private RecyclerView mRecyclerView;
@@ -46,28 +45,32 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     private NavigationRecyclerViewAdapter mNextAdapter;
     private NavigationRecyclerViewAdapter mPreviousAdapter;
 
-    public NavigationRecyclerViewAdapter(Context iContext, List<FTPFile> iItemList, FrameLayout iRecyclerSection, RecyclerView iRecyclerView,
+    public NavigationRecyclerViewAdapter(Context iContext, List<FTPFile> iFTPFileList, FrameLayout iRecyclerSection, RecyclerView iRecyclerView,
                                          SwipeRefreshLayout iSwipeRefreshLayout, String iDirectoryPath, boolean iVisible) {
         mContext = iContext;
-        mItemList = iItemList;
         mRecyclerSection = iRecyclerSection;
         mRecyclerView = iRecyclerView;
         mSwipeRefreshLayout = iSwipeRefreshLayout;
         mDirectoryPath = iDirectoryPath;
         mSwipeRefreshLayout.setVisibility(iVisible ? View.VISIBLE : View.GONE);
-        mCustomItems = new ArrayList<>();
+        mCustomViewItems = new ArrayList<>();
+
+        mFTPFileItems = new ArrayList<>();
+        for (FTPFile lItem : iFTPFileList) {
+            mFTPFileItems.add(new FTPFileItem(lItem));
+        }
     }
 
     public NavigationRecyclerViewAdapter(Context iContext, FrameLayout iRecyclerSection, RecyclerView iRecyclerView,
                                          SwipeRefreshLayout iSwipeRefreshLayout, String iDirectoryPath, boolean iVisible) {
         mContext = iContext;
-        mItemList = new ArrayList<>();
+        mFTPFileItems = new ArrayList<>();
         mRecyclerSection = iRecyclerSection;
         mRecyclerView = iRecyclerView;
         mSwipeRefreshLayout = iSwipeRefreshLayout;
         mDirectoryPath = iDirectoryPath;
         mSwipeRefreshLayout.setVisibility(iVisible ? View.VISIBLE : View.GONE);
-        mCustomItems = new ArrayList<>();
+        mCustomViewItems = new ArrayList<>();
     }
 
     @NonNull
@@ -76,7 +79,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         LinearLayout lLayout = (LinearLayout) LayoutInflater.
                 from(iViewGroup.getContext()).inflate(R.layout.navigation_list_item, iViewGroup, false);
 
-        CustomItemViewAdapter oViewHolder = new CustomItemViewAdapter(lLayout,
+        CustomItemViewAdapter oViewHolder = new CustomItemViewAdapter(
+                lLayout,
                 lLayout.findViewById(R.id.navigation_recycler_item_left_section),
                 (ImageView) lLayout.findViewById(R.id.navigation_recycler_item_left_draw),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_main_text),
@@ -84,14 +88,14 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_third_text),
                 (TextView) lLayout.findViewById(R.id.navigation_recycler_item_fourth),
                 (CheckBox) lLayout.findViewById(R.id.navigation_recycler_item_checkbox));
-        mCustomItems.add(oViewHolder);
+        mCustomViewItems.add(oViewHolder);
 
         return oViewHolder;
     }
 
     @Override
     public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iI) {
-        final FTPFile lFTPItem = mItemList.get(iI);
+        final FTPFile lFTPItem = mFTPFileItems.get(iI).mFTPFile;
 
         if (mClickListener != null) {
             iCustomItemViewAdapter.mMainLayout.setOnClickListener(new View.OnClickListener() {
@@ -121,7 +125,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         iCustomItemViewAdapter.mSecondaryText.setText(dateFormat.format(lFTPItem.getTimestamp().getTime()));
 
         if (lFTPItem.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION))
-            iCustomItemViewAdapter.mThirdText.setText("(Write access)");
+            iCustomItemViewAdapter.mThirdText.setText("(Write access)"); // TODO : Stings
         else if (lFTPItem.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION))
             iCustomItemViewAdapter.mThirdText.setText("(Read access)");
         else
@@ -133,49 +137,52 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             iCustomItemViewAdapter.mFourthText.setText(Utils.humanReadableByteCount(lFTPItem.getSize(), true));
 
         LogManager.info(TAG, lFTPItem.getRawListing());
-        // TODO continue with the listeners
     }
 
     @Override
     public int getItemCount() {
-        return mItemList.size();
+        return mFTPFileItems.size();
     }
 
     public void insertItem(FTPFile iItem) {
-        if (mItemList == null) {
+        if (mFTPFileItems == null) {
             LogManager.error(TAG, "Cannot insert an item if the list of items isn't initialized.");
             return;
         }
-        mItemList.add(iItem);
-        notifyItemRangeInserted(mItemList.size() + 1, 1);
+        mFTPFileItems.add(new FTPFileItem(iItem));
+        notifyItemRangeInserted(mFTPFileItems.size() + 1, 1);
     }
 
     public void insertItem(FTPFile iItem, int iPosition) {
-        if (mItemList == null) {
+        LogManager.info(TAG, "Insert item");
+        if (mFTPFileItems == null) {
             LogManager.error(TAG, "Cannot insert an item if the list of items isn't initialized.");
             return;
         }
-        if (iPosition > mItemList.size())
-            iPosition = mItemList.size();
-        mItemList.add(iPosition, iItem);
+        if (iPosition > mFTPFileItems.size())
+            iPosition = mFTPFileItems.size();
+        mFTPFileItems.add(iPosition, new FTPFileItem(iItem));
         notifyItemRangeInserted(iPosition, 1);
     }
 
     public void updateItem(FTPFile iItem) {
-        for (FTPFile lItem : mItemList) {
-            if (lItem.getName().equals(iItem.getName())) {
-                mItemList.add(iItem);
-                notifyItemRemoved(mItemList.indexOf(lItem));
+        LogManager.info(TAG, "Update item");
+        for (FTPFileItem lCustomItem : mFTPFileItems) {
+            if (lCustomItem.equals(iItem)) {
+                int lIndex = mFTPFileItems.indexOf(lCustomItem);
+                mFTPFileItems.get(lIndex).mFTPFile = iItem;
+                notifyItemChanged(lIndex);
                 return;
             }
         }
     }
 
     public void removeItem(FTPFile iItem) {
-        for (FTPFile lItem : mItemList) {
-            if (lItem.getName().equals(iItem.getName())) {
-                notifyItemRemoved(mItemList.indexOf(lItem));
-                mItemList.remove(lItem);
+        LogManager.info(TAG, "Remove item");
+        for (FTPFileItem lItem : mFTPFileItems) {
+            if (lItem.equals(iItem)) {
+                mFTPFileItems.remove(lItem);
+                notifyItemRemoved(mFTPFileItems.indexOf(lItem));
                 return;
             }
         }
@@ -187,9 +194,55 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             LogManager.error(TAG, "Cannot set the data if the given parameter is null.");
             return;
         }
-        mItemList = new ArrayList<>(Arrays.asList(iData));
+        for (FTPFile lItem : iData) {
+            mFTPFileItems.add(new FTPFileItem(lItem));
+        }
         notifyDataSetChanged();
     }
+
+    public void switchCheckBox(FTPFile iFTPFile) {
+        LogManager.info(TAG, "Switch checkbox");
+        if (iFTPFile == null) {
+            LogManager.error(TAG, "Given FTPFile is null");
+            return;
+        }
+        for (CustomItemViewAdapter lItem : mCustomViewItems) {
+            LogManager.debug(TAG, "i  " + mFTPFileItems.indexOf(iFTPFile));
+            LogManager.debug(TAG, "ada " + lItem.getAdapterPosition());
+            LogManager.debug(TAG, "lay " + lItem.getLayoutPosition());
+
+            if (lItem.getAdapterPosition() == mFTPFileItems.indexOf(iFTPFile))
+                lItem.mCheckBox.setChecked(!lItem.mCheckBox.isChecked());
+        }
+    }
+
+    public void setSelectedCheckBox(FTPFile iFTPFile, boolean iValue) {
+        LogManager.info(TAG, "Set selected check box");
+        if (iFTPFile == null) {
+            LogManager.error(TAG, "Given FTPFile is null");
+            return;
+        }
+        for (CustomItemViewAdapter lItem : mCustomViewItems) {
+            if (lItem.getAdapterPosition() == mFTPFileItems.indexOf(iFTPFile))
+                lItem.mCheckBox.setChecked(iValue);
+        }
+    }
+
+    public boolean isSelectedCheckBox(FTPFile iFTPFile) {
+        LogManager.info(TAG, "Is selected checkbox");
+        if (iFTPFile == null) {
+            LogManager.error(TAG, "Given FTPFile is null");
+            return false;
+        }
+        for (CustomItemViewAdapter lItem : mCustomViewItems) {
+            if (lItem.getAdapterPosition() == mFTPFileItems.indexOf(iFTPFile))
+                return lItem.mCheckBox.isChecked();
+        }
+        return false;
+    }
+
+    // TODO : Optimisation animations
+    // TODO : Animations are not executed on new views
 
     public String getDirectoryPath() {
         return mDirectoryPath;
@@ -333,13 +386,13 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     }
 
     public void setSelectionMode(boolean iInSelectionMode) {
-        if (mCustomItems.size() > 0) {
+        if (mCustomViewItems.size() > 0) {
 
             final float lLeftSectionShift = mContext.getResources().getDimension(R.dimen.navigation_recycler_left_section_shift);
 
             if (iInSelectionMode && !mIsInSelectionMode) {
 
-//                for (final CustomItemViewAdapter lItem : mCustomItems) {
+//                for (final CustomItemViewAdapter lItem : mCustomViewItems) {
 //                    LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(
 //                            lItem.mLeftSection, lItem.mCheckBox, true, lLeftSectionShift);
 //
@@ -352,7 +405,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                 mIsInSelectionMode = true;
             } else if (mIsInSelectionMode) {
 
-//                for (final CustomItemViewAdapter lItem : mCustomItems) {
+//                for (final CustomItemViewAdapter lItem : mCustomViewItems) {
 //                    LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(
 //                            lItem.mLeftSection, lItem.mCheckBox, false, lLeftSectionShift);
 //
@@ -369,14 +422,14 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
     private void setItemsTransparent() {
         LogManager.info(TAG, "Set item transparent");
-        for (CustomItemViewAdapter lItem : mCustomItems) {
+        for (CustomItemViewAdapter lItem : mCustomViewItems) {
             lItem.mMainLayout.setBackgroundResource(android.R.color.transparent);
         }
     }
 
     private void setItemsRipple() {
         LogManager.info(TAG, "Set item ripple");
-        for (CustomItemViewAdapter lItem : mCustomItems) {
+        for (CustomItemViewAdapter lItem : mCustomViewItems) {
             lItem.mMainLayout.setBackgroundResource(R.drawable.ripple_effect_primary);
         }
     }
@@ -407,7 +460,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                 public void onAnimationStart(Animation animation) {
                     LogManager.debug(TAG, "On animation start");
                     if (mIsAppearing) {
-                        for (CustomItemViewAdapter lItem : mCustomItems)
+                        for (CustomItemViewAdapter lItem : mCustomViewItems)
                             lItem.mCheckBox.setVisibility(View.VISIBLE);
                     }
                 }
@@ -415,7 +468,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                 @Override
                 public void onAnimationEnd(Animation animation) {
                     if (!mIsAppearing) {
-                        for (CustomItemViewAdapter lItem : mCustomItems)
+                        for (CustomItemViewAdapter lItem : mCustomViewItems)
                             lItem.mCheckBox.setVisibility(View.INVISIBLE);
                     }
                 }
@@ -450,7 +503,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                 lCheckBoxAlpha = 1 - iInterpolatedTime;
             }
 
-            for (CustomItemViewAdapter lItem : mCustomItems) {
+            for (CustomItemViewAdapter lItem : mCustomViewItems) {
                 ViewGroup.MarginLayoutParams lSectionLayoutParams = (ViewGroup.MarginLayoutParams) lItem.mLeftSection.getLayoutParams();
                 lSectionLayoutParams.leftMargin = (int) lMarginLeft;
                 lItem.mLeftSection.requestLayout();
@@ -461,7 +514,37 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         }
     }
 
+    private class FTPFileItem {
+        FTPFile mFTPFile;
+        boolean mChecked;
+
+        public FTPFileItem(FTPFile iFTPFile) {
+            mFTPFile = iFTPFile;
+        }
+
+        @Override
+        public boolean equals(Object iObj) {
+            if (iObj == null)
+                return false;
+            if (iObj == this)
+                return true;
+
+            if (iObj instanceof FTPFile) {
+                return mFTPFile.equals(iObj);
+            }
+            if (iObj instanceof FTPFileItem) {
+                return mFTPFile.equals(((FTPFileItem) iObj).mFTPFile);
+            }
+            return false;
+        }
+
+//        static int indexOf(List<FTPFileItem> iArray, FTPFile iFTPFile) {
+//            // TODO continue here
+//        }
+    }
+
     protected class CustomItemViewAdapter extends RecyclerView.ViewHolder {
+
         LinearLayout mMainLayout;
         View mLeftSection;
         ImageView mLeftImage;

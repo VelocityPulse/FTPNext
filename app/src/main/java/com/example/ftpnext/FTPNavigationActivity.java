@@ -3,7 +3,6 @@ package com.example.ftpnext;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -285,16 +284,20 @@ public class FTPNavigationActivity extends AppCompatActivity {
         lNewAdapter.setOnClickListener(new NavigationRecyclerViewAdapter.OnClickListener() {
             @Override
             public void onClick(FTPFile iFTPFile) {
-                closeFABMenu();
+                if (lNewAdapter.isInSelectionMode()) {
+                    lNewAdapter.switchCheckBox(iFTPFile);
+                } else {
+                    closeFABMenu();
 
-                if (iFTPFile.isDirectory()) {
-                    if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
-                            || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
-                        mDirectoryPath = mDirectoryPath + "/" + iFTPFile.getName();
-                        mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
-                        runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
-                    } else
-                        Utils.createErrorAlertDialog(FTPNavigationActivity.this, "You don't have enough permission");
+                    if (iFTPFile.isDirectory()) {
+                        if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
+                                || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
+                            mDirectoryPath = mDirectoryPath + "/" + iFTPFile.getName();
+                            mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
+                            runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
+                        } else
+                            Utils.createErrorAlertDialog(FTPNavigationActivity.this, "You don't have enough permission");
+                    }
                 }
             }
         });
