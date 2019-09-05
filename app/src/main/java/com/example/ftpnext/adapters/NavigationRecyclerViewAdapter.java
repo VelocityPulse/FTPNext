@@ -40,7 +40,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private Context mContext;
     private String mDirectoryPath;
-    private boolean mIsInSelectionMode;
+    private boolean mSelectionMode;
 
     private NavigationRecyclerViewAdapter mNextAdapter;
     private NavigationRecyclerViewAdapter mPreviousAdapter;
@@ -95,7 +95,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
     @Override
     public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iI) {
-        final FTPFile lFTPItem = mFTPFileItems.get(iI).mFTPFile;
+        iCustomItemViewAdapter.mFTPFileItem = mFTPFileItems.get(iI);
+        final FTPFile lFTPItem = iCustomItemViewAdapter.mFTPFileItem.mFTPFile;
 
         if (mClickListener != null) {
             iCustomItemViewAdapter.mMainLayout.setOnClickListener(new View.OnClickListener() {
@@ -124,8 +125,9 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy hh:mm", Locale.FRANCE);
         iCustomItemViewAdapter.mSecondaryText.setText(dateFormat.format(lFTPItem.getTimestamp().getTime()));
 
+        // TODO : Stings
         if (lFTPItem.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION))
-            iCustomItemViewAdapter.mThirdText.setText("(Write access)"); // TODO : Stings
+            iCustomItemViewAdapter.mThirdText.setText("(Write access)");
         else if (lFTPItem.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION))
             iCustomItemViewAdapter.mThirdText.setText("(Read access)");
         else
@@ -135,6 +137,32 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             iCustomItemViewAdapter.mFourthText.setText("DIR");
         else
             iCustomItemViewAdapter.mFourthText.setText(Utils.humanReadableByteCount(lFTPItem.getSize(), true));
+
+        iCustomItemViewAdapter.mCheckBox.setChecked(iCustomItemViewAdapter.mFTPFileItem.mChecked);
+
+        if (mSelectionMode && !iCustomItemViewAdapter.mSelectedMode) {
+            float lMarginLeft = 0;
+            float lCheckBoxAlpha = 1;
+
+            ViewGroup.MarginLayoutParams lSectionLayoutParams =
+                    (ViewGroup.MarginLayoutParams) iCustomItemViewAdapter.mLeftSection.getLayoutParams();
+            lSectionLayoutParams.leftMargin = (int) lMarginLeft;
+            iCustomItemViewAdapter.mLeftSection.requestLayout();
+            iCustomItemViewAdapter.mCheckBox.setAlpha(lCheckBoxAlpha);
+
+            iCustomItemViewAdapter.mSelectedMode = mSelectionMode;
+        } else if (!mSelectionMode && iCustomItemViewAdapter.mSelectedMode) {
+            float lMarginLeft = mContext.getResources().getDimension(R.dimen.navigation_recycler_left_section_shift);
+            float lCheckBoxAlpha = 0;
+
+            ViewGroup.MarginLayoutParams lSectionLayoutParams =
+                    (ViewGroup.MarginLayoutParams) iCustomItemViewAdapter.mLeftSection.getLayoutParams();
+            lSectionLayoutParams.leftMargin = (int) lMarginLeft;
+            iCustomItemViewAdapter.mLeftSection.requestLayout();
+            iCustomItemViewAdapter.mCheckBox.setAlpha(lCheckBoxAlpha);
+
+            iCustomItemViewAdapter.mSelectedMode = mSelectionMode;
+        }
 
         LogManager.info(TAG, lFTPItem.getRawListing());
     }
@@ -207,12 +235,10 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             return;
         }
         for (CustomItemViewAdapter lItem : mCustomViewItems) {
-            LogManager.debug(TAG, "i  " + mFTPFileItems.indexOf(iFTPFile));
-            LogManager.debug(TAG, "ada " + lItem.getAdapterPosition());
-            LogManager.debug(TAG, "lay " + lItem.getLayoutPosition());
-
-            if (lItem.getAdapterPosition() == mFTPFileItems.indexOf(iFTPFile))
+            if (lItem.mFTPFileItem.equals(iFTPFile)) {
                 lItem.mCheckBox.setChecked(!lItem.mCheckBox.isChecked());
+                lItem.mFTPFileItem.mChecked = lItem.mCheckBox.isChecked();
+            }
         }
     }
 
@@ -223,8 +249,10 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             return;
         }
         for (CustomItemViewAdapter lItem : mCustomViewItems) {
-            if (lItem.getAdapterPosition() == mFTPFileItems.indexOf(iFTPFile))
+            if (lItem.mFTPFileItem.equals(iFTPFile)) {
                 lItem.mCheckBox.setChecked(iValue);
+                lItem.mFTPFileItem.mChecked = iValue;
+            }
         }
     }
 
@@ -235,14 +263,64 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             return false;
         }
         for (CustomItemViewAdapter lItem : mCustomViewItems) {
-            if (lItem.getAdapterPosition() == mFTPFileItems.indexOf(iFTPFile))
+            if (lItem.mFTPFileItem.equals(iFTPFile))
                 return lItem.mCheckBox.isChecked();
         }
         return false;
     }
 
+    // TODO : Checkbox are still checked even if selected mode is disabled
     // TODO : Optimisation animations
     // TODO : Animations are not executed on new views
+    public void setSelectionMode(boolean iInSelectionMode) {
+        if (mCustomViewItems.size() > 0) {
+
+            final float lLeftSectionShift = mContext.getResources().getDimension(R.dimen.navigation_recycler_left_section_shift);
+
+            if (iInSelectionMode && !mSelectionMode) {
+
+//                for (final CustomItemViewAdapter lItem : mCustomViewItems) {
+//                    LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(
+//                            lItem.mLeftSection, lItem.mCheckBox, true, lLeftSectionShift);
+//
+//                    lItem.mLeftSection.startAnimation(lLeftSectionAnimation);
+//                }
+
+                LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(true, lLeftSectionShift);
+                mRecyclerSection.startAnimation(lLeftSectionAnimation);
+                mSelectionMode = true;
+            } else if (mSelectionMode) {
+
+//                for (final CustomItemViewAdapter lItem : mCustomViewItems) {
+//                    LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(
+//                            lItem.mLeftSection, lItem.mCheckBox, false, lLeftSectionShift);
+//
+//                    lItem.mLeftSection.startAnimation(lLeftSectionAnimation);
+//                }
+
+                LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(false, lLeftSectionShift);
+                mRecyclerSection.startAnimation(lLeftSectionAnimation);
+                mSelectionMode = false;
+
+                for (FTPFileItem lFTPFileItem : mFTPFileItems)
+                    lFTPFileItem.mChecked = false;
+                for (CustomItemViewAdapter lCustomItemViewAdapter : mCustomViewItems)
+                    lCustomItemViewAdapter.mCheckBox.setChecked(false);
+            }
+
+        }
+    }
+
+    int indexOfFTPFile(FTPFile iFTPFile) {
+        int oIndex = -1;
+
+        while (++oIndex < mFTPFileItems.size()) {
+            if (mFTPFileItems.get(oIndex).equals(iFTPFile))
+                return oIndex;
+        }
+        return -1;
+        // TODO continue here
+    }
 
     public String getDirectoryPath() {
         return mDirectoryPath;
@@ -381,43 +459,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         return mSwipeRefreshLayout;
     }
 
-    public boolean isInSelectionMode() {
-        return mIsInSelectionMode;
-    }
-
-    public void setSelectionMode(boolean iInSelectionMode) {
-        if (mCustomViewItems.size() > 0) {
-
-            final float lLeftSectionShift = mContext.getResources().getDimension(R.dimen.navigation_recycler_left_section_shift);
-
-            if (iInSelectionMode && !mIsInSelectionMode) {
-
-//                for (final CustomItemViewAdapter lItem : mCustomViewItems) {
-//                    LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(
-//                            lItem.mLeftSection, lItem.mCheckBox, true, lLeftSectionShift);
-//
-//                    lItem.mLeftSection.startAnimation(lLeftSectionAnimation);
-//                }
-
-                LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(true, lLeftSectionShift);
-                mRecyclerSection.startAnimation(lLeftSectionAnimation);
-// TODO : Bug in the adapters : cannot click after destroyrecycler
-                mIsInSelectionMode = true;
-            } else if (mIsInSelectionMode) {
-
-//                for (final CustomItemViewAdapter lItem : mCustomViewItems) {
-//                    LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(
-//                            lItem.mLeftSection, lItem.mCheckBox, false, lLeftSectionShift);
-//
-//                    lItem.mLeftSection.startAnimation(lLeftSectionAnimation);
-//                }
-
-                LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(false, lLeftSectionShift);
-                mRecyclerSection.startAnimation(lLeftSectionAnimation);
-                mIsInSelectionMode = false;
-            }
-
-        }
+    public boolean isSelectionMode() {
+        return mSelectionMode;
     }
 
     private void setItemsTransparent() {
@@ -454,6 +497,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         public LeftSectionAnimation(boolean iIsAppearing, float iLeftSectionShift) {
             mLeftSectionShift = -iLeftSectionShift;
             mIsAppearing = iIsAppearing;
+            this.setDuration(mContext.getResources().getInteger(R.integer.recycler_animation_time));
+            this.setInterpolator(new DecelerateInterpolator());
 
             this.setAnimationListener(new AnimationListener() {
                 @Override
@@ -463,6 +508,9 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                         for (CustomItemViewAdapter lItem : mCustomViewItems)
                             lItem.mCheckBox.setVisibility(View.VISIBLE);
                     }
+
+                    for (CustomItemViewAdapter lItem : mCustomViewItems)
+                        lItem.mSelectedMode = mIsAppearing;
                 }
 
                 @Override
@@ -478,15 +526,6 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
                 }
             });
-
-            this.setDuration(mContext.getResources().getInteger(R.integer.recycler_animation_time));
-            this.setInterpolator(new DecelerateInterpolator());
-        }
-
-        @Override
-        public void start() {
-            LogManager.info(TAG, "Start");
-            super.start();
         }
 
         @Override
@@ -537,13 +576,10 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             }
             return false;
         }
-
-//        static int indexOf(List<FTPFileItem> iArray, FTPFile iFTPFile) {
-//            // TODO continue here
-//        }
     }
 
     protected class CustomItemViewAdapter extends RecyclerView.ViewHolder {
+        FTPFileItem mFTPFileItem;
 
         LinearLayout mMainLayout;
         View mLeftSection;
@@ -553,6 +589,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         TextView mThirdText;
         TextView mFourthText;
         CheckBox mCheckBox;
+
+        boolean mSelectedMode;
 
         public CustomItemViewAdapter(@NonNull LinearLayout iMainView, View iLeftSection, ImageView iLeftImage, TextView iMainText, TextView iSecondaryText,
                                      TextView iThirdText, TextView iFourthText, CheckBox iCheckBox) {

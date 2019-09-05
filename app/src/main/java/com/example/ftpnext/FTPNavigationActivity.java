@@ -123,7 +123,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             return;
         }
 
-        if (mCurrentAdapter.isInSelectionMode()) {
+        if (mCurrentAdapter.isSelectionMode()) {
             mCurrentAdapter.setSelectionMode(false);
             return;
         }
@@ -284,7 +284,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         lNewAdapter.setOnClickListener(new NavigationRecyclerViewAdapter.OnClickListener() {
             @Override
             public void onClick(FTPFile iFTPFile) {
-                if (lNewAdapter.isInSelectionMode()) {
+                if (lNewAdapter.isSelectionMode()) {
                     lNewAdapter.switchCheckBox(iFTPFile);
                 } else {
                     closeFABMenu();
@@ -305,8 +305,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
         lNewAdapter.setOnLongClickListener(new NavigationRecyclerViewAdapter.OnLongClickListener() {
             @Override
             public void onLongClick(FTPFile iFTPFile) {
-                if (!lNewAdapter.isInSelectionMode()) {
+                if (!lNewAdapter.isSelectionMode()) {
                     lNewAdapter.setSelectionMode(true);
+                    lNewAdapter.setSelectedCheckBox(iFTPFile, true);
                 }
             }
         });
@@ -505,6 +506,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         if (iRecovering) {
+                            // TODO : Big bug on refreshing, files duplicated
                             mCurrentAdapter.setData(iFTPFiles);
                             mCurrentAdapter.appearVertically();
                             mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);
@@ -690,6 +692,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mErrorAlertDialog.dismiss();
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void buildFTPConnection(final boolean iIsRecovering, final boolean iRunFetchOnSuccess) {
         LogManager.info(TAG, "Rebuild FTP Connection");
         if (mFTPServer == null) {
@@ -761,16 +764,4 @@ public class FTPNavigationActivity extends AppCompatActivity {
             }
         });
     }
-
-//    // TODO : remove this code
-//    private void finishAllNavigationActivities() {
-//        mIsRunning = false;
-//        dismissAllDialogs();
-//        if (mFTPConnection != null)
-//            mFTPConnection.destroyConnection();
-//
-//        Intent lIntent = new Intent(this, MainActivity.class);
-//        lIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//        startActivity(lIntent);
-//    }
 }
