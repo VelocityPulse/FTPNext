@@ -118,7 +118,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        LogManager.info(TAG, "On back pressed" );
+        LogManager.info(TAG, "On back pressed");
         if (mIsFABOpen) {
             closeFABMenu();
             return;
@@ -359,7 +359,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
-                            finishAllNavigationActivities();
+                            finish();
                         }
                     })
                     .create()
@@ -407,7 +407,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             public void onCancel(DialogInterface dialog) {
                                 dialog.dismiss();
                                 mFTPConnection.abortConnection();
-                                finishAllNavigationActivities();
+                                finish();
                             }
                         });
                 mReconnectDialog.setTitle("Reconnection..."); // TODO : strings
@@ -437,7 +437,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
                                                 dialog.dismiss();
-                                                finishAllNavigationActivities();
+                                                finish();
                                             }
                                         })
                                         .create()
@@ -702,7 +702,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 dialog.dismiss();
                 if (mFTPConnection.isConnecting())
                     mFTPConnection.abortConnection();
-                mFTPConnection.destroyConnection();
+                onBackPressed();
             }
         });
         mLoadingDialog.setContentView(R.layout.loading_icon);
@@ -745,44 +745,29 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialog.dismiss();
-                                            finishAllNavigationActivities();
+                                            finish();
                                         }
                                     })
                                     .create()
                                     .show();
                         }
-                        mFTPConnection.destroyConnection();
+                        if (mFTPConnection.isConnecting())
+                            mFTPConnection.abortConnection();
                     }
                 });
             }
         });
     }
 
-    // TODO : remove this code
-    private void finishAllNavigationActivities() {
-        mIsRunning = false;
-        dismissAllDialogs();
-        if (mFTPConnection != null)
-            mFTPConnection.destroyConnection();
-
-        Intent lIntent = new Intent(this, MainActivity.class);
-        lIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(lIntent);
-    }
-
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//    }
+//    // TODO : remove this code
+//    private void finishAllNavigationActivities() {
+//        mIsRunning = false;
+//        dismissAllDialogs();
+//        if (mFTPConnection != null)
+//            mFTPConnection.destroyConnection();
 //
-
-//    private void startFTPNavigationActivity(FTPFile iFTPFile) {
-//        Intent lIntent = new Intent(FTPNavigationActivity.this, FTPNavigationActivity.class);
-//        lIntent.putExtra(FTPNavigationActivity.KEY_DATABASE_ID, mFTPServer.getDataBaseId());
-//        lIntent.putExtra(FTPNavigationActivity.KEY_DIRECTORY_PATH, mDirectoryPath + "/" + iFTPFile.getName());
-//        if (iFTPFile.getSize() > LARGE_DIRECTORY_SIZE)
-//            lIntent.putExtra(FTPNavigationActivity.KEY_IS_LARGE_DIRECTORY, true);
-//        startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
+//        Intent lIntent = new Intent(this, MainActivity.class);
+//        lIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//        startActivity(lIntent);
 //    }
-
 }
