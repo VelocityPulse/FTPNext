@@ -647,6 +647,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     public void run() {
                         mLoadingDialog.dismiss();
                         mCurrentAdapter.insertItem(iNewDirectory, 0);
+                        mCurrentAdapter.getRecyclerView().scrollToPosition(0);
                     }
                 });
             }

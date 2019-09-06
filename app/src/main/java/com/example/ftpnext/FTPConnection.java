@@ -354,9 +354,7 @@ public class FTPConnection {
 
                     if (!mFTPClient.makeDirectory(iPath + "/" + iName))
                         throw new IOException("Creation failed.");
-                    mFTPClient.enterLocalPassiveMode(); // TODO : try to remove this code
                     FTPFile lCreatedFile = mFTPClient.mlistFile(iPath + "/" + iName);
-                    mFTPClient.enterLocalActiveMode();
                     lCreatedFile.setName(iName);
                     if (iOnCreateDirectoryResult != null)
                         iOnCreateDirectoryResult.onSuccess(lCreatedFile);
