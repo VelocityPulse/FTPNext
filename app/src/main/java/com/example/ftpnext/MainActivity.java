@@ -233,15 +233,7 @@ public class MainActivity extends AppCompatActivity {
 
         final FTPConnection lNewFTPConnection = new FTPConnection(lFTPServer);
 
-        lLoadingAlertDialog = Utils.initProgressDialog(this, new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                dialog.dismiss();
-                if (lNewFTPConnection.isConnecting())
-                    lNewFTPConnection.abortConnection();
-                lNewFTPConnection.destroyConnection();
-            }
-        });
+        lLoadingAlertDialog = Utils.initProgressDialog(this, null);
         lLoadingAlertDialog.setContentView(R.layout.loading_icon);
         lLoadingAlertDialog.setTitle("Connection..."); // TODO : strings
         lLoadingAlertDialog.create();
@@ -250,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
         lNewFTPConnection.connect(new FTPConnection.OnConnectResult() {
             @Override
             public void onSuccess() {
-                Utils.dismissAlertDialogOnUIThread(MainActivity.this, lLoadingAlertDialog);
+                Utils.cancelAlertDialogOnUIThread(MainActivity.this, lLoadingAlertDialog);
 
                 startFTPNavigationActivity(iServerID);
                 mIsBusy = false;
@@ -264,7 +256,11 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         if (mIsRunning) {
-                            lLoadingAlertDialog.dismiss();
+                            lLoadingAlertDialog.cancel();
+
+                            if (lNewFTPConnection.isConnecting())
+                                lNewFTPConnection.abortConnection();
+                            lNewFTPConnection.destroyConnection();
 
                             mDialog = new AlertDialog.Builder(MainActivity.this)
                                     .setTitle("Error") // TODO string

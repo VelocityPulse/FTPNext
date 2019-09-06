@@ -53,6 +53,15 @@ public class Utils {
         });
     }
 
+    public static void cancelAlertDialogOnUIThread(Activity iActivity, final AlertDialog iAlertDialog) {
+        iActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                iAlertDialog.cancel();
+            }
+        });
+    }
+
     /**
      * *                               SI     BINARY
      * *
@@ -79,26 +88,13 @@ public class Utils {
         return String.format(Locale.FRANCE, "%.1f %sB", iBytes / Math.pow(lUnit, lExp), lPre);
     }
 
-    public static ProgressDialog initProgressDialog(Context iContext, final ProgressDialog.OnCancelListener iOnCancelListeners) {
-        ProgressDialog lProgressDialog;
+    public static ProgressDialog initProgressDialog(Context iContext, final ProgressDialog.OnClickListener iOnClickCancelListener) {
+        final ProgressDialog lProgressDialog;
         lProgressDialog = new ProgressDialog(iContext);
         lProgressDialog.setContentView(R.layout.loading_icon);
         lProgressDialog.setCancelable(true);
         lProgressDialog.setCanceledOnTouchOutside(false);
-        lProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                if (iOnCancelListeners != null)
-                    iOnCancelListeners.onCancel(dialog);
-            }
-        });
-        lProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (iOnCancelListeners != null)
-                    iOnCancelListeners.onCancel(dialog);
-            }
-        });
+        lProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", iOnClickCancelListener);
         return lProgressDialog;
     }
 }

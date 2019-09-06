@@ -46,7 +46,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private static final String TAG = "FTP NAVIGATION ACTIVITY";
     private static final int LARGE_DIRECTORY_SIZE = 30000;
-    private static final int BAD_CONNECTION_TIME = 600;
+    private static final int BAD_CONNECTION_TIME = 400;
 
     private boolean mIsRunning;
 
@@ -292,9 +292,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     if (iFTPFile.isDirectory()) {
                         if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
                                 || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
-                            mDirectoryPath = mDirectoryPath + "/" + iFTPFile.getName();
                             mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
-                            runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
+                            runFetchProcedures(mDirectoryPath + "/" + iFTPFile.getName(), mIsLargeDirectory, false);
                         } else
                             Utils.createErrorAlertDialog(FTPNavigationActivity.this, "You don't have enough permission");
                     }
@@ -342,13 +341,19 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         // FTP Connection
         mFTPConnection = FTPConnection.getFTPConnection(lServerId);
+
+        if (mFTPConnection == null)
+            LogManager.debug(TAG, "FTP CONNECTION NULL");
+
+        // Bad connection, Large dir, Reconnect dialog
+        initializeDialogs();
     }
 
-    private void runFetchProcedures(String iDirectoryPath, boolean iIsLargeDirectory, final boolean iRecovering) {
+    private void runFetchProcedures(final String iDirectoryPath, boolean iIsLargeDirectory, final boolean iRecovering) {
         dismissAllDialogs();
-        mReconnectDialog = null;
-        mLargeDirDialog = null;
-        mLoadingDialog = null;
+        mLargeDirDialog.cancel();
+        mReconnectDialog.cancel();
+        mLoadingDialog.cancel();
         mErrorAlertDialog = null;
         mDirectoryFetchFinished = false;
 
@@ -371,8 +376,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             return;
         }
 
-        // Bad connection, Large dir, Reconnect dialog
-        initializeDialogs(iIsLargeDirectory);
+        if (iIsLargeDirectory)
+            mLargeDirDialog.show();
 
         // Waiting fetch stop
         if (mFTPConnection.isFetchingFolders()) { // if another activity didn't stop its fetch yet
@@ -387,16 +392,15 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             iE.printStackTrace();
                         }
                     }
-                    initializeFetchDirectory(iRecovering);
+                    initializeFetchDirectory(iDirectoryPath,iRecovering);
                 }
             }).start();
         } else
-            initializeFetchDirectory(iRecovering);
+            initializeFetchDirectory(iDirectoryPath,iRecovering);
     }
 
-    private void initializeDialogs(boolean iIsLargeDirectory) {
+    private void initializeDialogs() {
         // Reconnect dialog
-        // TODO : This on connection lost will be re-set each runProcedures
         mFTPConnection.setOnConnectionLost(new FTPConnection.OnConnectionLost() {
             @Override
             public void onConnectionLost() {
@@ -405,18 +409,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 mFTPConnection.abortFetchDirectoryContent();
                 dismissAllDialogs();
 
-                mReconnectDialog = Utils.initProgressDialog(FTPNavigationActivity.this,
-                        new DialogInterface.OnCancelListener() {
-                            @Override
-                            public void onCancel(DialogInterface dialog) {
-                                dialog.dismiss();
-                                mFTPConnection.abortConnection();
-                                finish();
-                            }
-                        });
-                mReconnectDialog.setTitle("Reconnection..."); // TODO : strings
-                mReconnectDialog.create();
                 mReconnectDialog.show();
+
                 mFTPConnection.reconnect(new FTPConnection.OnConnectionRecover() {
                     @Override
                     public void onConnectionRecover() {
@@ -453,55 +447,68 @@ public class FTPNavigationActivity extends AppCompatActivity {
             }
         });
 
-        // Large directory loading
-        if (iIsLargeDirectory) {
-            mLargeDirDialog = Utils.initProgressDialog(this, new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    dialog.dismiss();
-                    finish();
-                }
-            });
-            mLargeDirDialog.setTitle("Large directory"); // TODO : strings
-            mLargeDirDialog.create();
-            mLargeDirDialog.show();
-        }
+        // Reconnection dialog
+        mReconnectDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                mFTPConnection.abortConnection();
+                finish();
+            }
+        });
+        mReconnectDialog.setTitle("Reconnection..."); // TODO : strings
+        mReconnectDialog.create();
+
+        // Large directory dialog
+        mLargeDirDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                mFTPConnection.abortFetchDirectoryContent();
+            }
+        });
+        mLargeDirDialog.setCancelable(false);
+        mLargeDirDialog.setTitle("Large directory"); // TODO : strings
+        mLargeDirDialog.create();
+
+        // Loading dialog
+        mLoadingDialog = Utils.initProgressDialog(FTPNavigationActivity.this, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                onBackPressed();
+            }
+        });
+        mLoadingDialog.create();
 
         //Bad Connection
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (!mDirectoryFetchFinished && mLargeDirDialog == null) { // in case if dialog has been canceled
+                if (!mDirectoryFetchFinished && (mLargeDirDialog == null || !mLargeDirDialog.isShowing())) { // in case if dialog has been canceled
                     if (mCurrentAdapter != null && mCurrentAdapter.getSwipeRefreshLayout().isRefreshing())
                         return;
 
-                    mLoadingDialog = Utils.initProgressDialog(FTPNavigationActivity.this, new DialogInterface.OnCancelListener() {
-                        @Override
-                        public void onCancel(DialogInterface dialog) {
-                            dialog.dismiss();
-                            finish();
-                        }
-                    });
-                    mLoadingDialog.setTitle("Loading..."); //TODO : strings
-                    mLoadingDialog.create();
-                    if (!mDirectoryFetchFinished)
+                    if (!mDirectoryFetchFinished) {
+                        mLoadingDialog.setTitle("Loading..."); //TODO : strings
                         mLoadingDialog.show();
-                    else
-                        mLoadingDialog = null;
+                    }
                 }
             }
         }, BAD_CONNECTION_TIME);
     }
 
-    private void initializeFetchDirectory(final boolean iRecovering) {
-        mFTPConnection.fetchDirectoryContent(mDirectoryPath, new FTPConnection.OnFetchDirectoryResult() {
+    private void initializeFetchDirectory(final String iDirectoryPath, final boolean iRecovering) {
+        mFTPConnection.fetchDirectoryContent(iDirectoryPath, new FTPConnection.OnFetchDirectoryResult() {
             @Override
             public void onSuccess(final FTPFile[] iFTPFiles) {
                 mDirectoryFetchFinished = true;
+                mDirectoryPath = iDirectoryPath;
                 if (mLoadingDialog != null && mLoadingDialog.isShowing())
                     mLoadingDialog.dismiss();
-                if (mLargeDirDialog != null)
+                if (mLargeDirDialog != null) {
                     mLargeDirDialog.dismiss();
+                }
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -535,7 +542,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                         @Override
                                         public void onClick(DialogInterface iDialog, int iWhich) {
                                             iDialog.dismiss();
-                                            finish();
+                                            onBackPressed();
                                         }
                                     })
                                     .create();
@@ -565,15 +572,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             return;
         }
 
-        mLoadingDialog = Utils.initProgressDialog(FTPNavigationActivity.this, new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                dialog.dismiss();
-                finish();
-            }
-        });
         mLoadingDialog.setTitle("Loading..."); //TODO : strings
-        mLoadingDialog.create();
+        mLoadingDialog.show();
 
         final AlertDialog.Builder lBuilder = new AlertDialog.Builder(this);
         lBuilder.setTitle("Create new folder"); // TODO : strings
@@ -645,6 +645,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        // TODO : Sort items
                         mLoadingDialog.dismiss();
                         mCurrentAdapter.insertItem(iNewDirectory, 0);
                         mCurrentAdapter.getRecyclerView().scrollToPosition(0);
@@ -703,21 +704,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         mFTPConnection = new FTPConnection(mFTPServer);
 
-        mLoadingDialog = Utils.initProgressDialog(this, new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                dialog.dismiss();
-                if (mFTPConnection.isConnecting())
-                    mFTPConnection.abortConnection();
-                onBackPressed();
-            }
-        });
-        mLoadingDialog.setContentView(R.layout.loading_icon);
         if (iIsRecovering)
             mLoadingDialog.setTitle("Reconnection..."); // TODO : strings
         else
             mLoadingDialog.setTitle("Connection..."); // TODO : strings
-        mLoadingDialog.create();
         mLoadingDialog.show();
 
         mFTPConnection.connect(new FTPConnection.OnConnectResult() {
@@ -748,7 +738,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                     .setTitle("Error") // TODO string
                                     .setMessage((iIsRecovering ? "Reconnection" : "Connection") + " failed...\nCode : " + iErrorCode)
                                     .setCancelable(false)
-                                    .setPositiveButton("Terminate", new DialogInterface.OnClickListener() {
+                                    .setNegativeButton("Terminate", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialog.dismiss();

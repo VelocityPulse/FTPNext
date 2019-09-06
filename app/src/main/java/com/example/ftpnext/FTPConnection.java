@@ -126,7 +126,7 @@ public class FTPConnection {
         AppCore.getNetworkManager().subscribeOnNetworkLost(mOnNetworkLostCallback);
     }
 
-    public void abortReconnection() {
+    public void abortReconnection() { // TODO : Fill this function
         LogManager.info(TAG, "Abort reconnect");
     }
 
