@@ -269,9 +269,6 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         return false;
     }
 
-    // TODO : Checkbox are still checked even if selected mode is disabled
-    // TODO : Optimisation animations
-    // TODO : Animations are not executed on new views
     public void setSelectionMode(boolean iInSelectionMode) {
         if (mCustomViewItems.size() > 0) {
 
@@ -279,24 +276,10 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
             if (iInSelectionMode && !mSelectionMode) {
 
-//                for (final CustomItemViewAdapter lItem : mCustomViewItems) {
-//                    LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(
-//                            lItem.mLeftSection, lItem.mCheckBox, true, lLeftSectionShift);
-//
-//                    lItem.mLeftSection.startAnimation(lLeftSectionAnimation);
-//                }
-
                 LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(true, lLeftSectionShift);
                 mRecyclerSection.startAnimation(lLeftSectionAnimation);
                 mSelectionMode = true;
             } else if (mSelectionMode) {
-
-//                for (final CustomItemViewAdapter lItem : mCustomViewItems) {
-//                    LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(
-//                            lItem.mLeftSection, lItem.mCheckBox, false, lLeftSectionShift);
-//
-//                    lItem.mLeftSection.startAnimation(lLeftSectionAnimation);
-//                }
 
                 LeftSectionAnimation lLeftSectionAnimation = new LeftSectionAnimation(false, lLeftSectionShift);
                 mRecyclerSection.startAnimation(lLeftSectionAnimation);
@@ -307,7 +290,6 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                 for (CustomItemViewAdapter lCustomItemViewAdapter : mCustomViewItems)
                     lCustomItemViewAdapter.mCheckBox.setChecked(false);
             }
-
         }
     }
 
@@ -319,7 +301,6 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                 return oIndex;
         }
         return -1;
-        // TODO continue here
     }
 
     public String getDirectoryPath() {
@@ -494,11 +475,19 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         private float mLeftSectionShift;
         private boolean mIsAppearing;
 
+        List<ViewGroup.MarginLayoutParams> mMarginLayoutParamsList;
+
         public LeftSectionAnimation(boolean iIsAppearing, float iLeftSectionShift) {
             mLeftSectionShift = -iLeftSectionShift;
             mIsAppearing = iIsAppearing;
             this.setDuration(mContext.getResources().getInteger(R.integer.recycler_animation_time));
             this.setInterpolator(new DecelerateInterpolator());
+
+            mMarginLayoutParamsList = new ArrayList<>();
+            for (CustomItemViewAdapter lItem : mCustomViewItems) {
+                lItem.mSelectedMode = mIsAppearing;
+                mMarginLayoutParamsList.add((ViewGroup.MarginLayoutParams) lItem.mLeftSection.getLayoutParams());
+            }
 
             this.setAnimationListener(new AnimationListener() {
                 @Override
@@ -508,9 +497,6 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                         for (CustomItemViewAdapter lItem : mCustomViewItems)
                             lItem.mCheckBox.setVisibility(View.VISIBLE);
                     }
-
-                    for (CustomItemViewAdapter lItem : mCustomViewItems)
-                        lItem.mSelectedMode = mIsAppearing;
                 }
 
                 @Override
@@ -542,9 +528,11 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
                 lCheckBoxAlpha = 1 - iInterpolatedTime;
             }
 
+            for (ViewGroup.MarginLayoutParams lMarginLayoutParams : mMarginLayoutParamsList) {
+                lMarginLayoutParams.leftMargin = (int) lMarginLeft;
+            }
+
             for (CustomItemViewAdapter lItem : mCustomViewItems) {
-                ViewGroup.MarginLayoutParams lSectionLayoutParams = (ViewGroup.MarginLayoutParams) lItem.mLeftSection.getLayoutParams();
-                lSectionLayoutParams.leftMargin = (int) lMarginLeft;
                 lItem.mLeftSection.requestLayout();
                 lItem.mCheckBox.setAlpha(lCheckBoxAlpha);
             }

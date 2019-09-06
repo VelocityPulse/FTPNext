@@ -37,6 +37,7 @@ TODO : Resume when screen change orientation
 TODO : Add a security network connection / network authorisation
 
 Ideas :
+    - Research mode in FTPNavigationActivity
     - Ask to respawn to the last folder visited if diff than root
     - Display to type of file/dir rights xxx-xxx-xxx or read
     - Remember the last folder used for create a server
