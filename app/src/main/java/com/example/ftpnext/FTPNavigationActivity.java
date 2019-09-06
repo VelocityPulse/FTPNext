@@ -125,6 +125,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         if (mCurrentAdapter.isSelectionMode()) {
             mCurrentAdapter.setSelectionMode(false);
+            showFABMenu();
             return;
         }
 
@@ -217,6 +218,18 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
+    private void hideFABMenu() {
+        mMainFAB.hide();
+        mCreateFolderFAB.hide();
+        mUploadFileFAB.hide();
+    }
+
+    private void showFABMenu() {
+        mMainFAB.show();
+        mCreateFolderFAB.show();
+        mUploadFileFAB.show();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         onBackPressed();
@@ -305,6 +318,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             @Override
             public void onLongClick(FTPFile iFTPFile) {
                 if (!lNewAdapter.isSelectionMode()) {
+                    closeFABMenu();
+                    hideFABMenu();
                     lNewAdapter.setSelectionMode(true);
                     lNewAdapter.setSelectedCheckBox(iFTPFile, true);
                 }

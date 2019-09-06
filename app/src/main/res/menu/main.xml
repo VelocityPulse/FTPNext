@@ -4,6 +4,6 @@
     <item
         android:id="@+id/action_parameters"
         android:orderInCategory="100"
-        android:title="Parameters"
+        android:title="Parameters (Unavailable)"
         app:showAsAction="never" />
 </menu>

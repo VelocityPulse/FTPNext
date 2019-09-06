@@ -126,8 +126,31 @@ public class FTPConnection {
         AppCore.getNetworkManager().subscribeOnNetworkLost(mOnNetworkLostCallback);
     }
 
-    public void abortReconnection() { // TODO : Fill this function
+    public void abortReconnection() {
         LogManager.info(TAG, "Abort reconnect");
+
+        if (isReconnecting())
+            mAbortReconnect = true; // To test
+    }
+
+    public void abortFetchDirectoryContent() {
+        LogManager.info(TAG, "Abort fetch directory contents");
+
+        if (isFetchingFolders()) {
+            mDirectoryFetchThread.interrupt();
+        }
+    }
+
+    public void abortConnection() {
+        LogManager.info(TAG, "Abort connection");
+
+        if (mFTPClient.isConnected()) {
+            disconnect();
+            return;
+        }
+        if (isConnecting()) {
+            mConnectionThread.interrupt();
+        }
     }
 
     public void reconnect(final OnConnectionRecover iOnConnectionRecover) {
@@ -185,14 +208,6 @@ public class FTPConnection {
         }
     }
 
-    public void abortFetchDirectoryContent() {
-        LogManager.info(TAG, "Abort fetch directory contents");
-
-        if (isFetchingFolders()) {
-            mDirectoryFetchThread.interrupt();
-        }
-    }
-
     public void fetchDirectoryContent(final String iPath, final OnFetchDirectoryResult iOnFetchDirectoryResult) {
         LogManager.info(TAG, "Fetch directory contents");
         if (!isConnected()) {
@@ -233,17 +248,6 @@ public class FTPConnection {
             }
         });
         mDirectoryFetchThread.start();
-    }
-
-    public void abortConnection() {
-        LogManager.info(TAG, "Abort connection");
-        if (mFTPClient.isConnected()) {
-            disconnect();
-            return;
-        }
-        if (isConnecting()) {
-            mConnectionThread.interrupt();
-        }
     }
 
     public void connect(final OnConnectResult iOnConnectResult) {
