@@ -506,7 +506,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         if (iRecovering) {
-                            // TODO : Big bug on refreshing, files duplicated
+                            LogManager.debug(TAG, "SIZE : " + iFTPFiles.length);
                             mCurrentAdapter.setData(iFTPFiles);
                             mCurrentAdapter.appearVertically();
                             mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);

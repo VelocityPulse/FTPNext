@@ -222,6 +222,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             LogManager.error(TAG, "Cannot set the data if the given parameter is null.");
             return;
         }
+        mFTPFileItems.clear();
         for (FTPFile lItem : iData) {
             mFTPFileItems.add(new FTPFileItem(lItem));
         }

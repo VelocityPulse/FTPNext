@@ -26,8 +26,6 @@ public class NetworkManager {
     private NetworkCapabilities mNetworkCapabilities;
     private boolean mAvailableNetworkFired;
 
-    //TODO : Airplane mode
-
     public static NetworkManager getInstance() {
         if (sSingleton != null)
             return sSingleton;
