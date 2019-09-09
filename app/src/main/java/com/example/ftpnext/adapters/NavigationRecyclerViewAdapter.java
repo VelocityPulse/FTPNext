@@ -126,10 +126,12 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         iCustomItemViewAdapter.mSecondaryText.setText(dateFormat.format(lFTPItem.getTimestamp().getTime()));
 
         // TODO : Stings
-        if (lFTPItem.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION))
-            iCustomItemViewAdapter.mThirdText.setText("(Write access)");
+        if (lFTPItem.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION) && lFTPItem.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION))
+            iCustomItemViewAdapter.mThirdText.setText("(Read/Write)");
+        else if (lFTPItem.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION))
+            iCustomItemViewAdapter.mThirdText.setText("(Write)");
         else if (lFTPItem.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION))
-            iCustomItemViewAdapter.mThirdText.setText("(Read access)");
+            iCustomItemViewAdapter.mThirdText.setText("(Read)");
         else
             iCustomItemViewAdapter.mThirdText.setText("(No access)");
 

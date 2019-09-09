@@ -47,6 +47,8 @@ public class FTPConnection {
     private OnConnectionLost mOnConnectionLost;
 
     private boolean mAbortReconnect;
+    private boolean mPauseDeleting;
+    private boolean mByPassDeletingErrors;
 
     public FTPConnection(FTPServer iFTPServer) {
         if (sFTPConnectionInstances == null)
@@ -140,9 +142,15 @@ public class FTPConnection {
     public void abortFetchDirectoryContent() {
         LogManager.info(TAG, "Abort fetch directory contents");
 
-        if (isFetchingFolders()) {
+        if (isFetchingFolders())
             mDirectoryFetchThread.interrupt();
-        }
+    }
+
+    public void abortDeleting() {
+        LogManager.info(TAG, "Abort deleting");
+
+        if (isDeletingFiles())
+            mDeleteFileThread.interrupt();
     }
 
     public void abortConnection() {
@@ -273,9 +281,6 @@ public class FTPConnection {
             return;
         }
 
-        LogManager.debug(TAG, "Connect : isNetworkAvailable : " +
-                AppCore.getNetworkManager().isNetworkAvailable());
-
         if (!AppCore.getNetworkManager().isNetworkAvailable()) {
             if (iOnConnectResult != null)
                 iOnConnectResult.onFail(CONNECTION_STATUS.ERROR_NO_INTERNET);
@@ -383,6 +388,8 @@ public class FTPConnection {
         deleteFiles(new FTPFile[]{iFTPFile}, iOnDeleteListener);
     }
 
+    // TODO : Abort deleting
+    // TODO : Destroy connection -> abort deleting
     public void deleteFiles(final FTPFile[] iFTPFiles, final OnDeleteListener iOnDeleteListener) {
         LogManager.info(TAG, "Delete files");
         if (!isConnected()) {
@@ -393,19 +400,30 @@ public class FTPConnection {
             return;
         }
 
+        mPauseDeleting = false;
+        mByPassDeletingErrors = false;
         mDeleteFileThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
+
+            private void recursiveDeletion(String iPath) throws IOException {
                 for (FTPFile lFTPFile : iFTPFiles) {
 
-                    try {
-                        mFTPClient.deleteFile(mCurrentAbsolutePath + "/" + lFTPFile);
-                    } catch (IOException iE) {
-                        iE.printStackTrace();
-                    }
+                    if (lFTPFile.isDirectory()) {
 
+                    }
+                    mFTPClient.deleteFile(mCurrentAbsolutePath + "/" + lFTPFile);
 
                 }
+            }
+
+            @Override
+            public void run() {
+
+                try {
+                    recursiveDeletion(mCurrentAbsolutePath);
+                } catch (IOException iE) {
+                    iE.printStackTrace();
+                }
+
                 if (iOnDeleteListener != null)
                     iOnDeleteListener.onSuccess();
             }
@@ -458,6 +476,22 @@ public class FTPConnection {
         mOnConnectionLost = iOnConnectionLost;
     }
 
+    public boolean isDeletingPaused() {
+        return mPauseDeleting;
+    }
+
+    public void resumeDeleting() {
+        mPauseDeleting = false;
+    }
+
+    public void pauseDeleting() {
+        mPauseDeleting = true;
+    }
+
+    public void setByPassDeletingErrors(boolean iValue) {
+        mByPassDeletingErrors = iValue;
+    }
+
     private void startReplyStatusThread() {
         if (mReplyStatusThread == null) {
             mReplyStatusThread = new Thread(new Runnable() {
@@ -495,9 +529,15 @@ public class FTPConnection {
     }
 
     public interface OnDeleteListener {
-        void onSuccess();
+        void onStartDelete();
 
-        void onProgress(int iProgress);
+        void onProgressDirectory(int iDirectoryProgress, int iTotalDirectories, String iDirectoryName);
+
+        void onProgressSubDirectory(int iSubDirectoryProgress, int iTotalSubDirectories, String iSubDirectoryName);
+
+        void onRightAccessFail(FTPFile iFTPFile);
+
+        void onSuccess();
 
         void onFail(FTPFile iFTPFile);
     }
