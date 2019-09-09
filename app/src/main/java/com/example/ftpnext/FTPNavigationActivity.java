@@ -5,6 +5,8 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.view.ViewCompat;
@@ -16,6 +18,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
@@ -48,6 +51,20 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private static final int LARGE_DIRECTORY_SIZE = 30000;
     private static final int BAD_CONNECTION_TIME = 400;
 
+    private static final int NAVIGATION_MESSAGE_CONNECTION_SUCCESS = 10;
+    private static final int NAVIGATION_MESSAGE_CONNECTION_FAIL = 11;
+    private static final int NAVIGATION_MESSAGE_CONNECTION_LOST = 12;
+    private static final int NAVIGATION_MESSAGE_RECONNECT_SUCCESS = 13;
+    private static final int NAVIGATION_MESSAGE_RECONNECT_FAIL = 14;
+    private static final int NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS = 15;
+    private static final int NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL = 16;
+    private static final int NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH = 17;
+    private static final int NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING = 18;
+    private static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH = 19;
+    private static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_UPDATE = 20;
+    private static final int NAVIGATION_MESSAGE_DISMISS_DIALOGS = 30;
+    private static final int NAVIGATION_MESSAGE_DISMISS_LOADING_DIALOGS = 31;
+
     private boolean mIsRunning;
 
     private FTPServer mFTPServer;
@@ -72,6 +89,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private FloatingActionButton mMainFAB;
     private FloatingActionButton mCreateFolderFAB;
     private FloatingActionButton mUploadFileFAB;
+    private Handler mHandler;
 
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
@@ -81,6 +99,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         mIsRunning = true;
         initializeGUI();
+        initializeHandler();
         initialize();
         if (mFTPConnection == null)
             buildFTPConnection(true, true);
@@ -112,6 +131,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mFTPConnection.destroyConnection();
         else if (mFTPConnection != null && mFTPConnection.isFetchingFolders())
             mFTPConnection.abortFetchDirectoryContent();
+
         super.onDestroy();
     }
 
@@ -123,7 +143,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             return;
         }
 
-        if (mCurrentAdapter.isSelectionMode()) {
+        if (mCurrentAdapter.isInSelectionMode()) {
             mCurrentAdapter.setSelectionMode(false);
             showFABMenu();
             return;
@@ -137,41 +157,189 @@ public class FTPNavigationActivity extends AppCompatActivity {
         super.onBackPressed();
     }
 
-    private void initializeGUI() {
-        Toolbar lToolBar = findViewById(R.id.toolbar);
-        setSupportActionBar(lToolBar);
+    @Override
+    public boolean onCreateOptionsMenu(Menu iMenu) {
+        getMenuInflater().inflate(R.menu.navigation, iMenu);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        return true;
+    }
 
-        mMainFAB = findViewById(R.id.navigation_floating_action_button);
-        mCreateFolderFAB = findViewById(R.id.navigation_fab_create_folder);
-        mUploadFileFAB = findViewById(R.id.navigation_fab_upload_file);
-        mMainFAB.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            case R.id.action_delete:
+                if (mCurrentAdapter.isInSelectionMode())
+                    deleteSelection();
+                else
+                    mCurrentAdapter.setSelectionMode(true);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void initializeHandler() {
+        mHandler = new Handler(Looper.getMainLooper()) {
             @Override
-            public void onClick(View view) {
-                if (!mIsFABOpen) {
-                    openFABMenu();
-                } else {
-                    closeFABMenu();
+            public void handleMessage(Message msg) {
+                FTPConnection.CONNECTION_STATUS lErrorCode;
+                FTPFile[] lFiles;
+
+                switch (msg.what) {
+
+                    case NAVIGATION_MESSAGE_RECONNECT_SUCCESS:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_SUCCESS");
+                        runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
+                        break;
+
+                    case NAVIGATION_MESSAGE_DISMISS_DIALOGS:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DISMISS_DIALOGS");
+                        dismissAllDialogs();
+                        break;
+
+                    case NAVIGATION_MESSAGE_DISMISS_LOADING_DIALOGS:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DISMISS_LOADING_DIALOGS");
+                        if (mLoadingDialog != null)
+                            mLoadingDialog.dismiss();
+                        if (mLargeDirDialog != null)
+                            mLargeDirDialog.dismiss();
+                        break;
+
+                    case NAVIGATION_MESSAGE_CONNECTION_SUCCESS:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CONNECTION_SUCCESS");
+                        runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
+                        break;
+
+                    case NAVIGATION_MESSAGE_CONNECTION_FAIL:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CONNECTION_FAIL");
+                        boolean lIsRecovering = msg.arg1 == 1;
+                        lErrorCode = (FTPConnection.CONNECTION_STATUS) msg.obj;
+                        new AlertDialog.Builder(FTPNavigationActivity.this)
+                                .setTitle("Error") // TODO string
+                                .setMessage((lIsRecovering ? "Reconnection" : "Connection") + " failed...\nCode : " + lErrorCode)
+                                .setCancelable(false)
+                                .setNegativeButton("Terminate", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        finish();
+                                    }
+                                })
+                                .create()
+                                .show();
+                        if (mFTPConnection.isConnecting())
+                            mFTPConnection.abortConnection();
+                        break;
+
+                    case NAVIGATION_MESSAGE_CONNECTION_LOST:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CONNECTION_LOST");
+                        mFTPConnection.abortFetchDirectoryContent();
+                        dismissAllDialogs();
+                        mReconnectDialog.show();
+                        mFTPConnection.reconnect(new FTPConnection.OnConnectionRecover() {
+                            @Override
+                            public void onConnectionRecover() {
+                                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_RECONNECT_SUCCESS);
+                            }
+
+                            @Override
+                            public void onConnectionDenied(final FTPConnection.CONNECTION_STATUS iErrorCode) {
+                                mHandler.sendMessage(Message.obtain(
+                                        mHandler,
+                                        NAVIGATION_MESSAGE_RECONNECT_FAIL,
+                                        iErrorCode
+                                ));
+                            }
+                        });
+                        break;
+
+                    case NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS");
+                        // TODO : Sort items
+                        FTPFile lNewDirectory = (FTPFile) msg.obj;
+                        mLoadingDialog.dismiss();
+                        mCurrentAdapter.insertItem(lNewDirectory, 0);
+                        mCurrentAdapter.getRecyclerView().scrollToPosition(0);
+                        break;
+
+                    case NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL");
+                        lErrorCode = (FTPConnection.CONNECTION_STATUS) msg.obj;
+                        mLoadingDialog.dismiss();
+                        if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
+                            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+                                    .setTitle("Error") // TODO string
+                                    .setMessage("Creation has failed...\nCode : " + lErrorCode.name())
+                                    .setCancelable(false)
+                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface iDialog, int iWhich) {
+                                            iDialog.dismiss();
+                                        }
+                                    })
+                                    .create();
+                            mErrorAlertDialog.show();
+                        }
+                        break;
+
+                    case NAVIGATION_MESSAGE_RECONNECT_FAIL:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_FAIL");
+                        lErrorCode = (FTPConnection.CONNECTION_STATUS) msg.obj;
+                        new AlertDialog.Builder(FTPNavigationActivity.this)
+                                .setTitle("Reconnection denied") // TODO string
+                                .setMessage("Reconnection has failed...\nCode : " + lErrorCode.name())
+                                .setCancelable(false)
+                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        finish();
+                                    }
+                                })
+                                .create()
+                                .show();
+                        break;
+
+                    case NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING");
+                        lFiles = (FTPFile[]) msg.obj;
+                        mCurrentAdapter.setData(lFiles);
+                        mCurrentAdapter.appearVertically();
+                        mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);
+                        break;
+
+                    case NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH");
+                        lFiles = (FTPFile[]) msg.obj;
+                        inflateNewAdapter(lFiles, mDirectoryPath, false);
+                        break;
+
+                    case NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH");
+                        mDirectoryFetchFinished = true;
+                        lErrorCode = (FTPConnection.CONNECTION_STATUS) msg.obj;
+                        if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
+                            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+                                    .setTitle("Error") // TODO string
+                                    .setMessage("Connection has failed...\nCode : " + lErrorCode.name())
+                                    .setCancelable(false)
+                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface iDialog, int iWhich) {
+                                            iDialog.dismiss();
+                                            onBackPressed();
+                                        }
+                                    })
+                                    .create();
+                            mErrorAlertDialog.show();
+                        }
+                        break;
                 }
             }
-        });
-
-        mCreateFolderFAB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                createDialogFolderClicked();
-            }
-        });
-        mUploadFileFAB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onUploadFileClicked();
-            }
-        });
-
-        mRecyclerSection = findViewById(R.id.navigation_recycler_section);
+        };
     }
 
     private void openFABMenu() {
@@ -230,10 +398,41 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mUploadFileFAB.show();
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        onBackPressed();
-        return true;
+    private void initializeGUI() {
+        Toolbar lToolBar = findViewById(R.id.toolbar);
+        setSupportActionBar(lToolBar);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        mMainFAB = findViewById(R.id.navigation_floating_action_button);
+        mCreateFolderFAB = findViewById(R.id.navigation_fab_create_folder);
+        mUploadFileFAB = findViewById(R.id.navigation_fab_upload_file);
+        mMainFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!mIsFABOpen) {
+                    openFABMenu();
+                } else {
+                    closeFABMenu();
+                }
+            }
+        });
+
+        mCreateFolderFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                createDialogFolderClicked();
+            }
+        });
+        mUploadFileFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onUploadFileClicked();
+            }
+        });
+
+        mRecyclerSection = findViewById(R.id.navigation_recycler_section);
     }
 
     private void destroyCurrentAdapter() {
@@ -297,7 +496,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         lNewAdapter.setOnClickListener(new NavigationRecyclerViewAdapter.OnClickListener() {
             @Override
             public void onClick(FTPFile iFTPFile) {
-                if (lNewAdapter.isSelectionMode()) {
+                if (lNewAdapter.isInSelectionMode()) {
                     lNewAdapter.switchCheckBox(iFTPFile);
                 } else {
                     closeFABMenu();
@@ -317,7 +516,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         lNewAdapter.setOnLongClickListener(new NavigationRecyclerViewAdapter.OnLongClickListener() {
             @Override
             public void onLongClick(FTPFile iFTPFile) {
-                if (!lNewAdapter.isSelectionMode()) {
+                if (!lNewAdapter.isInSelectionMode()) {
                     closeFABMenu();
                     hideFABMenu();
                     lNewAdapter.setSelectionMode(true);
@@ -407,58 +606,23 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             iE.printStackTrace();
                         }
                     }
-                    initializeFetchDirectory(iDirectoryPath,iRecovering);
+                    initializeFetchDirectory(iDirectoryPath, iRecovering);
                 }
             }).start();
         } else
-            initializeFetchDirectory(iDirectoryPath,iRecovering);
+            initializeFetchDirectory(iDirectoryPath, iRecovering);
     }
 
     private void initializeDialogs() {
+
         // Reconnect dialog
         mFTPConnection.setOnConnectionLost(new FTPConnection.OnConnectionLost() {
             @Override
             public void onConnectionLost() {
-                if (!mIsRunning)
-                    return;
-                mFTPConnection.abortFetchDirectoryContent();
-                dismissAllDialogs();
+//                if (!mIsRunning)
+//                    return;
+                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
 
-                mReconnectDialog.show();
-
-                mFTPConnection.reconnect(new FTPConnection.OnConnectionRecover() {
-                    @Override
-                    public void onConnectionRecover() {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onConnectionDenied(final FTPConnection.CONNECTION_STATUS iErrorCode) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                new AlertDialog.Builder(FTPNavigationActivity.this)
-                                        .setTitle("Reconnection denied") // TODO string
-                                        .setMessage("Reconnection has failed...\nCode : " + iErrorCode.name())
-                                        .setCancelable(false)
-                                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                                finish();
-                                            }
-                                        })
-                                        .create()
-                                        .show();
-                            }
-                        });
-                    }
-                });
             }
         });
 
@@ -471,6 +635,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 finish();
             }
         });
+        mReconnectDialog.setCancelable(false);
         mReconnectDialog.setTitle("Reconnection..."); // TODO : strings
         mReconnectDialog.create();
 
@@ -519,52 +684,28 @@ public class FTPNavigationActivity extends AppCompatActivity {
             public void onSuccess(final FTPFile[] iFTPFiles) {
                 mDirectoryFetchFinished = true;
                 mDirectoryPath = iDirectoryPath;
-                if (mLoadingDialog != null && mLoadingDialog.isShowing())
-                    mLoadingDialog.dismiss();
-                if (mLargeDirDialog != null) {
-                    mLargeDirDialog.dismiss();
-                }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (iRecovering) {
-                            LogManager.debug(TAG, "SIZE : " + iFTPFiles.length);
-                            mCurrentAdapter.setData(iFTPFiles);
-                            mCurrentAdapter.appearVertically();
-                            mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);
-                        } else
-                            inflateNewAdapter(iFTPFiles, mDirectoryPath, iRecovering);
-                    }
-                });
+                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DISMISS_LOADING_DIALOGS);
+                if (iRecovering) {
+                    mHandler.sendMessage(Message.obtain(
+                            mHandler,
+                            NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING,
+                            iFTPFiles
+                    ));
+                } else
+                    mHandler.sendMessage(Message.obtain(
+                            mHandler,
+                            NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH,
+                            iFTPFiles));
             }
 
             @Override
             public void onFail(final FTPConnection.CONNECTION_STATUS iErrorCode) {
-                mDirectoryFetchFinished = true;
-                if (mLoadingDialog != null)
-                    mLoadingDialog.dismiss();
-                if (mLargeDirDialog != null)
-                    mLargeDirDialog.dismiss();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
-                            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
-                                    .setTitle("Error") // TODO string
-                                    .setMessage("Connection has failed...\nCode : " + iErrorCode.name())
-                                    .setCancelable(false)
-                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface iDialog, int iWhich) {
-                                            iDialog.dismiss();
-                                            onBackPressed();
-                                        }
-                                    })
-                                    .create();
-                            mErrorAlertDialog.show();
-                        }
-                    }
-                });
+                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DISMISS_LOADING_DIALOGS);
+                mHandler.sendMessage(Message.obtain(
+                        mHandler,
+                        NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH,
+                        iErrorCode
+                ));
             }
         });
     }
@@ -657,41 +798,46 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mFTPConnection.createDirectory(mDirectoryPath, iName, new FTPConnection.OnCreateDirectoryResult() {
             @Override
             public void onSuccess(final FTPFile iNewDirectory) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // TODO : Sort items
-                        mLoadingDialog.dismiss();
-                        mCurrentAdapter.insertItem(iNewDirectory, 0);
-                        mCurrentAdapter.getRecyclerView().scrollToPosition(0);
-                    }
-                });
+
+                mHandler.sendMessage(Message.obtain(
+                        mHandler,
+                        NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS,
+                        iNewDirectory
+                ));
             }
 
             @Override
             public void onFail(final FTPConnection.CONNECTION_STATUS iErrorCode) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mLoadingDialog.dismiss();
-                        if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
-                            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
-                                    .setTitle("Error") // TODO string
-                                    .setMessage("Creation has failed...\nCode : " + iErrorCode.name())
-                                    .setCancelable(false)
-                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface iDialog, int iWhich) {
-                                            iDialog.dismiss();
-                                        }
-                                    })
-                                    .create();
-                            mErrorAlertDialog.show();
-                        }
-                    }
-                });
+
+                mHandler.sendMessage(Message.obtain(
+                        mHandler,
+                        NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS,
+                        iErrorCode
+                ));
             }
         });
+    }
+
+    private void deleteSelection() {
+        FTPFile[] lSelectedFiles = mCurrentAdapter.getSelection();
+
+        if (lSelectedFiles.length == 0) {
+            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+                    .setTitle("Error") // TODO string
+                    .setMessage("Select something")
+                    .setCancelable(false)
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface iDialog, int iWhich) {
+                            iDialog.dismiss();
+                        }
+                    })
+                    .create();
+            mErrorAlertDialog.show();
+        } else {
+            // TODO : Are you sure to delete x files ?
+            // TODO : Use ProgressBar
+        }
     }
 
     private void onUploadFileClicked() {
@@ -700,13 +846,13 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private void dismissAllDialogs() {
         if (mReconnectDialog != null)
-            mReconnectDialog.dismiss();
+            mReconnectDialog.cancel();
         if (mLargeDirDialog != null)
-            mLargeDirDialog.dismiss();
+            mLargeDirDialog.cancel();
         if (mLoadingDialog != null)
-            mLoadingDialog.dismiss();
+            mLoadingDialog.cancel();
         if (mErrorAlertDialog != null)
-            mErrorAlertDialog.dismiss();
+            mErrorAlertDialog.cancel();
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -715,6 +861,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         if (mFTPServer == null) {
             LogManager.error(TAG, "mFTPServer is null");
             LogManager.error(TAG, Arrays.toString(new Exception("mFTPServer instance is null").getStackTrace()));
+            return;
         }
 
         mFTPConnection = new FTPConnection(mFTPServer);
@@ -728,45 +875,22 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mFTPConnection.connect(new FTPConnection.OnConnectResult() {
             @Override
             public void onSuccess() {
-                dismissAllDialogs();
-                if (iRunFetchOnSuccess) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
-                        }
-                    });
-                }
+                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DISMISS_DIALOGS);
+                if (iRunFetchOnSuccess)
+                    mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_SUCCESS);
             }
 
             @Override
             public void onFail(final FTPConnection.CONNECTION_STATUS iErrorCode) {
                 if (iErrorCode == FTPConnection.CONNECTION_STATUS.ERROR_CONNECTION_INTERRUPTED)
                     return;
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mIsRunning) {
-                            mLoadingDialog.dismiss();
-
-                            new AlertDialog.Builder(FTPNavigationActivity.this)
-                                    .setTitle("Error") // TODO string
-                                    .setMessage((iIsRecovering ? "Reconnection" : "Connection") + " failed...\nCode : " + iErrorCode)
-                                    .setCancelable(false)
-                                    .setNegativeButton("Terminate", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
-                                            finish();
-                                        }
-                                    })
-                                    .create()
-                                    .show();
-                        }
-                        if (mFTPConnection.isConnecting())
-                            mFTPConnection.abortConnection();
-                    }
-                });
+                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DISMISS_DIALOGS);
+                mHandler.sendMessage(Message.obtain(
+                        mHandler,
+                        NAVIGATION_MESSAGE_CONNECTION_FAIL,
+                        iIsRecovering ? 1 : 0,
+                        0,
+                        iErrorCode));
             }
         });
     }

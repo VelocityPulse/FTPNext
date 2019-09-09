@@ -33,15 +33,19 @@ public class FTPConnection {
     private FTPServer mFTPServer;
     private FTPClient mFTPClient;
     private FTPFile mCurrentDirectory;
-    private String mLocalization;
+    private String mCurrentAbsolutePath;
+
     private Thread mConnectionThread;
     private Thread mReconnectThread;
     private Thread mDirectoryFetchThread;
     private Thread mReplyStatusThread;
     private Thread mCreateDirectoryThread;
+    private Thread mDeleteFileThread;
+
     private NetworkManager.OnNetworkAvailable mOnNetworkAvailableCallback;
     private NetworkManager.OnNetworkLost mOnNetworkLostCallback;
     private OnConnectionLost mOnConnectionLost;
+
     private boolean mAbortReconnect;
 
     public FTPConnection(FTPServer iFTPServer) {
@@ -166,8 +170,9 @@ public class FTPConnection {
                             @Override
                             public void onSuccess() {
                                 LogManager.info(TAG, "Reconnect success");
-                                if (iOnConnectionRecover != null)
+                                if (iOnConnectionRecover != null) {
                                     iOnConnectionRecover.onConnectionRecover();
+                                }
                             }
 
                             @Override
@@ -235,6 +240,8 @@ public class FTPConnection {
                     }
                     if (Thread.interrupted())
                         return;
+                    mFTPClient.changeWorkingDirectory(iPath);
+                    mCurrentAbsolutePath = iPath;
                     iOnFetchDirectoryResult.onSuccess(files);
                 } catch (IOException iE) {
                     iE.printStackTrace();
@@ -372,6 +379,40 @@ public class FTPConnection {
         mCreateDirectoryThread.start();
     }
 
+    public void deleteFile(FTPFile iFTPFile, OnDeleteListener iOnDeleteListener) {
+        deleteFiles(new FTPFile[]{iFTPFile}, iOnDeleteListener);
+    }
+
+    public void deleteFiles(final FTPFile[] iFTPFiles, final OnDeleteListener iOnDeleteListener) {
+        LogManager.info(TAG, "Delete files");
+        if (!isConnected()) {
+            LogManager.error(TAG, "Connection not established");
+            return;
+        } else if (isDeletingFiles()) {
+            LogManager.error(TAG, "Is already deleting files");
+            return;
+        }
+
+        mDeleteFileThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (FTPFile lFTPFile : iFTPFiles) {
+
+                    try {
+                        mFTPClient.deleteFile(mCurrentAbsolutePath + "/" + lFTPFile);
+                    } catch (IOException iE) {
+                        iE.printStackTrace();
+                    }
+
+
+                }
+                if (iOnDeleteListener != null)
+                    iOnDeleteListener.onSuccess();
+            }
+        });
+        mDeleteFileThread.start();
+    }
+
     public FTPServer getFTPServer() {
         return mFTPServer;
     }
@@ -402,6 +443,15 @@ public class FTPConnection {
 
     public boolean isCreatingFolder() {
         return isConnected() && mCreateDirectoryThread != null && mCreateDirectoryThread.isAlive();
+    }
+
+    public boolean isDeletingFiles() {
+        return isConnected() && mDeleteFileThread != null && mDeleteFileThread.isAlive();
+    }
+
+    public boolean isBusy() {
+        return !isConnecting() && !isReconnecting() && !isFetchingFolders() && !isCreatingFolder() &&
+                !isDeletingFiles();
     }
 
     public void setOnConnectionLost(OnConnectionLost iOnConnectionLost) {
@@ -442,6 +492,14 @@ public class FTPConnection {
         ERROR_NO_INTERNET,
         ERROR_FAILED_LOGIN,
         ERROR_NOT_REACHABLE,
+    }
+
+    public interface OnDeleteListener {
+        void onSuccess();
+
+        void onProgress(int iProgress);
+
+        void onFail(FTPFile iFTPFile);
     }
 
     public interface OnFetchDirectoryResult {

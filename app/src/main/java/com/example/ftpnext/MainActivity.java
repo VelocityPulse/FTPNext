@@ -114,20 +114,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
+    public boolean onCreateOptionsMenu(Menu iMenu) {
+        getMenuInflater().inflate(R.menu.main, iMenu);
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
+    public boolean onOptionsItemSelected(MenuItem iMenuItem) {
+        int id = iMenuItem.getItemId();
         if (id == R.id.action_parameters) {
 
             return true;
         }
 
-        return super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected(iMenuItem);
     }
 
     private void initializeGUI() {

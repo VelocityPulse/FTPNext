@@ -257,6 +257,16 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         }
     }
 
+    public FTPFile[] getSelection() {
+        List<FTPFile> oSelectedItems = new ArrayList<>();
+
+        for (FTPFileItem lFTPFileItem : mFTPFileItems) {
+            if (lFTPFileItem.mChecked)
+                oSelectedItems.add(lFTPFileItem.mFTPFile);
+        }
+        return (FTPFile[]) oSelectedItems.toArray();
+    }
+
     public boolean isSelectedCheckBox(FTPFile iFTPFile) {
         LogManager.info(TAG, "Is selected checkbox");
         if (iFTPFile == null) {
@@ -304,9 +314,53 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         return -1;
     }
 
+    public NavigationRecyclerViewAdapter getNextAdapter() {
+        return mNextAdapter;
+    }
+
+    public void setNextAdapter(NavigationRecyclerViewAdapter iNextAdapter) {
+        mNextAdapter = iNextAdapter;
+    }
+
+    public NavigationRecyclerViewAdapter getPreviousAdapter() {
+        return mPreviousAdapter;
+    }
+
+    public void setPreviousAdapter(NavigationRecyclerViewAdapter iPreviousAdapter) {
+        mPreviousAdapter = iPreviousAdapter;
+    }
+
     public String getDirectoryPath() {
         return mDirectoryPath;
     }
+
+    public RecyclerView getRecyclerView() {
+        return mRecyclerView;
+    }
+
+    public SwipeRefreshLayout getSwipeRefreshLayout() {
+        return mSwipeRefreshLayout;
+    }
+
+    public boolean isInSelectionMode() {
+        return mSelectionMode;
+    }
+
+    private void setItemsTransparent() {
+        LogManager.info(TAG, "Set item transparent");
+        for (CustomItemViewAdapter lItem : mCustomViewItems) {
+            lItem.mMainLayout.setBackgroundResource(android.R.color.transparent);
+        }
+    }
+
+    private void setItemsRipple() {
+        LogManager.info(TAG, "Set item ripple");
+        for (CustomItemViewAdapter lItem : mCustomViewItems) {
+            lItem.mMainLayout.setBackgroundResource(R.drawable.ripple_effect_primary);
+        }
+    }
+
+
 
     public void appearVertically() {
         Animation lAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_appear_vertically);
@@ -413,50 +467,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         mSwipeRefreshLayout.startAnimation(lAnimation);
     }
 
-    public NavigationRecyclerViewAdapter getNextAdapter() {
-        return mNextAdapter;
-    }
-
-    public void setNextAdapter(NavigationRecyclerViewAdapter iNextAdapter) {
-        mNextAdapter = iNextAdapter;
-    }
-
-    public NavigationRecyclerViewAdapter getPreviousAdapter() {
-        return mPreviousAdapter;
-    }
-
-    public void setPreviousAdapter(NavigationRecyclerViewAdapter iPreviousAdapter) {
-        mPreviousAdapter = iPreviousAdapter;
-    }
-
     public void setOnLongClickListener(OnLongClickListener iListener) {
         mLongClickListener = iListener;
-    }
-
-    public RecyclerView getRecyclerView() {
-        return mRecyclerView;
-    }
-
-    public SwipeRefreshLayout getSwipeRefreshLayout() {
-        return mSwipeRefreshLayout;
-    }
-
-    public boolean isSelectionMode() {
-        return mSelectionMode;
-    }
-
-    private void setItemsTransparent() {
-        LogManager.info(TAG, "Set item transparent");
-        for (CustomItemViewAdapter lItem : mCustomViewItems) {
-            lItem.mMainLayout.setBackgroundResource(android.R.color.transparent);
-        }
-    }
-
-    private void setItemsRipple() {
-        LogManager.info(TAG, "Set item ripple");
-        for (CustomItemViewAdapter lItem : mCustomViewItems) {
-            lItem.mMainLayout.setBackgroundResource(R.drawable.ripple_effect_primary);
-        }
     }
 
     public void setOnClickListener(OnClickListener iListener) {
