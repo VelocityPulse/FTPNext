@@ -13,6 +13,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -210,9 +211,10 @@ public class FTPConnection {
         if (isConnected()) {
             if (isFetchingFolders())
                 abortFetchDirectoryContent();
+            if (isDeletingFiles())
+                abortDeleting();
             try {
                 mFTPClient.disconnect();
-
             } catch (IOException iE) {
                 iE.printStackTrace();
             }
@@ -238,7 +240,7 @@ public class FTPConnection {
                 try {
                     mFTPClient.enterLocalPassiveMode();
                     mFTPClient.changeWorkingDirectory(iPath);
-                    FTPFile[] files = mFTPClient.listFiles();
+                    FTPFile[] lFiles = mFTPClient.listFiles();
                     mCurrentDirectory = mFTPClient.mlistFile(iPath);
                     mFTPClient.enterLocalActiveMode();
                     if (Thread.interrupted())
@@ -250,7 +252,7 @@ public class FTPConnection {
                         return;
                     mFTPClient.changeWorkingDirectory(iPath);
                     mCurrentAbsolutePath = iPath;
-                    iOnFetchDirectoryResult.onSuccess(files);
+                    iOnFetchDirectoryResult.onSuccess(lFiles);
                 } catch (IOException iE) {
                     iE.printStackTrace();
                     if (!Thread.interrupted()) {
@@ -328,7 +330,7 @@ public class FTPConnection {
                     }
 
                     if (isConnected()) {
-                        startReplyStatusThread();
+//                        startReplyStatusThread();
                         LogManager.info(TAG, "FTPClient connected");
                         if (iOnConnectResult != null)
                             iOnConnectResult.onSuccess();
@@ -388,9 +390,7 @@ public class FTPConnection {
         deleteFiles(new FTPFile[]{iFTPFile}, iOnDeleteListener);
     }
 
-    // TODO : Abort deleting
-    // TODO : Destroy connection -> abort deleting
-    public void deleteFiles(final FTPFile[] iFTPFiles, final OnDeleteListener iOnDeleteListener) {
+    public void deleteFiles(final FTPFile[] iSelection, final OnDeleteListener iOnDeleteListener) {
         LogManager.info(TAG, "Delete files");
         if (!isConnected()) {
             LogManager.error(TAG, "Connection not established");
@@ -404,23 +404,108 @@ public class FTPConnection {
         mByPassDeletingErrors = false;
         mDeleteFileThread = new Thread(new Runnable() {
 
-            private void recursiveDeletion(String iPath) throws IOException {
-                for (FTPFile lFTPFile : iFTPFiles) {
+            private void recursiveDeletion(FTPFile iFTPFile, int iProgress, int iTotal) throws IOException, InterruptedException {
 
-                    if (lFTPFile.isDirectory()) {
+                LogManager.info(TAG, "Recursive deletion : " + iFTPFile.getName() + " " + iFTPFile.isDirectory());
 
+                if (iFTPFile.isDirectory()) {
+//                    LogManager.info(TAG, "Is a directory");
+
+
+                    // DIRECTORY
+                    if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)) {
+
+                        FTPFile[] lFiles = mFTPClient.listFiles(iFTPFile.getName());
+                        int lProgress = 0;
+                        for (FTPFile lFile : lFiles) {
+//                                LogManager.info(TAG, "For each files progress : " + lProgress);
+//                                LogManager.info(TAG,"New recursive for : " + lFile.getName());
+
+                            iOnDeleteListener.onProgressDirectory(
+                                    iProgress,
+                                    iTotal,
+                                    iFTPFile.getName());
+
+                            lFile.setName(iFTPFile.getName() + "/" + lFile.getName());
+                            recursiveDeletion(lFile, lProgress++, lFiles.length);
+                        }
+                        iOnDeleteListener.onProgressSubDirectory(
+                                0,
+                                0,
+                                "");
+
+                        iOnDeleteListener.onProgressDirectory(
+                                iProgress,
+                                iTotal,
+                                iFTPFile.getName());
+
+                        if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
+//                                LogManager.debug(TAG, "WILL DELETE DIR : " + iFTPFile.getName());
+                            Thread.sleep(100);
+//                            mFTPClient.deleteFile(iFTPFile.getName());
+                        } else if (!mByPassDeletingErrors) {
+                            mPauseDeleting = true;
+                            iOnDeleteListener.onRightAccessFail(iFTPFile);
+                        }
+
+                    } else if (!mByPassDeletingErrors) {
+                        mPauseDeleting = true;
+                        iOnDeleteListener.onRightAccessFail(iFTPFile);
                     }
-                    mFTPClient.deleteFile(mCurrentAbsolutePath + "/" + lFTPFile);
+                } else if (iFTPFile.isFile()) {
+                    // FILE
 
+                    iOnDeleteListener.onProgressSubDirectory(
+                            iProgress,
+                            iTotal,
+                            iFTPFile.getName().substring(iFTPFile.getName().lastIndexOf(File.separator)));
+
+                    if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
+//                        LogManager.debug(TAG, "WILL DELETE FILE : " + iFTPFile.getName());
+                        Thread.sleep(100);
+//                        mFTPClient.deleteFile(iFTPFile.getName());
+                    }
                 }
+
             }
 
             @Override
             public void run() {
-
+                LogManager.info(TAG, "Thread delete files");
                 try {
-                    recursiveDeletion(mCurrentAbsolutePath);
-                } catch (IOException iE) {
+                    mFTPClient.enterLocalPassiveMode(); // PASSIVE MODE
+
+                    if (iOnDeleteListener != null)
+                        iOnDeleteListener.onStartDelete();
+
+                    int lProgress = 0;
+                    for (FTPFile lFTPFile : iSelection) {
+                        LogManager.debug(TAG, "Selected file : " + lFTPFile.getName());
+                        FTPFile lAbsoluteFile = mFTPClient.mlistFile(mCurrentAbsolutePath + "/" + lFTPFile.getName());
+                        if (lAbsoluteFile != null) {
+                            LogManager.debug(TAG, "Absolute name : " + lAbsoluteFile.getName());
+
+                            iOnDeleteListener.onProgressDirectory(
+                                    lProgress,
+                                    iSelection.length,
+                                    lFTPFile.getName());
+
+                            recursiveDeletion(lAbsoluteFile, lProgress++, iSelection.length);
+                        } else {
+                            LogManager.error(TAG, "Error with : " + lFTPFile.toFormattedString());
+                            if (iOnDeleteListener != null)
+                                iOnDeleteListener.onFail(lFTPFile);
+                            mPauseDeleting = true;
+                        }
+
+                        iOnDeleteListener.onProgressDirectory(
+                                lProgress,
+                                iSelection.length,
+                                lFTPFile.getName());
+                    }
+
+                    mFTPClient.enterLocalActiveMode(); // ACTIVE MODE
+                } catch (IOException | InterruptedException iE) {
                     iE.printStackTrace();
                 }
 

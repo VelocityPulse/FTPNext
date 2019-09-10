@@ -213,8 +213,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_ORDER_REFRESH_DATA:
                         LogManager.info(TAG, "Handle : NAVIGATION_ORDER_REFRESH_DATA");
-                        if (!mFTPConnection.isReconnecting())
+                        if (!mFTPConnection.isReconnecting() && mDirectoryFetchFinished) {
                             mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(true);
+                            runFetchProcedures(mDirectoryPath, false, true);
+                        }
                         break;
 
                     case NAVIGATION_MESSAGE_RECONNECT_SUCCESS:
@@ -478,7 +480,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
         lSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                runFetchProcedures(mDirectoryPath, false, true);
+                LogManager.error(TAG, "On refresh");
+                mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
             }
         });
 
@@ -701,8 +704,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mFTPConnection.fetchDirectoryContent(iDirectoryPath, new FTPConnection.OnFetchDirectoryResult() {
             @Override
             public void onSuccess(final FTPFile[] iFTPFiles) {
-                mDirectoryFetchFinished = true;
                 mDirectoryPath = iDirectoryPath;
+                mDirectoryFetchFinished = true;
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS);
                 if (iRecovering) {
                     mHandler.sendMessage(Message.obtain(
@@ -882,13 +885,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     public void run() {
                         final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
                         lBuilder.setTitle("Deleting"); // TODO : strings
-                        View lDialogDoubleProgress = View.inflate(FTPNavigationActivity.this, R.layout.dialog_double_progress, null);
 
+                        View lDialogDoubleProgress = View.inflate(FTPNavigationActivity.this, R.layout.dialog_double_progress, null);
                         mProgressDirectory = lDialogDoubleProgress.findViewById(R.id.dialog_double_progress_progress_1);
-                        mProgressSubDirectory = lDialogDoubleProgress.findViewById(R.id.dialog_double_progress_progress_2);
                         mTextViewDirectory = lDialogDoubleProgress.findViewById(R.id.dialog_double_progress_text_1);
+                        mProgressSubDirectory = lDialogDoubleProgress.findViewById(R.id.dialog_double_progress_progress_2);
                         mTextViewSubDirectory = lDialogDoubleProgress.findViewById(R.id.dialog_double_progress_text_2);
-                        lBuilder.setView(R.layout.dialog_double_progress);
+
+                        lBuilder.setView(lDialogDoubleProgress);
                         lBuilder.setCancelable(false);
                         lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                             @Override
@@ -897,23 +901,40 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             }
                         });
                         mDeletingDialog = lBuilder.create();
+
                         mDeletingDialog.show();
                     }
                 });
             }
 
             @Override
-            public void onProgressDirectory(int iDirectoryProgress, int iTotalDirectories, String iDirectoryName) {
-                mTextViewDirectory.setText(iDirectoryName);
-                mProgressDirectory.setMax(iTotalDirectories);
-                mProgressDirectory.setProgress(iDirectoryProgress);
+            public void onProgressDirectory(final int iDirectoryProgress, final int iTotalDirectories, final String iDirectoryName) {
+                LogManager.debug(TAG, "progress dir : " + iDirectoryName);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mTextViewDirectory.setText(iDirectoryName);
+                        mProgressDirectory.setMax(iTotalDirectories);
+                        mProgressDirectory.setProgress(iDirectoryProgress);
+//                        mProgressDirectory.requestLayout();
+//                        mTextViewDirectory.requestLayout();
+                    }
+                });
             }
 
             @Override
-            public void onProgressSubDirectory(int iSubDirectoryProgress, int iTotalSubDirectories, String iSubDirectoryName) {
-                mTextViewSubDirectory.setText(iSubDirectoryName);
-                mProgressSubDirectory.setMax(iTotalSubDirectories);
-                mProgressSubDirectory.setProgress(iSubDirectoryProgress);
+            public void onProgressSubDirectory(final int iSubDirectoryProgress, final int iTotalSubDirectories, final String iSubDirectoryName) {
+                LogManager.debug(TAG, "progress subdir : " + iSubDirectoryName);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mTextViewSubDirectory.setText(iSubDirectoryName);
+                        mProgressSubDirectory.setMax(iTotalSubDirectories);
+                        mProgressSubDirectory.setProgress(iSubDirectoryProgress);
+//                        mProgressSubDirectory.requestLayout();
+//                        mTextViewSubDirectory.requestLayout();
+                    }
+                });
             }
 
             @Override
@@ -930,7 +951,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         lBuilder.setCancelable(false);
                         lBuilder.setPositiveButton("Ignore", new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
+                            public void onClick(DialogInterface iDialog, int iWhich) {
+                                iDialog.dismiss();
                                 mFTPConnection.setByPassDeletingErrors(lCheckBox.isChecked());
                                 mFTPConnection.resumeDeleting();
                             }
@@ -938,7 +960,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                         lBuilder.setNegativeButton("Stop", new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
+                            public void onClick(DialogInterface iDialog, int iWhich) {
+                                iDialog.dismiss();
                                 mFTPConnection.abortDeleting();
                             }
                         });

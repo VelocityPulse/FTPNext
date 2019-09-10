@@ -266,7 +266,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             if (lFTPFileItem.mChecked)
                 oSelectedItems.add(lFTPFileItem.mFTPFile);
         }
-        return (FTPFile[]) oSelectedItems.toArray();
+        return oSelectedItems.toArray(new FTPFile[0]);
     }
 
     public boolean isSelectedCheckBox(FTPFile iFTPFile) {
