@@ -12,7 +12,7 @@ import com.example.ftpnext.R;
 
 import java.util.Locale;
 
-public class Utils {
+public final class Utils {
 
     public static void hideKeyboard(Activity iActivity) {
         InputMethodManager lImm = (InputMethodManager) iActivity.getSystemService(Activity.INPUT_METHOD_SERVICE);

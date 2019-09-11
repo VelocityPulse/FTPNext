@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="horizontal"
     android:gravity="end"
-    android:padding="?dialogPreferredPadding">
+    android:paddingRight="?dialogPreferredPadding">
 
     <TextView
         android:id="@+id/dialog_delete_error_text"
