@@ -10,8 +10,8 @@ public class AppCore {
 
     private static DataBase mDataBase = null;
     private static NetworkManager mNetworkManager = null;
+    private static  boolean mApplicationStarted;
 
-    private boolean mApplicationStarted;
     private Context mContext;
 
     public AppCore(Context iContext) {
@@ -25,6 +25,8 @@ public class AppCore {
 
         mNetworkManager = NetworkManager.getInstance();
         mNetworkManager.startMonitoring(mContext);
+
+        mApplicationStarted = true;
     }
 
     public static DataBase getDataBase() {
@@ -33,5 +35,9 @@ public class AppCore {
 
     public static NetworkManager getNetworkManager() {
         return mNetworkManager;
+    }
+
+    public static boolean isApplicationStarted() {
+        return mApplicationStarted && mDataBase != null && mNetworkManager != null;
     }
 }

@@ -30,8 +30,8 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.example.ftpnext.FTPConnection.OnDeleteListener;
 import com.example.ftpnext.adapters.NavigationRecyclerViewAdapter;
-import com.example.ftpnext.commons.FTPFileUtils;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LogManager;
@@ -224,13 +224,19 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         break;
 
                     case NAVIGATION_ORDER_SELECTED_MODE_ON:
-                        if (mCurrentAdapter != null && !mCurrentAdapter.isInSelectionMode())
+                        LogManager.info(TAG, "Handle : NAVIGATION_ORDER_SELECTED_MODE_ON");
+                        if (mCurrentAdapter != null && !mCurrentAdapter.isInSelectionMode()) {
                             mCurrentAdapter.setSelectionMode(true);
+                            mCurrentAdapter.getSwipeRefreshLayout().setEnabled(false);
+                        }
                         break;
 
                     case NAVIGATION_ORDER_SELECTED_MODE_OFF:
-                        if (mCurrentAdapter != null && mCurrentAdapter.isInSelectionMode())
+                        LogManager.info(TAG, "Handle : NAVIGATION_ORDER_SELECTED_MODE_OFF");
+                        if (mCurrentAdapter != null && mCurrentAdapter.isInSelectionMode()) {
                             mCurrentAdapter.setSelectionMode(false);
+                            mCurrentAdapter.getSwipeRefreshLayout().setEnabled(true);
+                        }
                         break;
 
                     case NAVIGATION_MESSAGE_RECONNECT_SUCCESS:
@@ -370,6 +376,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         break;
 
                     case NAVIGATION_ORDER_STOP_DELETING:
+                        LogManager.info(TAG, "Handle : NAVIGATION_ORDER_STOP_DELETING");
                         if (mDeletingInfoDialog != null && mDeletingInfoDialog.isShowing())
                             mDeletingInfoDialog.cancel();
                         mFTPConnection.abortDeleting();
@@ -540,8 +547,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     if (iFTPFile.isDirectory()) {
 //                        if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
 //                                || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
-                            mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
-                            runFetchProcedures(mDirectoryPath + "/" + iFTPFile.getName(), mIsLargeDirectory, false);
+                        mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
+                        runFetchProcedures(mDirectoryPath + "/" + iFTPFile.getName(), mIsLargeDirectory, false);
 //                        } else
 //                            Utils.createErrorAlertDialog(FTPNavigationActivity.this, "You don't have enough permission");
                     }
@@ -566,6 +573,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void initialize() {
+        if (!AppCore.isApplicationStarted()) {
+            new AppCore(this).startApplication();
+        }
+
         mFTPServerDAO = DataBase.getFTPServerDAO();
 
         mBundle = this.getIntent().getExtras();
@@ -882,8 +893,37 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
+
+    public class AbstractTest {
+        public void main(final String... args) {
+            final Printer p = new Printer() {
+
+                String lol;
+
+                @Override
+                public void print() {
+                    super.print();
+                    System.out.println("world");
+                }
+            };
+            test(new Printer() {
+            });
+            //p.printSomethingOther(); // does not work
+        }
+
+        private void test(final Printer a) {
+
+        }
+
+    }
+    abstract class Printer {
+        public void print() {
+            System.out.println("hello");
+        }
+    }
+
     private void deleteFile(FTPFile[] iSelectedFiles) {
-        mFTPConnection.deleteFiles(iSelectedFiles, new FTPConnection.OnDeleteListener() {
+        mFTPConnection.deleteFiles(iSelectedFiles, mFTPConnection.new OnDeleteListener() {
 
             ProgressBar mProgressDirectory;
             ProgressBar mProgressSubDirectory;
@@ -891,10 +931,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
             TextView mTextViewSubDirectory;
 
             // TODO : If a reconnection is performed, we should re-open dialogs here
-
-            private void buildErrorDialog() {
-
-            }
 
             @Override
             public void onStartDelete() {
@@ -938,6 +974,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
             @Override
             public void onProgressSubDirectory(final int iSubDirectoryProgress, final int iTotalSubDirectories, final String iSubDirectoryName) {
+//                super.onProgressSubDirectory(iSubDirectoryProgress, iTotalSubDirectories, iSubDirectoryName);
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -950,11 +987,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
             @Override
             public void onRightAccessFail(final FTPFile iFTPFile) {
+                super.onRightAccessFail(iFTPFile);
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
-                        lBuilder.setTitle("Deleting"); // TODO : strings
+                        lBuilder.setTitle("Permission error"); // TODO : strings
                         final View lDialogDeleteError = View.inflate(FTPNavigationActivity.this, R.layout.dialog_delete_error, null);
                         final CheckBox lCheckBox = lDialogDeleteError.findViewById(R.id.dialog_delete_error_checkbox);
                         final TextView lTextView = lDialogDeleteError.findViewById(R.id.dialog_delete_error_text);
@@ -963,8 +1001,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         lBuilder.setView(lDialogDeleteError);
                         String lMessage =
                                 "\nNot enough permissions to delete this " +
-                                (iFTPFile.isDirectory() ? "directory \n" : "file \n") +
-                                iFTPFile.getName();
+                                        (iFTPFile.isDirectory() ? "directory \n" : "file \n") +
+                                        iFTPFile.getName();
                         lBuilder.setMessage(lMessage);
                         lBuilder.setCancelable(false);
                         lBuilder.setPositiveButton("Ignore", new DialogInterface.OnClickListener() {
@@ -1000,11 +1038,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
             @Override
             public void onFail(final FTPFile iFTPFile) {
+                super.onFail(iFTPFile);
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
-                        lBuilder.setTitle("Deleting"); // TODO : strings
+                        lBuilder.setTitle("Fail error"); // TODO : strings
                         final View lDialogDeleteError = View.inflate(FTPNavigationActivity.this, R.layout.dialog_delete_error, null);
                         final CheckBox lCheckBox = lDialogDeleteError.findViewById(R.id.dialog_delete_error_checkbox);
                         final TextView lTextView = lDialogDeleteError.findViewById(R.id.dialog_delete_error_text);

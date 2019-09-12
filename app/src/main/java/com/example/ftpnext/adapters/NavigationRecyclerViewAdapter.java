@@ -218,6 +218,17 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         }
     }
 
+//    public void removeItems(FTPFile[] iItems) {
+//        LogManager.info(TAG, "Remove items");
+//        for (FTPFileItem lItem : mFTPFileItems) {
+//            if (lItem.equals(iItem)) {
+//                mFTPFileItems.remove(lItem);
+//                notifyItemRemoved(mFTPFileItems.indexOf(lItem));
+//                return;
+//            }
+//        }
+//    }
+
     public void setData(FTPFile[] iData) {
         LogManager.info(TAG, "Set data");
         if (iData == null) {

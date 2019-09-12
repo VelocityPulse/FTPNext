@@ -8,8 +8,7 @@
     <TextView
         android:id="@+id/dialog_double_progress_text_1"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Progress 1" />
+        android:layout_height="wrap_content" />
 
     <ProgressBar
         android:id="@+id/dialog_double_progress_progress_1"
@@ -23,8 +22,7 @@
         android:id="@+id/dialog_double_progress_text_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Progress 2" />
+        android:layout_marginTop="20dp" />
 
     <ProgressBar
         android:id="@+id/dialog_double_progress_progress_2"
