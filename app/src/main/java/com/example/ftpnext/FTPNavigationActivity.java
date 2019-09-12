@@ -30,7 +30,6 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.example.ftpnext.FTPConnection.OnDeleteListener;
 import com.example.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
@@ -148,7 +147,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        LogManager.info(TAG, "On back pressed");
+        LogManager.info(TAG, "On back pressed"); // TODO : Code the back pressed of delete dialogs
         if (mIsFABOpen) {
             closeFABMenu();
             return;
@@ -200,6 +199,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 FTPConnection.CONNECTION_STATUS lErrorCode;
                 FTPFile[] lFiles;
 
+                if (!mIsRunning)
+                    return;
+
                 switch (msg.what) {
 
                     case NAVIGATION_ORDER_DISMISS_DIALOGS:
@@ -241,7 +243,15 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_MESSAGE_RECONNECT_SUCCESS:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_SUCCESS");
-                        runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
+                        if (mFTPConnection.isDeletingFiles()) {
+                            mReconnectDialog.cancel();
+                            if (mDeletingErrorDialog != null)
+                                mDeletingErrorDialog.show();
+                            else if (mDeletingInfoDialog != null)
+                                mDeletingInfoDialog.show();
+//                            mFTPConnection.resumeDeleting();
+                        } else
+                            runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
                         break;
 
                     case NAVIGATION_MESSAGE_CONNECTION_SUCCESS:
@@ -273,8 +283,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     case NAVIGATION_MESSAGE_CONNECTION_LOST:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CONNECTION_LOST");
                         mFTPConnection.abortFetchDirectoryContent();
-                        dismissAllDialogs();
+                        if (mFTPConnection.isDeletingFiles()) {
+                            mFTPConnection.pauseDeleting();
+                            mDeletingInfoDialog.hide();
+                            mDeletingErrorDialog.hide();
+                        } else
+                            dismissAllDialogs();
                         mReconnectDialog.show();
+
                         mFTPConnection.reconnect(new FTPConnection.OnConnectionRecover() {
                             @Override
                             public void onConnectionRecover() {
@@ -283,6 +299,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                             @Override
                             public void onConnectionDenied(final FTPConnection.CONNECTION_STATUS iErrorCode) {
+                                if (mFTPConnection != null)
+                                    mFTPConnection.disconnect();
+                                mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
                                 mHandler.sendMessage(Message.obtain(
                                         mHandler,
                                         NAVIGATION_MESSAGE_RECONNECT_FAIL,
@@ -379,7 +398,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         LogManager.info(TAG, "Handle : NAVIGATION_ORDER_STOP_DELETING");
                         if (mDeletingInfoDialog != null && mDeletingInfoDialog.isShowing())
                             mDeletingInfoDialog.cancel();
+                        if (mDeletingErrorDialog != null && mDeletingErrorDialog.isShowing())
+                            mDeletingErrorDialog.cancel();
                         mFTPConnection.abortDeleting();
+                        mDeletingInfoDialog = null;
+                        mDeletingErrorDialog = null;
                         mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
                         break;
                 }
@@ -687,8 +710,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
         // Large directory dialog
         mLargeDirDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
+            public void onClick(DialogInterface iDialog, int iWhich) {
+                iDialog.dismiss();
                 mFTPConnection.abortFetchDirectoryContent();
             }
         });
@@ -697,17 +720,18 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mLargeDirDialog.create();
 
         // Loading dialog
-        mLoadingDialog = Utils.initProgressDialog(FTPNavigationActivity.this, new DialogInterface.OnClickListener() {
+        mLoadingDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
+            public void onClick(DialogInterface iDialog, int iWhich) {
+                iDialog.dismiss();
                 onBackPressed();
             }
         });
+        mLoadingDialog.setTitle("Loading..."); //TODO : strings
         mLoadingDialog.create();
 
         //Bad Connection
-        new Handler().postDelayed(new Runnable() {
+        mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 if (!mDirectoryFetchFinished && (mLargeDirDialog == null || !mLargeDirDialog.isShowing())) { // in case if dialog has been canceled
@@ -894,14 +918,13 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void deleteFile(FTPFile[] iSelectedFiles) {
+        mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
         mFTPConnection.deleteFiles(iSelectedFiles, mFTPConnection.new OnDeleteListener() {
 
             ProgressBar mProgressDirectory;
             ProgressBar mProgressSubDirectory;
             TextView mTextViewDirectory;
             TextView mTextViewSubDirectory;
-
-            // TODO : If a reconnection is performed, we should re-open dialogs here
 
             @Override
             public void onStartDelete() {
@@ -980,7 +1003,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface iDialog, int iWhich) {
                                 iDialog.dismiss();
-                                mDeletingInfoDialog.show();
+                                mDeletingErrorDialog = null;
+                                if (mDeletingInfoDialog != null)
+                                    mDeletingInfoDialog.show();
                                 mFTPConnection.setDeletingByPassRightErrors(lCheckBox.isChecked());
                                 mFTPConnection.resumeDeleting();
                             }
@@ -990,6 +1015,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface iDialog, int iWhich) {
                                 iDialog.dismiss();
+                                mDeletingErrorDialog = null; // check at null used in NAVIGATION_MESSAGE_RECONNECT_SUCCESS
                                 mCurrentAdapter.setSelectionMode(false);
                                 mFTPConnection.abortDeleting();
                             }
@@ -1003,7 +1029,16 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
+                if (mDeletingInfoDialog != null) {
+                    mDeletingInfoDialog.cancel();
+                    mDeletingInfoDialog = null; // check at null used in NAVIGATION_MESSAGE_RECONNECT_SUCCESS
+                }
+                if (mDeletingErrorDialog != null) {
+                    mDeletingErrorDialog.cancel();
+                    mDeletingErrorDialog = null;
+                }
+
+                mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
             }
 
@@ -1014,7 +1049,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
-                        lBuilder.setTitle("Fail error"); // TODO : strings
+                        lBuilder.setTitle("Delete error"); // TODO : strings
                         final View lDialogDeleteError = View.inflate(FTPNavigationActivity.this, R.layout.dialog_delete_error, null);
                         final CheckBox lCheckBox = lDialogDeleteError.findViewById(R.id.dialog_delete_error_checkbox);
                         final TextView lTextView = lDialogDeleteError.findViewById(R.id.dialog_delete_error_text);
@@ -1031,7 +1066,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface iDialog, int iWhich) {
                                 iDialog.dismiss();
-                                mDeletingInfoDialog.show();
+                                mDeletingErrorDialog = null; // check at null used in NAVIGATION_MESSAGE_RECONNECT_SUCCESS
+                                if (mDeletingInfoDialog != null)
+                                    mDeletingInfoDialog.show();
                                 mFTPConnection.setDeletingByPassFailErrors(lCheckBox.isChecked());
                                 mFTPConnection.resumeDeleting();
                             }
@@ -1041,12 +1078,15 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface iDialog, int iWhich) {
                                 iDialog.dismiss();
+                                mDeletingErrorDialog = null;
                                 mCurrentAdapter.setSelectionMode(false);
                                 mFTPConnection.abortDeleting();
                             }
                         });
+                        if (mDeletingInfoDialog != null)
+                            mDeletingInfoDialog.hide();
+
                         mDeletingErrorDialog = lBuilder.create();
-                        mDeletingInfoDialog.hide();
                         mDeletingErrorDialog.show();
                     }
                 });
@@ -1057,6 +1097,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private void onUploadFileClicked() {
         // TODO : upload file
     }
+
+    // TODO : Rename feature
 
     private void dismissAllDialogs() {
         if (mReconnectDialog != null)
