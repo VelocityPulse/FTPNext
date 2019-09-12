@@ -893,35 +893,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
-
-    public class AbstractTest {
-        public void main(final String... args) {
-            final Printer p = new Printer() {
-
-                String lol;
-
-                @Override
-                public void print() {
-                    super.print();
-                    System.out.println("world");
-                }
-            };
-            test(new Printer() {
-            });
-            //p.printSomethingOther(); // does not work
-        }
-
-        private void test(final Printer a) {
-
-        }
-
-    }
-    abstract class Printer {
-        public void print() {
-            System.out.println("hello");
-        }
-    }
-
     private void deleteFile(FTPFile[] iSelectedFiles) {
         mFTPConnection.deleteFiles(iSelectedFiles, mFTPConnection.new OnDeleteListener() {
 
