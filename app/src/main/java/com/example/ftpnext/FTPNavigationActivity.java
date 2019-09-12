@@ -247,9 +247,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             mReconnectDialog.cancel();
                             if (mDeletingErrorDialog != null)
                                 mDeletingErrorDialog.show();
-                            else if (mDeletingInfoDialog != null)
+                            else if (mDeletingInfoDialog != null) // TODO : Try to reconnect during a long delete without warn
                                 mDeletingInfoDialog.show();
-//                            mFTPConnection.resumeDeleting();
+//                            else
+//                                mFTPConnection.resumeDeleting();
                         } else
                             runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
                         break;
@@ -285,7 +286,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         mFTPConnection.abortFetchDirectoryContent();
                         if (mFTPConnection.isDeletingFiles()) {
                             mFTPConnection.pauseDeleting();
+                            if (mDeletingInfoDialog != null)
                             mDeletingInfoDialog.hide();
+                            if (mDeletingErrorDialog != null)
                             mDeletingErrorDialog.hide();
                         } else
                             dismissAllDialogs();
@@ -567,7 +570,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 } else {
                     closeFABMenu();
 
-                    if (iFTPFile.isDirectory()) {
+                    if (iFTPFile.isDirectory()) { // TODO : Bug : Clicking on 2 lines in same time
 //                        if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
 //                                || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
                         mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
@@ -908,7 +911,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     .setTitle("Deleting :")
                     .setMessage("Are you sure to delete the selection ? (" + lSelectedFiles.length + " files)")
                     .setPositiveButton("yes", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
+                        public void onClick(DialogInterface iDialog, int iWhich) {
+                            iDialog.dismiss();
                             deleteFile(lSelectedFiles);
                         }
                     })

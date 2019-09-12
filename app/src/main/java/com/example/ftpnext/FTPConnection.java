@@ -558,6 +558,8 @@ public class FTPConnection {
                         LogManager.debug(TAG, "Absolute path : " + mCurrentDirectory.getName() + "/" + lFTPFile.getName());
                         FTPFile lAbsoluteFile = mFTPClient.mlistFile(mCurrentDirectory.getName() + "/" + lFTPFile.getName());
                         LogManager.debug(TAG, "File name : " + lAbsoluteFile.getName());
+                        // TODO : Bug : Enter and back a dir then try a delete
+                        // TODO : Bug : Enter a large folder and cancel the loading then try a delete
 
                         if (lAbsoluteFile != null) {
                             LogManager.debug(TAG, "Absolute name : " + lAbsoluteFile.getName());
