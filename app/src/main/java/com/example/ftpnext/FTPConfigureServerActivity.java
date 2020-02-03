@@ -12,11 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.transition.Slide;
-import android.view.Gravity;
 import android.view.View;
-import android.view.Window;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.RadioGroup;
 
 import com.example.ftpnext.commons.FileUtils;
@@ -36,13 +32,14 @@ import java.io.File;
 public class FTPConfigureServerActivity extends AppCompatActivity {
 
     public static final int ACTIVITY_REQUEST_CODE = 1;
+    public static final int ACTIVITY_REQUEST_CODE_SELECT_FOLDER = 10;
     public static final int ACTIVITY_RESULT_ADD_SUCCESS = 0;
     public static final int ACTIVITY_RESULT_ADD_FAIL = 1;
     public static final int ACTIVITY_RESULT_ABORT = 2;
     public static final int ACTIVITY_RESULT_UPDATE_SUCCESS = 3;
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
     public static final int NO_DATABASE_ID = -1;
-    private static String TAG = "CONFIGURE FTP SERVER ACTIVITY";
+    private static final String TAG = "CONFIGURE FTP SERVER ACTIVITY";
     private View mRootView;
 
     private TextInputEditText mNameEditText;
@@ -148,8 +145,7 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
                     if (iEditable != null && !Utils.isNullOrEmpty(lString)) {
                         LogManager.debug(TAG, "Editable != null passing");
                         ((TextInputLayout) mNameEditText.getTag()).setErrorEnabled(false);
-                    }
-                    else if (Utils.isNullOrEmpty(lString)) {
+                    } else if (Utils.isNullOrEmpty(lString)) {
                         LogManager.debug(TAG, "Editable != null not useless");
                         ((TextInputLayout) mNameEditText.getTag()).setError("Obligatory");
                     }
@@ -291,13 +287,12 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
             if (Utils.isNullOrEmpty(lPort)) {
                 switch (lFTPType) {
                     case FTP:
+                    case DEFAULT:
                         lNewFTPServer.setPort(AppInfo.FTP_DEFAULT_PORT);
                         break;
                     case SFTP:
                         lNewFTPServer.setPort(AppInfo.SFTP_DEFAULT_PORT);
                         break;
-                    case DEFAULT:
-                        lNewFTPServer.setPort(AppInfo.FTP_DEFAULT_PORT);
                 }
             } else
                 lNewFTPServer.setPort(Integer.parseInt(lPort));
@@ -320,21 +315,23 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
     }
 
     public void onActivityResult(int iRequestCode, int iResultCode, Intent iResultData) {
-        if (iResultCode == RESULT_OK) {
-            Uri lTreeUri = iResultData.getData();
-            DocumentFile lPickedDir = DocumentFile.fromTreeUri(this, lTreeUri);
+        if (iRequestCode == ACTIVITY_REQUEST_CODE_SELECT_FOLDER) {
+            if (iResultCode == RESULT_OK) {
+                Uri lTreeUri = iResultData.getData();
+                DocumentFile lPickedDir = DocumentFile.fromTreeUri(this, lTreeUri);
 
-            LogManager.error(TAG, lPickedDir.getName());
-            LogManager.error(TAG, FileUtils.getFullPathFromTreeUri(lTreeUri, this));
-            mFolderName = lPickedDir.getName();
-            mFolderNameEditText.setText(mFolderName);
-            mAbsolutePath = FileUtils.getFullPathFromTreeUri(lTreeUri, this);
+                LogManager.error(TAG, lPickedDir.getName());
+                LogManager.error(TAG, FileUtils.getFullPathFromTreeUri(lTreeUri, this));
+                mFolderName = lPickedDir.getName();
+                mAbsolutePath = FileUtils.getFullPathFromTreeUri(lTreeUri, this);
+                mFolderNameEditText.setText(mAbsolutePath);
+            }
         }
     }
 
     public void OnClickLocalFolder(View view) {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-        startActivityForResult(intent, 10);
+        startActivityForResult(intent, ACTIVITY_REQUEST_CODE_SELECT_FOLDER);
     }
 
     public void OnClickRadioButtonFTP(View iView) {
