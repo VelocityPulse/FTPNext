@@ -78,6 +78,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private FTPServer mFTPServer;
     private FTPConnection mFTPConnection;
     private FTPServerDAO mFTPServerDAO;
+    private int mErrorCode;
 
     private NavigationRecyclerViewAdapter mCurrentAdapter;
     private FrameLayout mRecyclerSection;
@@ -196,7 +197,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mHandler = new Handler(Looper.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                FTPConnection.CONNECTION_STATUS lErrorCode;
+                FTPConnection.ERROR_CODE_DESCRIPTION lErrorDescription;
                 FTPFile[] lFiles;
 
                 if (!mIsRunning)
@@ -263,10 +264,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     case NAVIGATION_MESSAGE_CONNECTION_FAIL:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CONNECTION_FAIL");
                         boolean lIsRecovering = msg.arg1 == 1;
-                        lErrorCode = (FTPConnection.CONNECTION_STATUS) msg.obj;
+                        lErrorDescription = (FTPConnection.ERROR_CODE_DESCRIPTION) msg.obj;
                         new AlertDialog.Builder(FTPNavigationActivity.this)
                                 .setTitle("Error") // TODO string
-                                .setMessage((lIsRecovering ? "Reconnection" : "Connection") + " failed...\nCode : " + lErrorCode)
+                                .setMessage((lIsRecovering ? "Reconnection" : "Connection") + " failed..." +
+                                        "\nError : " + lErrorDescription +
+                                        "\nCode :" + mErrorCode)
                                 .setCancelable(false)
                                 .setNegativeButton("Terminate", new DialogInterface.OnClickListener() {
                                     @Override
@@ -301,14 +304,16 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             }
 
                             @Override
-                            public void onConnectionDenied(final FTPConnection.CONNECTION_STATUS iErrorCode) {
+                            public void onConnectionDenied(final FTPConnection.ERROR_CODE_DESCRIPTION iErrorEnum,
+                                                           int iErrorCode) {
                                 if (mFTPConnection != null)
                                     mFTPConnection.disconnect();
+                                mErrorCode = iErrorCode;
                                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
                                 mHandler.sendMessage(Message.obtain(
                                         mHandler,
                                         NAVIGATION_MESSAGE_RECONNECT_FAIL,
-                                        iErrorCode
+                                        iErrorEnum
                                 ));
                             }
                         });
@@ -325,12 +330,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL");
-                        lErrorCode = (FTPConnection.CONNECTION_STATUS) msg.obj;
+                        lErrorDescription = (FTPConnection.ERROR_CODE_DESCRIPTION) msg.obj;
                         mLoadingDialog.dismiss();
                         if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
                             mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
                                     .setTitle("Error") // TODO string
-                                    .setMessage("Creation has failed...\nCode : " + lErrorCode.name())
+                                    .setMessage("Creation has failed...\nCode : " + lErrorDescription.name())
                                     .setCancelable(false)
                                     .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                         @Override
@@ -345,10 +350,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_MESSAGE_RECONNECT_FAIL:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_FAIL");
-                        lErrorCode = (FTPConnection.CONNECTION_STATUS) msg.obj;
+                        lErrorDescription = (FTPConnection.ERROR_CODE_DESCRIPTION) msg.obj;
                         new AlertDialog.Builder(FTPNavigationActivity.this)
                                 .setTitle("Reconnection denied") // TODO string
-                                .setMessage("Reconnection has failed...\nCode : " + lErrorCode.name())
+                                .setMessage("Reconnection has failed...\nCode : " + lErrorDescription.name())
                                 .setCancelable(false)
                                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                     @Override
@@ -378,11 +383,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     case NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH");
                         mDirectoryFetchFinished = true;
-                        lErrorCode = (FTPConnection.CONNECTION_STATUS) msg.obj;
+                        lErrorDescription = (FTPConnection.ERROR_CODE_DESCRIPTION) msg.obj;
                         if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
                             mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
                                     .setTitle("Error") // TODO string
-                                    .setMessage("Connection has failed...\nCode : " + lErrorCode.name())
+                                    .setMessage("Connection has failed...\nCode : " + lErrorDescription.name())
                                     .setCancelable(false)
                                     .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                         @Override
@@ -771,12 +776,13 @@ public class FTPNavigationActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFail(final FTPConnection.CONNECTION_STATUS iErrorCode) {
+            public void onFail(final FTPConnection.ERROR_CODE_DESCRIPTION iErrorEnum, int iErrorCode) {
+                mErrorCode = iErrorCode;
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS);
                 mHandler.sendMessage(Message.obtain(
                         mHandler,
                         NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH,
-                        iErrorCode
+                        iErrorEnum
                 ));
             }
         });
@@ -879,12 +885,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFail(final FTPConnection.CONNECTION_STATUS iErrorCode) {
-
+            public void onFail(final FTPConnection.ERROR_CODE_DESCRIPTION iErrorEnum, int iErrorCode) {
+                mErrorCode = iErrorCode;
                 mHandler.sendMessage(Message.obtain(
                         mHandler,
                         NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS,
-                        iErrorCode
+                        iErrorEnum
                 ));
             }
         });
@@ -1145,16 +1151,17 @@ public class FTPNavigationActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFail(final FTPConnection.CONNECTION_STATUS iErrorCode) {
-                if (iErrorCode == FTPConnection.CONNECTION_STATUS.ERROR_CONNECTION_INTERRUPTED)
+            public void onFail(final FTPConnection.ERROR_CODE_DESCRIPTION iErrorEnum, int iErrorCode) {
+                if (iErrorEnum == FTPConnection.ERROR_CODE_DESCRIPTION.ERROR_CONNECTION_INTERRUPTED)
                     return;
+                mErrorCode = iErrorCode;
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
                 mHandler.sendMessage(Message.obtain(
                         mHandler,
                         NAVIGATION_MESSAGE_CONNECTION_FAIL,
                         iIsRecovering ? 1 : 0,
                         0,
-                        iErrorCode));
+                        iErrorEnum));
             }
         });
     }

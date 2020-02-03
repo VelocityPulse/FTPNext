@@ -18,7 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import com.example.ftpnext.FTPConnection.CONNECTION_STATUS;
+import com.example.ftpnext.FTPConnection.ERROR_CODE_DESCRIPTION;
 import com.example.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
@@ -249,8 +249,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFail(final CONNECTION_STATUS iErrorCode) {
-                if (iErrorCode == CONNECTION_STATUS.ERROR_CONNECTION_INTERRUPTED)
+            public void onFail(final ERROR_CODE_DESCRIPTION iErrorEnum, final int iErrorCode) {
+                if (iErrorEnum == ERROR_CODE_DESCRIPTION.ERROR_CONNECTION_INTERRUPTED)
                     return;
                 runOnUiThread(new Runnable() {
                     @Override
@@ -264,7 +264,9 @@ public class MainActivity extends AppCompatActivity {
 
                             mDialog = new AlertDialog.Builder(MainActivity.this)
                                     .setTitle("Error") // TODO string
-                                    .setMessage("Connection has failed...\nMessage : " + iErrorCode.name())
+                                    .setMessage("Connection has failed..." +
+                                            "\nMessage : " + iErrorEnum.name() +
+                                            "\nCode : " + iErrorCode)
                                     .setPositiveButton("Ok", null)
                                     .setOnDismissListener(new DialogInterface.OnDismissListener() {
                                         @Override
