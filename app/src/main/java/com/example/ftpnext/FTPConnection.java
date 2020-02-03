@@ -150,7 +150,6 @@ public class FTPConnection {
                 }
             }
         }).start();
-
     }
 
     public void abortReconnection() {
@@ -271,6 +270,8 @@ public class FTPConnection {
             public void run() {
                 try {
 
+                    FTPFile lLeavingDirectory = mCurrentDirectory;
+
                     FTPFile lTargetDirectory = mFTPClient.mlistFile(iPath);
                     if (!lTargetDirectory.isDirectory()) {
                         if (iOnFetchDirectoryResult != null)
@@ -297,16 +298,28 @@ public class FTPConnection {
                     mFTPClient.enterLocalPassiveMode();
                     mFTPClient.changeWorkingDirectory(iPath);
                     FTPFile[] lFiles = mFTPClient.listFiles();
+                    if (Thread.interrupted()) {
+                        mFTPClient.changeWorkingDirectory(lLeavingDirectory.getName());
+                        mCurrentDirectory = lLeavingDirectory;
+                        return;
+                    }
                     mCurrentDirectory = lTargetDirectory;
                     mFTPClient.enterLocalActiveMode();
-                    if (Thread.interrupted())
+                    if (Thread.interrupted()) {
+                        mFTPClient.changeWorkingDirectory(lLeavingDirectory.getName());
+                        mCurrentDirectory = lLeavingDirectory;
                         return;
+                    }
                     if (!FTPReply.isPositiveCompletion(mFTPClient.getReplyCode())) {
                         throw new IOException(mFTPClient.getReplyString());
                     }
-                    if (Thread.interrupted())
+                    if (Thread.interrupted()) {
+                        mFTPClient.changeWorkingDirectory(lLeavingDirectory.getName());
+                        mCurrentDirectory = lLeavingDirectory;
                         return;
+                    }
                     iOnFetchDirectoryResult.onSuccess(lFiles);
+
                 } catch (IOException iE) {
                     iE.printStackTrace();
                     if (!Thread.interrupted()) {
@@ -577,8 +590,6 @@ public class FTPConnection {
                         LogManager.debug(TAG, "Absolute path : " + mCurrentDirectory.getName() + "/" + lFTPFile.getName());
                         FTPFile lAbsoluteFile = mFTPClient.mlistFile(mCurrentDirectory.getName() + "/" + lFTPFile.getName());
                         LogManager.debug(TAG, "File name : " + lAbsoluteFile.getName());
-                        // TODO : Bug : Enter and back a dir then try a delete
-                        // TODO : Bug : Enter a large folder and cancel the loading then try a delete
 
                         if (lAbsoluteFile != null) {
                             LogManager.debug(TAG, "Absolute name : " + lAbsoluteFile.getName());
