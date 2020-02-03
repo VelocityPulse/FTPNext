@@ -98,7 +98,7 @@ public class NetworkManager {
                 @Override
                 public void onAvailable(Network iNetwork) {
                     super.onAvailable(iNetwork);
-                    LogManager.error(TAG, "On available");
+                    LogManager.info(TAG, "On available");
                     mAvailableNetwork = iNetwork;
                     mAvailableNetworkFired = false;
                     mNetworkCapabilities = lConnectivityManager.getNetworkCapabilities(iNetwork);
@@ -111,7 +111,7 @@ public class NetworkManager {
                 @Override
                 public void onLost(Network iNetwork) {
                     super.onLost(iNetwork);
-                    LogManager.error(TAG, "On lost " + iNetwork.toString());
+                    LogManager.info(TAG, "On lost " + iNetwork.toString());
 
 //                    fireNetworkLost();
 
@@ -124,7 +124,10 @@ public class NetworkManager {
                 @Override
                 public void onCapabilitiesChanged(Network iNetwork, NetworkCapabilities iNetworkCapabilities) {
                     super.onCapabilitiesChanged(iNetwork, iNetworkCapabilities);
-                    LogManager.debug(TAG, "On capabilities changed");
+                    LogManager.info(TAG, "On capabilities changed");
+
+                    if (mAvailableNetwork == null)
+                        return;
 
                     if (mAvailableNetwork.equals(iNetwork))
                         mNetworkCapabilities = iNetworkCapabilities;
