@@ -1,6 +1,5 @@
 package com.example.ftpnext;
 
-import android.app.ActivityOptions;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -203,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onActivityResult(int iRequestCode, int iResultCode, Intent iResultData) {
         if (iRequestCode == FTPConfigureServerActivity.ACTIVITY_REQUEST_CODE) {
+            overridePendingTransition(R.anim.no_animation, R.anim.activity_fade_out_centered);
             if (iResultData != null) {
                 int lId = iResultData.getIntExtra(FTPConfigureServerActivity.KEY_DATABASE_ID, -1);
 
@@ -293,9 +293,8 @@ public class MainActivity extends AppCompatActivity {
         Intent lIntent = new Intent(MainActivity.this, FTPConfigureServerActivity.class);
 
         lIntent.putExtra(FTPConfigureServerActivity.KEY_DATABASE_ID, iFTPServerId);
-        startActivityForResult(lIntent,
-                FTPConfigureServerActivity.ACTIVITY_REQUEST_CODE,
-                ActivityOptions.makeSceneTransitionAnimation(MainActivity.this).toBundle());
+        startActivityForResult(lIntent, FTPConfigureServerActivity.ACTIVITY_REQUEST_CODE);
+        overridePendingTransition(R.anim.activity_fade_in_centered, R.anim.no_animation);
     }
 
     private void runTests() {

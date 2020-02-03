@@ -63,7 +63,6 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
-        configureActivityIntroduce();
         setContentView(R.layout.activity_configure_ftp_server);
 
         initializeGUI();
@@ -80,16 +79,6 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
     }
 
     // TODO on resume
-
-    private void configureActivityIntroduce() {
-        getWindow().requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS);
-
-        Slide lSlide = new Slide();
-        lSlide.setDuration(getResources().getInteger(R.integer.configure_ftp_server_animation_slide_time));
-        lSlide.setInterpolator(new DecelerateInterpolator(5F));
-        lSlide.setSlideEdge(Gravity.BOTTOM);
-        getWindow().setEnterTransition(lSlide);
-    }
 
     @Override
     public void onBackPressed() {
@@ -129,6 +118,7 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
         mFolderNameEditText.setTextIsSelectable(false);
 
         mTypeRadioGroup = findViewById(R.id.type_radio_group);
+        // Open the keyboard :
         mRootView.requestFocus();
     }
 
