@@ -72,6 +72,9 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
         if (lServerId != NO_DATABASE_ID) {
             mEditedFTPServer = mFTPServerDAO.fetchById(lServerId);
             configureEntriesForEdition(mEditedFTPServer);
+        } else {
+            // Open the keyboard :
+            mRootView.requestFocus();
         }
     }
 
@@ -115,8 +118,6 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
         mFolderNameEditText.setTextIsSelectable(false);
 
         mTypeRadioGroup = findViewById(R.id.type_radio_group);
-        // Open the keyboard :
-        mRootView.requestFocus();
     }
 
     private void initializeListeners() {
@@ -193,12 +194,10 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
         mFolderNameEditText.setText(iEditedFTPServer.getFolderName());
 
         switch (iEditedFTPServer.getFTPType()) {
-            case FTP:
-                mTypeRadioGroup.check(R.id.radio_button_ftp);
-                break;
             case SFTP:
                 mTypeRadioGroup.check(R.id.radio_button_sftp);
                 break;
+            case FTP:
             default:
                 mTypeRadioGroup.check(R.id.radio_button_ftp);
         }
