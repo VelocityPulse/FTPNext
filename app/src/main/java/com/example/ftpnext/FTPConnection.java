@@ -255,7 +255,7 @@ public class FTPConnection {
         }
     }
 
-    public void fetchDirectoryContent(final String iPath, final OnFetchDirectoryResult iOnFetchDirectoryResult) {
+    public void fetchDirectoryContent(final String iPath, @NotNull final OnFetchDirectoryResult iOnFetchDirectoryResult) {
         LogManager.info(TAG, "Fetch directory contents");
         if (!isConnected()) {
             LogManager.error(TAG, "Connection not established");
@@ -298,8 +298,10 @@ public class FTPConnection {
                         return;
                     }
 
-                    if (Thread.interrupted())
+                    if (Thread.interrupted()) {
+                        iOnFetchDirectoryResult.onInterrupt();
                         return;
+                    }
 
                     mFTPClient.enterLocalPassiveMode();
                     mFTPClient.changeWorkingDirectory(iPath);
@@ -307,6 +309,7 @@ public class FTPConnection {
                     if (Thread.interrupted()) {
                         mFTPClient.changeWorkingDirectory(lLeavingDirectory.getName());
                         mCurrentDirectory = lLeavingDirectory;
+                        iOnFetchDirectoryResult.onInterrupt();
                         return;
                     }
                     mCurrentDirectory = lTargetDirectory;
@@ -314,6 +317,7 @@ public class FTPConnection {
                     if (Thread.interrupted()) {
                         mFTPClient.changeWorkingDirectory(lLeavingDirectory.getName());
                         mCurrentDirectory = lLeavingDirectory;
+                        iOnFetchDirectoryResult.onInterrupt();
                         return;
                     }
                     if (!FTPReply.isPositiveCompletion(mFTPClient.getReplyCode())) {
@@ -322,6 +326,7 @@ public class FTPConnection {
                     if (Thread.interrupted()) {
                         mFTPClient.changeWorkingDirectory(lLeavingDirectory.getName());
                         mCurrentDirectory = lLeavingDirectory;
+                        iOnFetchDirectoryResult.onInterrupt();
                         return;
                     }
                     iOnFetchDirectoryResult.onSuccess(lFiles);
@@ -335,7 +340,9 @@ public class FTPConnection {
                         else
                             iOnFetchDirectoryResult.onFail(ERROR_CODE_DESCRIPTION.ERROR,
                                     mFTPClient.getReplyCode());
-                    }
+                    } else
+                        iOnFetchDirectoryResult.onInterrupt();
+
                 }
             }
 
@@ -754,6 +761,8 @@ public class FTPConnection {
         void onSuccess(FTPFile[] iFTPFiles);
 
         void onFail(ERROR_CODE_DESCRIPTION iErrorEnum, int iErrorCode);
+
+        void onInterrupt();
     }
 
     public interface OnCreateDirectoryResult {
@@ -778,7 +787,6 @@ public class FTPConnection {
         void onConnectionDenied(ERROR_CODE_DESCRIPTION iErrorEnum, int iErrorCode);
     }
 
-    // TODO : Try to transform it in abstract
     public abstract class OnDeleteListener {
         public abstract void onStartDelete();
 

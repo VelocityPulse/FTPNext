@@ -90,11 +90,11 @@ public final class Utils {
 
     public static ProgressDialog initProgressDialog(Context iContext, final ProgressDialog.OnClickListener iOnClickCancelListener) {
         final ProgressDialog lProgressDialog;
-        lProgressDialog = new ProgressDialog(iContext);
-        lProgressDialog.setContentView(R.layout.loading_icon);
-        lProgressDialog.setCancelable(true);
-        lProgressDialog.setCanceledOnTouchOutside(false);
-        lProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", iOnClickCancelListener);
+            lProgressDialog = new ProgressDialog(iContext);
+            lProgressDialog.setContentView(R.layout.loading_icon);
+            lProgressDialog.setCancelable(true);
+            lProgressDialog.setCanceledOnTouchOutside(false);
+            lProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", iOnClickCancelListener);
         return lProgressDialog;
     }
 }

@@ -52,7 +52,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private static final String TAG = "FTP NAVIGATION ACTIVITY";
     private static final int LARGE_DIRECTORY_SIZE = 30000;
-    private static final int BAD_CONNECTION_TIME = 400;
+    private static final int BAD_CONNECTION_TIME = 200;
 
     private static final int NAVIGATION_MESSAGE_CONNECTION_SUCCESS = 10;
     private static final int NAVIGATION_MESSAGE_CONNECTION_FAIL = 11;
@@ -87,6 +87,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private boolean mIsLargeDirectory;
 
     private ProgressDialog mLoadingDialog;
+    private ProgressDialog mCancelingDialog;
     private ProgressDialog mLargeDirDialog;
     private ProgressDialog mReconnectDialog;
     private AlertDialog mErrorAlertDialog;
@@ -728,6 +729,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface iDialog, int iWhich) {
                 iDialog.dismiss();
+                mCancelingDialog.show();
                 mFTPConnection.abortFetchDirectoryContent();
             }
         });
@@ -745,6 +747,13 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
         mLoadingDialog.setTitle("Loading..."); //TODO : strings
         mLoadingDialog.create();
+
+        mCancelingDialog = new ProgressDialog(this);
+        mCancelingDialog.setContentView(R.layout.loading_icon);
+        mCancelingDialog.setCancelable(false);
+        mCancelingDialog.setCanceledOnTouchOutside(false);
+        mCancelingDialog.setTitle("Canceling..."); //TODO : strings
+        mCancelingDialog.create();
 
         //Bad Connection
         mHandler.postDelayed(new Runnable() {
@@ -792,6 +801,18 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH,
                         iErrorEnum
                 ));
+            }
+
+            @Override
+            public void onInterrupt() {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mCancelingDialog != null && mCancelingDialog.isShowing())
+                            mCancelingDialog.dismiss();
+                        mCurrentAdapter.setItemsClickable(true);
+                    }
+                });
             }
         });
     }
