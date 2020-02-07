@@ -754,6 +754,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mCancelingDialog.setCanceledOnTouchOutside(false);
         mCancelingDialog.setTitle("Canceling..."); //TODO : strings
         mCancelingDialog.create();
+    }
+
+    private void initializeFetchDirectory(final String iDirectoryPath, final boolean iRecovering) {
 
         //Bad Connection
         mHandler.postDelayed(new Runnable() {
@@ -770,9 +773,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 }
             }
         }, BAD_CONNECTION_TIME);
-    }
 
-    private void initializeFetchDirectory(final String iDirectoryPath, final boolean iRecovering) {
         mFTPConnection.fetchDirectoryContent(iDirectoryPath, new FTPConnection.OnFetchDirectoryResult() {
             @Override
             public void onSuccess(final FTPFile[] iFTPFiles) {
