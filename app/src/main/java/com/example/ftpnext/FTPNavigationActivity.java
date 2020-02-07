@@ -154,6 +154,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
             return;
         }
 
+        if (mFTPConnection.isBusy()) {
+            LogManager.debug(TAG, "Canceling onBackPressed");
+            return;
+        }
+
         if (mCurrentAdapter.isInSelectionMode()) {
             mCurrentAdapter.setSelectionMode(false);
             showFABMenu();
@@ -290,9 +295,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         if (mFTPConnection.isDeletingFiles()) {
                             mFTPConnection.pauseDeleting();
                             if (mDeletingInfoDialog != null)
-                            mDeletingInfoDialog.hide();
+                                mDeletingInfoDialog.hide();
                             if (mDeletingErrorDialog != null)
-                            mDeletingErrorDialog.hide();
+                                mDeletingErrorDialog.hide();
                         } else
                             dismissAllDialogs();
                         mReconnectDialog.show();
@@ -522,7 +527,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             }
         });
         mCurrentAdapter = lDeprecatedAdapter.getPreviousAdapter();
-        mCurrentAdapter.appearOnLeft();
+        mCurrentAdapter.appearFromLeft();
         mCurrentAdapter.setNextAdapter(null);
         mDirectoryPath = mCurrentAdapter.getDirectoryPath();
     }
@@ -559,7 +564,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mCurrentAdapter.disappearOnLeft();
         }
         if (mCurrentAdapter != null && !iForceVerticalAppear)
-            lNewAdapter.appearOnRight();
+            lNewAdapter.appearFromRight();
         else
             lNewAdapter.appearVertically();
 
@@ -575,13 +580,16 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 } else {
                     closeFABMenu();
 
-                    if (iFTPFile.isDirectory()) { // TODO : Bug : Clicking on 2 lines in same time
+                    if (iFTPFile.isDirectory()) {
 //                        if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
 //                                || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
                         mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
                         runFetchProcedures(mDirectoryPath + "/" + iFTPFile.getName(), mIsLargeDirectory, false);
 //                        } else
 //                            Utils.createErrorAlertDialog(FTPNavigationActivity.this, "You don't have enough permission");
+                    } else {
+                        // If it is a file
+                        lNewAdapter.setItemsClickable(true);
                     }
                 }
             }

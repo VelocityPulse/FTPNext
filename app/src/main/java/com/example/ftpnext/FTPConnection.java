@@ -53,6 +53,7 @@ public class FTPConnection {
     private boolean mPauseDeleting;
     private boolean mByPassDeletingRightErrors;
     private boolean mByPassDeletingFailErrors;
+    private boolean mStartingFetchDirectory;
 
     public FTPConnection(FTPServer iFTPServer) {
         if (sFTPConnectionInstances == null)
@@ -260,20 +261,25 @@ public class FTPConnection {
             LogManager.error(TAG, "Connection not established");
             return;
         }
+
         if (isFetchingFolders()) {
-            LogManager.info(TAG, "Aborting current directory fetch");
-            abortFetchDirectoryContent();
+            LogManager.info(TAG, "Canceling fetch request");
+            return;
         }
 
+        mStartingFetchDirectory = true;
         mDirectoryFetchThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-
+                    // Sometimes, isFetchingDirectory returned false while it was actually
+                    // Trying to fetch a dir, but the thread wasn't started yet
+                    mStartingFetchDirectory = false;
                     FTPFile lLeavingDirectory = mCurrentDirectory;
 
+                    LogManager.debug(TAG, "iPath : " + iPath);
                     FTPFile lTargetDirectory = mFTPClient.mlistFile(iPath);
-                    if (!lTargetDirectory.isDirectory()) {
+                    if (!lTargetDirectory.isDirectory()) { // TODO : put null security for release
                         if (iOnFetchDirectoryResult != null)
                             iOnFetchDirectoryResult.onFail(ERROR_CODE_DESCRIPTION.ERROR_NOT_A_DIRECTORY,
                                     FTPReply.FILE_UNAVAILABLE);
@@ -332,6 +338,8 @@ public class FTPConnection {
                     }
                 }
             }
+
+
         });
         mDirectoryFetchThread.start();
     }
@@ -421,7 +429,7 @@ public class FTPConnection {
                 } catch (Exception iE) {
                     iE.printStackTrace();
                     if (iOnConnectResult != null)
-                    iOnConnectResult.onFail(ERROR_CODE_DESCRIPTION.ERROR,
+                        iOnConnectResult.onFail(ERROR_CODE_DESCRIPTION.ERROR,
                                 mFTPClient.getReplyCode());
 //                      iOnConnectResult.onFail(ERROR_CODE_DESCRIPTION.ERROR, FTPReply.UNRECOGNIZED_COMMAND);
                 }
@@ -656,7 +664,11 @@ public class FTPConnection {
     }
 
     public boolean isFetchingFolders() {
-        return isConnected() && mDirectoryFetchThread != null && mDirectoryFetchThread.isAlive();
+        // Display :
+//        LogManager.info(TAG, "isFetchingFolders : " + isConnected() + " && (" +
+//                (mDirectoryFetchThread != null && mDirectoryFetchThread.isAlive()) + ") || " + mStartingFetchDirectory);
+        return (isConnected() && (mDirectoryFetchThread != null && mDirectoryFetchThread.isAlive())) ||
+                mStartingFetchDirectory;
     }
 
     public boolean isCreatingFolder() {
@@ -668,8 +680,11 @@ public class FTPConnection {
     }
 
     public boolean isBusy() {
-        return !isConnecting() && !isReconnecting() && !isFetchingFolders() && !isCreatingFolder() &&
-                !isDeletingFiles();
+        // Display :
+//        LogManager.debug(TAG, " " + isConnecting() + " " + isReconnecting() + " " + isFetchingFolders() + " "
+//                + isCreatingFolder() + " " + isDeletingFiles());
+        return isConnecting() || isReconnecting() || isFetchingFolders() || isCreatingFolder() ||
+                isDeletingFiles();
     }
 
     public void setOnConnectionLost(OnConnectionLost iOnConnectionLost) {

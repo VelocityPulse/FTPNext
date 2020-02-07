@@ -102,6 +102,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             iCustomItemViewAdapter.mMainLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View iV) {
+                    setItemsClickable(false);
                     mClickListener.onClick(lFTPItem);
                 }
             });
@@ -366,14 +367,20 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         }
     }
 
+    public void setItemsClickable(boolean iClickable) {
+        LogManager.info(TAG, "Set item clickable : " + iClickable);
+        for (CustomItemViewAdapter lItem : mCustomViewItems) {
+            lItem.mMainLayout.setEnabled(iClickable);
+        }
+    }
+
     private void setItemsRipple() {
         LogManager.info(TAG, "Set item ripple");
+        setItemsClickable(true);
         for (CustomItemViewAdapter lItem : mCustomViewItems) {
             lItem.mMainLayout.setBackgroundResource(R.drawable.ripple_effect_primary);
         }
     }
-
-
 
     public void appearVertically() {
         Animation lAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_appear_vertically);
@@ -397,7 +404,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         mSwipeRefreshLayout.setVisibility(View.VISIBLE);
     }
 
-    public void appearOnRight() {
+    public void appearFromRight() {
+        LogManager.info(TAG, "Appearing from right");
         Animation lAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_appear_on_right);
         lAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
@@ -419,7 +427,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         mSwipeRefreshLayout.setVisibility(View.VISIBLE);
     }
 
-    public void appearOnLeft() {
+    public void appearFromLeft() {
+        LogManager.info(TAG, "Appearing from left");
         Animation lAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_appear_on_left);
         lAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
@@ -441,6 +450,12 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     }
 
     public void disappearOnRightAndDestroy(final Runnable iOnAnimationEnd) {
+        LogManager.info(TAG, "Disappearing on right then destroy");
+        for (CustomItemViewAdapter lItem : mCustomViewItems) {
+            lItem.mMainLayout.setOnClickListener(null);
+            lItem.mMainLayout.setOnLongClickListener(null);
+        }
+
         Animation lAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_disappear_on_right);
         lAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
@@ -461,6 +476,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     }
 
     public void disappearOnLeft() {
+        LogManager.info(TAG, "Disappearing on left");
         Animation lAnimation = AnimationUtils.loadAnimation(mContext, R.anim.recycler_animation_disappear_on_left);
         lAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
@@ -498,10 +514,9 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
     private class LeftSectionAnimation extends Animation {
 
+        List<ViewGroup.MarginLayoutParams> mMarginLayoutParamsList;
         private float mLeftSectionShift;
         private boolean mIsAppearing;
-
-        List<ViewGroup.MarginLayoutParams> mMarginLayoutParamsList;
 
         public LeftSectionAnimation(boolean iIsAppearing, float iLeftSectionShift) {
             mLeftSectionShift = -iLeftSectionShift;
