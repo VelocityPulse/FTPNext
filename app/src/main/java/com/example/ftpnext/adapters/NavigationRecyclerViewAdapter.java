@@ -35,12 +35,14 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     private List<CustomItemViewAdapter> mCustomViewItems;
     private OnLongClickListener mLongClickListener;
     private OnClickListener mClickListener;
+    private OnFirstViewHolderCreation mOnFirstViewHolderCreation;
     private RecyclerView mRecyclerView;
     private FrameLayout mRecyclerSection;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private Context mContext;
     private String mDirectoryPath;
     private boolean mSelectionMode;
+    private boolean mIsViewHolderCreationStarted;
 
     private NavigationRecyclerViewAdapter mNextAdapter;
     private NavigationRecyclerViewAdapter mPreviousAdapter;
@@ -52,7 +54,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         mRecyclerView = iRecyclerView;
         mSwipeRefreshLayout = iSwipeRefreshLayout;
         mDirectoryPath = iDirectoryPath;
-        mSwipeRefreshLayout.setVisibility(iVisible ? View.VISIBLE : View.GONE);
+        mSwipeRefreshLayout.setVisibility(iVisible ? View.VISIBLE : View.INVISIBLE);
         mCustomViewItems = new ArrayList<>();
 
         mFTPFileItems = new ArrayList<>();
@@ -69,13 +71,19 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         mRecyclerView = iRecyclerView;
         mSwipeRefreshLayout = iSwipeRefreshLayout;
         mDirectoryPath = iDirectoryPath;
-        mSwipeRefreshLayout.setVisibility(iVisible ? View.VISIBLE : View.GONE);
+        mSwipeRefreshLayout.setVisibility(iVisible ? View.VISIBLE : View.INVISIBLE);
         mCustomViewItems = new ArrayList<>();
     }
 
     @NonNull
     @Override
     public CustomItemViewAdapter onCreateViewHolder(@NonNull ViewGroup iViewGroup, int iI) {
+        if (!mIsViewHolderCreationStarted) {
+            mIsViewHolderCreationStarted = true;
+            if (mOnFirstViewHolderCreation != null)
+                mOnFirstViewHolderCreation.onCreation();
+        }
+
         LinearLayout lLayout = (LinearLayout) LayoutInflater.
                 from(iViewGroup.getContext()).inflate(R.layout.navigation_list_item, iViewGroup, false);
 
@@ -126,7 +134,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy hh:mm", Locale.FRANCE);
         iCustomItemViewAdapter.mSecondaryText.setText(dateFormat.format(lFTPItem.getTimestamp().getTime()));
 
-        // TODO : Stings
+        // TODO : Strings
         if (lFTPItem.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION) && lFTPItem.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION))
             iCustomItemViewAdapter.mThirdText.setText("(Read/Write)");
         else if (lFTPItem.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION))
@@ -344,6 +352,10 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         mPreviousAdapter = iPreviousAdapter;
     }
 
+    public void setOnFirstViewHolderCreation(OnFirstViewHolderCreation iAction) {
+        mOnFirstViewHolderCreation = iAction;
+    }
+
     public String getDirectoryPath() {
         return mDirectoryPath;
     }
@@ -510,6 +522,10 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
     public interface OnClickListener {
         void onClick(FTPFile iFTPFile);
+    }
+
+    public interface OnFirstViewHolderCreation {
+        void onCreation();
     }
 
     private class LeftSectionAnimation extends Animation {

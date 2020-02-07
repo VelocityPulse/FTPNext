@@ -533,7 +533,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mDirectoryPath = mCurrentAdapter.getDirectoryPath();
     }
 
-    private void inflateNewAdapter(FTPFile[] iFTPFiles, String iDirectoryPath, boolean iForceVerticalAppear) {
+
+    // TODO : Make a connection, then receive a call. Creates a disconnection bug
+    private void inflateNewAdapter(FTPFile[] iFTPFiles, String iDirectoryPath, final boolean iForceVerticalAppear) {
         LogManager.info(TAG, "Inflate new adapter");
         SwipeRefreshLayout lSwipeRefreshLayout = (SwipeRefreshLayout) View.inflate(this, R.layout.navigation_recycler_layout, null);
         lSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -558,16 +560,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 lSwipeRefreshLayout,
                 iDirectoryPath,
                 false);
-
-        if (mCurrentAdapter != null) {
-            lNewAdapter.setPreviousAdapter(mCurrentAdapter);
-            mCurrentAdapter.setNextAdapter(lNewAdapter);
-            mCurrentAdapter.disappearOnLeft();
-        }
-        if (mCurrentAdapter != null && !iForceVerticalAppear)
-            lNewAdapter.appearFromRight();
-        else
-            lNewAdapter.appearVertically();
 
         DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
 
@@ -605,6 +597,33 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     lNewAdapter.setSelectionMode(true);
                     lNewAdapter.setSelectedCheckBox(iFTPFile, true);
                 }
+            }
+        });
+
+
+        final NavigationRecyclerViewAdapter lCurrentAdapterSavedStatus = mCurrentAdapter;
+        final boolean lIsTheFirstAdapter = mCurrentAdapter == null;
+        lNewAdapter.setOnFirstViewHolderCreation(new NavigationRecyclerViewAdapter.OnFirstViewHolderCreation() {
+            @Override
+            public void onCreation() {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // if it's not the first list
+                        if (!lIsTheFirstAdapter) {
+                            lNewAdapter.setPreviousAdapter(lCurrentAdapterSavedStatus);
+                            lCurrentAdapterSavedStatus.setNextAdapter(lNewAdapter);
+                            lCurrentAdapterSavedStatus.disappearOnLeft();
+                        }
+
+                        // if it's the first list or need to appear vertically
+                        if (lIsTheFirstAdapter || iForceVerticalAppear) {
+                            lNewAdapter.appearVertically();
+                        } else {
+                            lNewAdapter.appearFromRight();
+                        }
+                    }
+                });
             }
         });
 
