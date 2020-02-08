@@ -3,7 +3,6 @@ package com.example.ftpnext;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -130,6 +129,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 buildFTPConnection(true, true);
             else
                 runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
+        } else {
+            if (!AppCore.getNetworkManager().isNetworkAvailable()) {
+                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
+            } else {
+                LogManager.info(TAG, "Network apparently still available");
+            }
         }
     }
 
@@ -378,7 +383,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     case NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING");
                         lFiles = (FTPFile[]) msg.obj;
-                        mCurrentAdapter.setData(lFiles); // TODO : Crash when you simply change the orientation
+                        mCurrentAdapter.setData(lFiles);
                         mCurrentAdapter.appearVertically();
                         mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);
                         break;
