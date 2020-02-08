@@ -3,6 +3,7 @@ package com.example.ftpnext;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -131,6 +132,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
         }
     }
+
+    // Orientation is manager in android manifest with android:configChanges
 
     @Override
     protected void onDestroy() {

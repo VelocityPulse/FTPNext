@@ -32,6 +32,7 @@
         <activity
             android:name=".FTPNavigationActivity"
             android:label="@string/ftp_navigation"
+            android:configChanges="orientation|screenLayout|screenSize"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustNothing" />
     </application>
