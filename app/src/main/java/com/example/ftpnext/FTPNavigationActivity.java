@@ -52,7 +52,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private static final String TAG = "FTP NAVIGATION ACTIVITY";
     private static final int LARGE_DIRECTORY_SIZE = 30000;
-    private static final int BAD_CONNECTION_TIME = 200;
+    private static final int BAD_CONNECTION_TIME = 400;
 
     private static final int NAVIGATION_MESSAGE_CONNECTION_SUCCESS = 10;
     private static final int NAVIGATION_MESSAGE_CONNECTION_FAIL = 11;
@@ -149,7 +149,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        LogManager.info(TAG, "On back pressed"); // TODO : Code the back pressed of delete dialogs
+        LogManager.info(TAG, "On back pressed");
         if (mIsFABOpen) {
             closeFABMenu();
             return;
@@ -375,7 +375,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     case NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING");
                         lFiles = (FTPFile[]) msg.obj;
-                        mCurrentAdapter.setData(lFiles);
+                        mCurrentAdapter.setData(lFiles); // TODO : Crash when you simply change the orientation
                         mCurrentAdapter.appearVertically();
                         mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);
                         break;
@@ -576,6 +576,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     if (iFTPFile.isDirectory()) {
 //                        if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
 //                                || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
+                        lNewAdapter.setItemsClickable(false);
                         mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
                         runFetchProcedures(mDirectoryPath + "/" + iFTPFile.getName(), mIsLargeDirectory, false);
 //                        } else

@@ -78,10 +78,9 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     @NonNull
     @Override
     public CustomItemViewAdapter onCreateViewHolder(@NonNull ViewGroup iViewGroup, int iI) {
-        if (!mIsViewHolderCreationStarted) {
+        if (!mIsViewHolderCreationStarted && mOnFirstViewHolderCreation != null) {
             mIsViewHolderCreationStarted = true;
-            if (mOnFirstViewHolderCreation != null)
-                mOnFirstViewHolderCreation.onCreation();
+            mOnFirstViewHolderCreation.onCreation();
         }
 
         LinearLayout lLayout = (LinearLayout) LayoutInflater.
@@ -110,7 +109,6 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             iCustomItemViewAdapter.mMainLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View iV) {
-                    setItemsClickable(false);
                     mClickListener.onClick(lFTPItem);
                 }
             });

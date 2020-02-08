@@ -22,7 +22,7 @@ public class FTPServerDAO extends ADataAccessObject<FTPServer> implements IFTPSe
 
     // TODO test
     public FTPServer fetchByName(String iName) {
-        final String lSelectionArgs[] = {iName};
+        final String[] lSelectionArgs = {iName};
         final String lSelection = COLUMN_NAME + " = ?";
         FTPServer lObject = null;
 

@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onLongClick(final int iServerID) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                // TODO add string xml
+                // TODO strings
                 builder.setTitle("title")
                         .setItems(R.array.string_array_name, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface iDialog, int iWhich) {

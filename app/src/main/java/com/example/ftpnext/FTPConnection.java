@@ -277,7 +277,6 @@ public class FTPConnection {
                     mStartingFetchDirectory = false;
                     FTPFile lLeavingDirectory = mCurrentDirectory;
 
-                    LogManager.debug(TAG, "iPath : " + iPath);
                     FTPFile lTargetDirectory = mFTPClient.mlistFile(iPath);
                     if (!lTargetDirectory.isDirectory()) { // TODO : put null security for release
                         if (iOnFetchDirectoryResult != null)
@@ -558,7 +557,7 @@ public class FTPConnection {
                             return;
 
                         if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
-                            LogManager.debug(TAG, "WILL DELETE DIR : " + iFTPFile.getName());
+                            LogManager.info(TAG, "Will delete dir : " + iFTPFile.getName());
                             boolean lReply = mFTPClient.removeDirectory(iFTPFile.getName());
 
                             if (!lReply && !mByPassDeletingFailErrors)

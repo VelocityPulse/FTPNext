@@ -28,6 +28,7 @@ import java.io.File;
 
 // TODO : Set last local folder used
 // TODO : Don't save the metadata if there's already a connection
+// TODO : Add a back arrow on the top left
 
 public class FTPConfigureServerActivity extends AppCompatActivity {
 
@@ -77,8 +78,6 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
             mRootView.requestFocus();
         }
     }
-
-    // TODO on resume
 
     @Override
     public void onBackPressed() {
@@ -138,7 +137,7 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
                     String lString = iEditable.toString();
 
                     if (mFTPServerDAO.fetchByName(lString) != null &&
-                            (mEditedFTPServer != null && !lString.equals(mEditedFTPServer.getName()))) {// TODO : use resources
+                            (mEditedFTPServer != null && !lString.equals(mEditedFTPServer.getName()))) {
                         if (!lString.equals(mEditedFTPServer.getName()))
                             ((TextInputLayout) mNameEditText.getTag()).setError("Name already used");
                         return;
