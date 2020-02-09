@@ -23,13 +23,19 @@ public class DataBaseOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase iDataBase) {
-        LogManager.info(TAG, "On Create DataBase");
+
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase iDataBase) {
+        LogManager.info(TAG, "On open DataBase");
 
         for (String lTableCreate : mTableSchemaToCreate) {
             iDataBase.execSQL(lTableCreate);
         }
 
         LogManager.info(TAG, "DataBase tables created");
+        super.onOpen(iDataBase);
     }
 
     @Override

@@ -3,13 +3,13 @@ package com.example.ftpnext.database.FTPServerTable;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.FTPCharacterEncoding;
 import com.example.ftpnext.core.FTPType;
-import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.ABaseTable;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+// TODO : When FTPServer is deleted, delete all pending file referenced
 public class FTPServer extends ABaseTable {
 
     private String mName;

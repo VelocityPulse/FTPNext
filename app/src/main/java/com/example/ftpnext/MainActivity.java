@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
@@ -27,6 +28,7 @@ import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.DataBaseTests;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
+import com.example.ftpnext.database.PendingFileTable.PendingFile;
 import com.example.ftpnext.database.TableTest1.TableTest1;
 
 import java.util.List;
@@ -303,8 +305,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void runTests() {
         // Note : RunTests will automatically increment the database ID
-        DataBaseTests.runTests(new TableTest1(), DataBase.getTableTest1DAO());
+//        DataBaseTests.runTests(new TableTest1(), DataBase.getTableTest1DAO());
 //        DataBaseTests.runTests(new FTPServer(), DataBase.getFTPServerDAO());
+        DataBaseTests.runTests(new PendingFile(), DataBase.getPendingFileDAO());
 
 //        for (int i = 0; i < 20; i++) {
 //            mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + i);

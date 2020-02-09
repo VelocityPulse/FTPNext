@@ -8,6 +8,9 @@ import com.example.ftpnext.core.AppInfo;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.example.ftpnext.database.FTPServerTable.IFTPServerSchema;
+import com.example.ftpnext.database.PendingFileTable.IPendingFileSchema;
+import com.example.ftpnext.database.PendingFileTable.PendingFile;
+import com.example.ftpnext.database.PendingFileTable.PendingFileDAO;
 import com.example.ftpnext.database.TableTest1.ITableTest1Schema;
 import com.example.ftpnext.database.TableTest1.TableTest1DAO;
 
@@ -23,6 +26,7 @@ public class DataBase {
 
     private static TableTest1DAO sTableTest1Dao;
     private static FTPServerDAO sFTPServerDAO;
+    private static PendingFileDAO sPendingFileDAO;
 
     private static DataBase sSingleton = null;
     private static boolean sDataBaseIsOpen = false;
@@ -46,6 +50,10 @@ public class DataBase {
         return sFTPServerDAO;
     }
 
+    public static PendingFileDAO getPendingFileDAO() {
+        return sPendingFileDAO;
+    }
+
     public static void initDataDirectory() {
 
     }
@@ -66,9 +74,11 @@ public class DataBase {
         LogManager.info(TAG, "Open database");
 
         List<String> lTableSchemaToCreate = new ArrayList<>();
+
         // Table Create
         lTableSchemaToCreate.add(ITableTest1Schema.TABLE_CREATE);
         lTableSchemaToCreate.add(IFTPServerSchema.TABLE_CREATE);
+        lTableSchemaToCreate.add(IPendingFileSchema.TABLE_CREATE);
 
         mDataBaseOpenHelper = new DataBaseOpenHelper(iContext, lTableSchemaToCreate);
         SQLiteDatabase lDataBase = mDataBaseOpenHelper.getWritableDatabase();
@@ -76,6 +86,7 @@ public class DataBase {
         //DAO list
         sTableTest1Dao = new TableTest1DAO(lDataBase);
         sFTPServerDAO = new FTPServerDAO(lDataBase);
+        sPendingFileDAO = new PendingFileDAO(lDataBase);
 
         return (sDataBaseIsOpen = true);
     }

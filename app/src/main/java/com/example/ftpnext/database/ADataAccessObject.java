@@ -40,12 +40,12 @@ public abstract class ADataAccessObject<T extends ABaseTable> extends ADataBaseS
 
     protected abstract T cursorToEntity(Cursor iCursor);
 
-    protected T fetchById(String iTable, int iId, String iColumnId, String[] iColumns) {
+    protected T fetchById(String iTable, int iId, String iColumnDataBaseId, String[] iColumns) {
         final String[] lSelectionArgs = {String.valueOf(iId)};
-        final String lSelection = iColumnId + " = ?";
+        final String lSelection = iColumnDataBaseId + " = ?";
         T lObject = null;
 
-        mCursor = super.query(iTable, iColumns, lSelection, lSelectionArgs, iColumnId);
+        mCursor = super.query(iTable, iColumns, lSelection, lSelectionArgs, iColumnDataBaseId);
         if (mCursor != null) {
             mCursor.moveToFirst();
             while (!mCursor.isAfterLast()) {
@@ -57,10 +57,10 @@ public abstract class ADataAccessObject<T extends ABaseTable> extends ADataBaseS
         return lObject;
     }
 
-    protected List<T> fetchAll(String iTable, String[] iColumns, String iColumnId) {
+    protected List<T> fetchAll(String iTable, String[] iColumns, String iColumnDataBaseId) {
         List<T> lList = new ArrayList<>();
 
-        mCursor = super.query(iTable, iColumns, null, null, iColumnId);
+        mCursor = super.query(iTable, iColumns, null, null, iColumnDataBaseId);
         if (mCursor != null) {
             mCursor.moveToFirst();
             while (!mCursor.isAfterLast()) {
