@@ -137,18 +137,4 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
 
         return oObject;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
