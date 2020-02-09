@@ -52,6 +52,8 @@ Ideas :
     - Stop phone(?) after download
     - Airplane mode after download
     - Song after download...
+    - Duplicate server
+    - Sort per type, name, size, and date
  */
 
 /*

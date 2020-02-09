@@ -92,6 +92,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private ProgressDialog mReconnectDialog;
     private AlertDialog mErrorAlertDialog;
     private AlertDialog mCreateFolderDialog;
+    private AlertDialog mDownloadingConfirmationDialog;
+    private AlertDialog mDownloadingInfoDialog;
     private AlertDialog mDeletingInfoDialog;
     private AlertDialog mDeletingErrorDialog;
 
@@ -202,6 +204,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 else
                     mCurrentAdapter.setSelectionMode(true);
                 return true;
+            case R.id.action_download:
+                if (mCurrentAdapter.isInSelectionMode())
+                    createDialogDownloadSelection();
+                else
+                    createDialogError("Select something.").show();
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -954,25 +961,45 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
     }
 
-    private void createDialogDeleteSelection() {
+    private void onUploadFileClicked() {
+        // TODO : upload file
+    }
+
+    private void createDialogDownloadSelection() {
+        LogManager.info(TAG, "Create dialog download selection");
         final FTPFile[] lSelectedFiles = mCurrentAdapter.getSelection();
 
-        if (lSelectedFiles.length == 0) {
-            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
-                    .setTitle("Error") // TODO string
-                    .setMessage("Select something")
-                    .setCancelable(false)
-                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+        if (lSelectedFiles.length == 0)
+            createDialogError("Select something.").show();
+        else {
+            mDownloadingInfoDialog = new AlertDialog.Builder(this)
+                    .setTitle("Downloading :") // TODO : Strings
+                    .setMessage("Do you confirm the download of " + lSelectedFiles.length + " files ?")
+                    .setPositiveButton("yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface iDialog, int iWhich) {
                             iDialog.dismiss();
+                            downloadFile(lSelectedFiles);
                         }
                     })
-                    .create();
-            mErrorAlertDialog.show();
-        } else {
+                    .setNegativeButton("cancel", null)
+                    .show();
+        }
+    }
+
+    private void downloadFile(FTPFile[] iSelectedFiles) {
+        mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
+
+    }
+
+    private void createDialogDeleteSelection() {
+        final FTPFile[] lSelectedFiles = mCurrentAdapter.getSelection();
+
+        if (lSelectedFiles.length == 0)
+            createDialogError("Select something.").show();
+        else {
             mDeletingInfoDialog = new AlertDialog.Builder(this)
-                    .setTitle("Deleting :")
+                    .setTitle("Deleting :") // TODO : Strings
                     .setMessage("Are you sure to delete the selection ? (" + lSelectedFiles.length + " files)")
                     .setPositiveButton("yes", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface iDialog, int iWhich) {
@@ -1162,11 +1189,20 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
     }
 
-    private void onUploadFileClicked() {
-        // TODO : upload file
+    private AlertDialog createDialogError(String iMessage) { // TODO : Replace by resources
+        mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+                .setTitle("Error") // TODO : string
+                .setMessage(iMessage)
+                .setCancelable(false)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface iDialog, int iWhich) {
+                        iDialog.dismiss();
+                    }
+                })
+                .create();
+        return mErrorAlertDialog;
     }
-
-    // TODO : Rename feature
 
     private void dismissAllDialogs() {
         if (mReconnectDialog != null)
@@ -1177,6 +1213,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mLoadingDialog.cancel();
         if (mErrorAlertDialog != null)
             mErrorAlertDialog.cancel();
+        if (mDownloadingConfirmationDialog != null)
+            mDownloadingConfirmationDialog.cancel();
+        if (mDownloadingInfoDialog != null)
+            mDownloadingInfoDialog.cancel();
         if (mDeletingInfoDialog != null)
             mDeletingInfoDialog.cancel();
         if (mDeletingErrorDialog != null)
