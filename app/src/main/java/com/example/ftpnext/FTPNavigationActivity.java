@@ -33,10 +33,12 @@ import android.widget.TextView;
 import com.example.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
+import com.example.ftpnext.core.LoadDirection;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
+import com.example.ftpnext.database.PendingFileTable.PendingFile;
 
 import org.apache.commons.net.ftp.FTPFile;
 
@@ -988,7 +990,16 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void downloadFile(FTPFile[] iSelectedFiles) {
+        LogManager.info(TAG, "Download file");
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
+
+        PendingFile[] lPendingFiles = PendingFile.createPendingFiles(
+                mFTPConnection.getCurrentDirectory().getName(),
+                mFTPServer.getDataBaseId(),
+                iSelectedFiles,
+                LoadDirection.DOWNLOAD);
+
+        DataBase.getPendingFileDAO().add(lPendingFiles);
 
     }
 

@@ -23,7 +23,7 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
 
     // TODO : Huge tests to do here.
     // If function bugs, also fix FTPServerDAO.fetchByName()
-    public List<PendingFile> fetchByServer(FTPServer iFTPServer) {
+    public PendingFile[] fetchByServer(FTPServer iFTPServer) {
         final String[] lSelectionArgs = {String.valueOf(iFTPServer.getDataBaseId())};
         final String lSelection = COLUMN_SERVER_ID + " = ?";
         List<PendingFile> lObjectList = new ArrayList<>();
@@ -37,7 +37,7 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
             }
             mCursor.close();
         }
-        return lObjectList;
+        return (PendingFile[]) lObjectList.toArray();
     }
 
     @Override
@@ -48,6 +48,19 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
     @Override
     public List<PendingFile> fetchAll() {
         return super.fetchAll(TABLE, COLUMNS, COLUMN_DATABASE_ID);
+    }
+
+    public boolean add(PendingFile[] iObjects) {
+        if (iObjects == null || iObjects.length == 0) {
+            LogManager.error(TAG, "No object to add");
+            return false;
+        }
+
+        int oErrors = 0;
+        for (PendingFile lItem : iObjects) {
+            oErrors += (super.add(lItem, TABLE) < 0) ? 1 : 0;
+        }
+        return oErrors == 0;
     }
 
     @Override
