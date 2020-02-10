@@ -36,7 +36,6 @@ public class FTPConnection {
 
     private static List<FTPConnection> sFTPConnectionInstances;
 
-    private final FTPConnectionType mFTPConnectionType;
 
     private FTPServerDAO mFTPServerDAO;
     private FTPServer mFTPServer;
@@ -60,11 +59,10 @@ public class FTPConnection {
     private boolean mByPassDeletingFailErrors;
     private boolean mStartingFetchDirectory;
 
-    public FTPConnection(FTPServer iFTPServer, FTPConnectionType iConnectionType) {
+    public FTPConnection(FTPServer iFTPServer) {
         if (sFTPConnectionInstances == null)
             sFTPConnectionInstances = new ArrayList<>();
 
-        mFTPConnectionType = iConnectionType;
         mFTPServerDAO = DataBase.getFTPServerDAO();
         mFTPServer = iFTPServer;
         sFTPConnectionInstances.add(this);
@@ -72,11 +70,10 @@ public class FTPConnection {
         initializeNetworkMonitoring();
     }
 
-    public FTPConnection(int iServerId, FTPConnectionType iConnectionType) {
+    public FTPConnection(int iServerId) {
         if (sFTPConnectionInstances == null)
             sFTPConnectionInstances = new ArrayList<>();
 
-        mFTPConnectionType = iConnectionType;
         mFTPServerDAO = DataBase.getFTPServerDAO();
         mFTPServer = mFTPServerDAO.fetchById(iServerId);
         sFTPConnectionInstances.add(this);
@@ -800,11 +797,6 @@ public class FTPConnection {
         ERROR_NOT_A_DIRECTORY,
         ERROR_EXECUTE_PERMISSION_MISSED,
         ERROR_READ_PERMISSION_MISSED,
-    }
-
-    public enum FTPConnectionType {
-        NAVIGATION_CONNECTION,
-        TRANSFER_DEDICATED_CONNECTION
     }
 
     public interface IOnFetchDirectoryResult {
