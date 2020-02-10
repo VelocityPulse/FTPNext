@@ -29,6 +29,7 @@ import com.example.ftpnext.database.DataBaseTests;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.example.ftpnext.database.PendingFileTable.PendingFile;
+import com.example.ftpnext.ftpservices.FTPServices;
 
 import java.util.List;
 
@@ -243,9 +244,9 @@ public class MainActivity extends AppCompatActivity {
         lLoadingAlertDialog.create();
         lLoadingAlertDialog.show();
 
-        final FTPConnection lNewFTPConnection = new FTPConnection(lFTPServer);
+        final FTPServices lNewFTPServices = new FTPServices(lFTPServer);
 
-        lNewFTPConnection.connect(new FTPConnection.IOnConnectResult() {
+        lNewFTPServices.connect(new FTPConnection.IOnConnectionResult() {
             @Override
             public void onSuccess() {
                 Utils.cancelAlertDialogOnUIThread(MainActivity.this, lLoadingAlertDialog);
@@ -264,9 +265,9 @@ public class MainActivity extends AppCompatActivity {
                         if (mIsRunning) {
                             lLoadingAlertDialog.cancel();
 
-                            if (lNewFTPConnection.isConnecting())
-                                lNewFTPConnection.abortConnection();
-                            lNewFTPConnection.destroyConnection();
+                            if (lNewFTPServices.isConnecting())
+                                lNewFTPServices.abortConnection();
+                            lNewFTPServices.destroyConnection();
 
                             mDialog = new AlertDialog.Builder(MainActivity.this)
                                     .setTitle("Error") // TODO string
@@ -283,7 +284,7 @@ public class MainActivity extends AppCompatActivity {
                                     .create();
                             mDialog.show();
                         }
-                        lNewFTPConnection.destroyConnection();
+                        lNewFTPServices.destroyConnection();
                     }
                 });
             }
