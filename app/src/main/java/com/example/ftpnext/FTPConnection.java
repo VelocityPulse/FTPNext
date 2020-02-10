@@ -1,10 +1,10 @@
 package com.example.ftpnext;
 
 import android.net.Network;
-import android.provider.ContactsContract;
 
 import com.example.ftpnext.commons.FTPFileUtils;
 import com.example.ftpnext.core.AppCore;
+import com.example.ftpnext.core.LoadDirection;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.core.NetworkManager;
 import com.example.ftpnext.database.DataBase;
@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 // TODO : Download save when app is killed
@@ -371,6 +372,7 @@ public class FTPConnection {
         }
 
         if (!AppCore.getNetworkManager().isNetworkAvailable()) {
+            LogManager.error(TAG, "Connection : Network not available");
             if (iOnConnectResult != null)
                 iOnConnectResult.onFail(ERROR_CODE_DESCRIPTION.ERROR_NO_INTERNET,
                         FTPReply.CANNOT_OPEN_DATA_CONNECTION);
@@ -649,6 +651,40 @@ public class FTPConnection {
             }
         });
         mDeleteFileThread.start();
+    }
+
+    public PendingFile[] createPendingFiles(String iEnclosureName, int iServerId, FTPFile[] iSelectedFiles, LoadDirection iLoadDirection)  {
+        LogManager.info(TAG, "Create pending files");
+        List<PendingFile> oPendingFiles = new ArrayList<>();
+
+        for (FTPFile lItem : iSelectedFiles) {
+
+            if (lItem.isDirectory()) {
+                FTPFile[] lFiles = new FTPFile[0];
+                LogManager.debug(TAG, "folder item name : \t\t" + lItem.getName());
+                LogManager.debug(TAG, "mCurrentFolder item name : \t" + mCurrentDirectory.getName());
+
+                try {
+                    LogManager.error(TAG, "list file : " + mCurrentDirectory.getName() + "/" + lItem.getName());
+                    // TODO : Need a thread
+                    lFiles = mFTPClient.listFiles(mCurrentDirectory.getName() + "/" + lItem.getName());
+                } catch (IOException iE) {
+                    iE.printStackTrace();
+                }
+
+                oPendingFiles.addAll(Arrays.asList(
+                        createPendingFiles(lItem.getName(), iServerId, lFiles, iLoadDirection)));
+            } else {
+                oPendingFiles.add(new PendingFile(
+                        iServerId,
+                        iLoadDirection,
+                        false,
+                        mCurrentDirectory.getName() + "/" + lItem.getName(),
+                        iEnclosureName
+                ));
+            }
+        }
+        return (PendingFile[]) oPendingFiles.toArray();
     }
 
     public FTPServer getFTPServer() {

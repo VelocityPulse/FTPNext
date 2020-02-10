@@ -993,15 +993,19 @@ public class FTPNavigationActivity extends AppCompatActivity {
         LogManager.info(TAG, "Download file");
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
 
-        PendingFile[] lPendingFiles = PendingFile.createPendingFiles(
-                mFTPConnection.getCurrentDirectory().getName(),
+        PendingFile[] lPendingFiles = mFTPConnection.createPendingFiles(
+                null,
                 mFTPServer.getDataBaseId(),
                 iSelectedFiles,
                 LoadDirection.DOWNLOAD);
 
-        DataBase.getPendingFileDAO().add(lPendingFiles);
+        LogManager.debug(TAG, "Listing all PendingFile : ");
 
+        for (PendingFile lItem : lPendingFiles) {
+            LogManager.debug(TAG, lItem.toString());
+        }
 
+        //DataBase.getPendingFileDAO().add(lPendingFiles);
 
     }
 

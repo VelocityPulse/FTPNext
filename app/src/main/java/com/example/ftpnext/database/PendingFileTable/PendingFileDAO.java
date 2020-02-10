@@ -123,7 +123,7 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
         mContentValues.put(COLUMN_LOAD_DIRECTION, iObject.getLoadDirection().getValue());
         mContentValues.put(COLUMN_STARTED, iObject.isStarted());
         mContentValues.put(COLUMN_PATH, iObject.getPath());
-        mContentValues.put(COLUMN_IS_FOLDER, iObject.isStarted());
+        mContentValues.put(COLUMN_ENCLOSING_NAME, iObject.isStarted());
     }
 
     @Override
@@ -145,8 +145,8 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
             oObject.setStarted(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_STARTED)) != 0);
         if (iCursor.getColumnIndexOrThrow(COLUMN_PATH) != -1)
             oObject.setPath(iCursor.getString(iCursor.getColumnIndexOrThrow(COLUMN_PATH)));
-        if (iCursor.getColumnIndexOrThrow(COLUMN_IS_FOLDER) != -1)
-            oObject.setFolder(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_IS_FOLDER)) != 0);
+        if (iCursor.getColumnIndexOrThrow(COLUMN_ENCLOSING_NAME) != -1)
+            oObject.setEnclosureName(iCursor.getString(iCursor.getColumnIndexOrThrow(COLUMN_ENCLOSING_NAME)));
 
         return oObject;
     }

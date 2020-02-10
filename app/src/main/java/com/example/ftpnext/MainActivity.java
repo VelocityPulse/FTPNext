@@ -236,13 +236,13 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        final FTPConnection lNewFTPConnection = new FTPConnection(lFTPServer);
-
         lLoadingAlertDialog = Utils.initProgressDialog(this, null);
         lLoadingAlertDialog.setContentView(R.layout.loading_icon);
         lLoadingAlertDialog.setTitle("Connection..."); // TODO : strings
         lLoadingAlertDialog.create();
         lLoadingAlertDialog.show();
+
+        final FTPConnection lNewFTPConnection = new FTPConnection(lFTPServer);
 
         lNewFTPConnection.connect(new FTPConnection.OnConnectResult() {
             @Override
