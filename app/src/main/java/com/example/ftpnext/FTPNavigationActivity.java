@@ -39,6 +39,7 @@ import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.example.ftpnext.database.PendingFileTable.PendingFile;
+import com.example.ftpnext.ftpservices.FTPConnection;
 
 import org.apache.commons.net.ftp.FTPFile;
 

@@ -18,7 +18,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import com.example.ftpnext.FTPConnection.ErrorCodeDescription;
+import com.example.ftpnext.ftpservices.FTPConnection;
+import com.example.ftpnext.ftpservices.FTPConnection.ErrorCodeDescription;
 import com.example.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;

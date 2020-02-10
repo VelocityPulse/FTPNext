@@ -1,4 +1,4 @@
-package com.example.ftpnext;
+package com.example.ftpnext.ftpservices;
 
 import android.net.Network;
 
