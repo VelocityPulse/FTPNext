@@ -80,8 +80,8 @@ public class PendingFile extends ABaseTable {
         oToString = "ServerId: " + mServerId +
                 ", LoadDirection: " + mLoadDirection.toString() +
                 ", Started: " + mStarted +
-                "\nPath: " + mPath +
-                "\nEnclosureName: " + mEnclosureName;
+                "\nPath:\t\t\t" + mPath +
+                "\nEnclosureName:\t" + mEnclosureName;
         return oToString;
     }
 }

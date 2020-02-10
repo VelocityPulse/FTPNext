@@ -1,8 +1,12 @@
 package com.example.ftpnext.ftpservices;
 
+import android.util.Log;
+
 import com.example.ftpnext.commons.FTPFileUtils;
+import com.example.ftpnext.core.LoadDirection;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
+import com.example.ftpnext.database.PendingFileTable.PendingFile;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
@@ -26,6 +30,7 @@ public class FTPServices extends AFTPConnection {
     private Thread mDirectoryFetchThread;
     private Thread mDeleteFileThread;
     private Thread mCreateDirectoryThread;
+    private Thread mCreatePendingFilesThread;
 
     private boolean mPauseDeleting;
     private boolean mByPassDeletingRightErrors;
@@ -48,7 +53,7 @@ public class FTPServices extends AFTPConnection {
     }
 
     public static FTPServices getFTPServicesInstance(int iServerId) {
-        LogManager.info(TAG, "Get FTP connection");
+        LogManager.info(TAG, "Get FTP services instance");
         if (sFTPServicesInstances == null)
             sFTPServicesInstances = new ArrayList<>();
 
@@ -73,6 +78,8 @@ public class FTPServices extends AFTPConnection {
                 abortFetchDirectoryContent();
             if (isDeletingFiles() && !isReconnecting())
                 abortDeleting();
+            if (isCreatingPendingFiles())
+                abortCreatingPendingFiles();
             super.disconnect();
         }
     }
@@ -102,6 +109,13 @@ public class FTPServices extends AFTPConnection {
 
         if (isFetchingFolders())
             mDirectoryFetchThread.interrupt();
+    }
+
+    public void abortCreatingPendingFiles() {
+        LogManager.info(TAG, "Abort creating pending files");
+
+        if (isCreatingPendingFiles())
+            mCreatePendingFilesThread.interrupt();
     }
 
     public void abortDeleting() {
@@ -405,6 +419,116 @@ public class FTPServices extends AFTPConnection {
         mDeleteFileThread.start();
     }
 
+    public void createPendingFilesProcedure(final FTPFile[] iSelectedFiles, IOnCreatePendingFilesResult iOnResult) {
+        LogManager.info(TAG, "Create pending files procedure");
+        if (!isConnected()) {
+            LogManager.error(TAG, "Is not connected");
+            if (iOnResult != null)
+                iOnResult.onResult(false, null);
+            return;
+        }
+
+        if (isCreatingPendingFiles()) {
+            LogManager.error(TAG, "Is already creating pending files");
+            if (iOnResult != null)
+                iOnResult.onResult(false, null);
+            return;
+        }
+
+        createPendingFiles(
+                mFTPServer.getDataBaseId(),
+                iSelectedFiles,
+                null,
+                LoadDirection.DOWNLOAD,
+                iOnResult);
+    }
+
+    private void createPendingFiles(
+            final int iServerId, final FTPFile[] iSelectedFiles, final String iEnclosureName,
+            final LoadDirection iLoadDirection, final IOnCreatePendingFilesResult iOnResult) {
+
+        LogManager.info(TAG, "Create pending files");
+        final List<PendingFile> oPendingFiles = new ArrayList<>();
+
+        mCreatePendingFilesThread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+
+                for (FTPFile lItem : iSelectedFiles) {
+                    if (Thread.interrupted()) {
+                        iOnResult.onResult(false, null);
+                        return;
+                    }
+                    if (lItem.isDirectory()) {
+                        recursiveCreatePendingFiles(lItem, lItem.getName());
+                        if (Thread.interrupted()) {
+                            iOnResult.onResult(false, null);
+                            return;
+                        }
+                    } else {
+                        oPendingFiles.add(new PendingFile(
+                                iServerId,
+                                iLoadDirection,
+                                false,
+                                mCurrentDirectory.getName() + "/" + lItem.getName(),
+                                null
+                        ));
+                    }
+                }
+
+                if (Thread.interrupted()) {
+                    iOnResult.onResult(false, null);
+                    return;
+                }
+                iOnResult.onResult(true, oPendingFiles.toArray(new PendingFile[0]));
+            }
+
+            private void recursiveCreatePendingFiles(FTPFile iDirectory, String iRelativePath) {
+                LogManager.error(TAG, "Recursive create pending files");
+                LogManager.debug(TAG,
+                        "Params :\niFTPFile :\t\t\t" + iDirectory.getName() +
+                                "\niEnclosureName :\t" + iRelativePath);
+
+                if (Thread.interrupted())
+                    return;
+
+                FTPFile[] lFiles = new FTPFile[0];
+
+                try {
+                    LogManager.debug(TAG, "list file : " + mCurrentDirectory.getName() + "/" + iRelativePath);
+                    lFiles = mFTPClient.listFiles(mCurrentDirectory.getName() + "/" + iRelativePath);
+                    if (Thread.interrupted())
+                        return;
+                } catch (IOException iE) {
+                    iE.printStackTrace();
+                }
+
+                for (FTPFile lItem : lFiles) {
+                    if (lItem.isDirectory()) {
+                        recursiveCreatePendingFiles(lItem, iRelativePath + "/" + lItem.getName());
+                        if (Thread.interrupted())
+                            return;
+                    } else {
+                        LogManager.debug(TAG, "Adding file :\t" + lItem.getName());
+                        LogManager.debug(TAG, "Adding path :" + mCurrentDirectory.getName() + iRelativePath + lItem.getName());
+
+                        LogManager.debug(TAG, "Adding for iEnclosureName:\t" + iRelativePath);
+
+                        oPendingFiles.add(new PendingFile(
+                                iServerId,
+                                iLoadDirection,
+                                false,
+                                mCurrentDirectory.getName() + "/" + iRelativePath + lItem.getName(),
+                                iRelativePath
+                        ));
+                    }
+                }
+            }
+        });
+        mCreatePendingFilesThread.start();
+    }
+
     public boolean isFetchingFolders() {
         // Display :
 //        LogManager.info(TAG, "isFetchingFolders : " + isConnected() + " && (" +
@@ -425,13 +549,17 @@ public class FTPServices extends AFTPConnection {
         return mPauseDeleting;
     }
 
+    public boolean isCreatingPendingFiles() {
+        return isConnected() && mCreatePendingFilesThread != null && mCreatePendingFilesThread.isAlive();
+    }
+
     @Override
     public boolean isBusy() {
         // Display :
 //        LogManager.debug(TAG, " " + isConnecting() + " " + isReconnecting() + " " + isFetchingFolders() + " "
 //                + isCreatingFolder() + " " + isDeletingFiles());
         return isConnecting() || isReconnecting() || isFetchingFolders() || isCreatingFolder() ||
-                isDeletingFiles();
+                isDeletingFiles() || isCreatingPendingFiles();
     }
 
     public void resumeDeleting() {
@@ -445,7 +573,6 @@ public class FTPServices extends AFTPConnection {
     public void setDeletingByPassRightErrors(boolean iValue) {
         mByPassDeletingRightErrors = iValue;
     }
-
 
     public void setDeletingByPassFailErrors(boolean iValue) {
         mByPassDeletingFailErrors = iValue;
@@ -465,6 +592,12 @@ public class FTPServices extends AFTPConnection {
         void onFail(ErrorCodeDescription iErrorEnum, int iErrorCode);
     }
 
+    public interface IOnCreatePendingFilesResult {
+
+        void onResult(boolean isSuccess, PendingFile[] iPendingFiles);
+
+    }
+
     public abstract class AOnDeleteListener {
         public abstract void onStartDelete();
 
@@ -482,5 +615,4 @@ public class FTPServices extends AFTPConnection {
             mPauseDeleting = true;
         }
     }
-
 }

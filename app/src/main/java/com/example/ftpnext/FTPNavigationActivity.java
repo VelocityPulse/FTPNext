@@ -33,7 +33,6 @@ import android.widget.TextView;
 import com.example.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
-import com.example.ftpnext.core.LoadDirection;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
@@ -409,6 +408,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH");
                         mDirectoryFetchFinished = true;
                         lErrorDescription = (AFTPConnection.ErrorCodeDescription) msg.obj;
+                        mCurrentAdapter.setItemsClickable(true);
                         if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
                             mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
                                     .setTitle("Error") // TODO string
@@ -995,20 +995,20 @@ public class FTPNavigationActivity extends AppCompatActivity {
         LogManager.info(TAG, "Download file");
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
 
-        PendingFile[] lPendingFiles = mFTPServices.createPendingFiles(
-                null,
-                mFTPServer.getDataBaseId(),
-                iSelectedFiles,
-                LoadDirection.DOWNLOAD);
 
-        LogManager.debug(TAG, "Listing all PendingFile : ");
+        mFTPServices.createPendingFilesProcedure(iSelectedFiles, new FTPServices.IOnCreatePendingFilesResult() {
+            @Override
+            public void onResult(boolean isSuccess, PendingFile[] iPendingFiles) {
+                LogManager.debug(TAG, "Creating pending file result : " + isSuccess);
+                LogManager.debug(TAG, "Listing all PendingFile : ");
 
-        for (PendingFile lItem : lPendingFiles) {
-            LogManager.debug(TAG, lItem.toString());
-        }
+                for (PendingFile lItem : iPendingFiles) {
+                    LogManager.debug(TAG, lItem.toString());
+                }
+            }
+        });
 
         //DataBase.getPendingFileDAO().add(lPendingFiles);
-
     }
 
     private void createDialogDeleteSelection() {

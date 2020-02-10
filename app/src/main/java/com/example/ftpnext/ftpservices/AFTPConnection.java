@@ -286,44 +286,6 @@ public abstract class AFTPConnection {
         mConnectionThread.start();
     }
 
-    public void downloadFiles(final PendingFile[] iSelection, @NotNull final AOnDownloadListener iAOnDownloadListener) {
-
-    }
-
-    public PendingFile[] createPendingFiles(String iEnclosureName, int iServerId, FTPFile[] iSelectedFiles, LoadDirection iLoadDirection) {
-        LogManager.info(TAG, "Create pending files");
-        List<PendingFile> oPendingFiles = new ArrayList<>();
-
-        for (FTPFile lItem : iSelectedFiles) {
-
-            if (lItem.isDirectory()) {
-                FTPFile[] lFiles = new FTPFile[0];
-                LogManager.debug(TAG, "folder item name : \t\t" + lItem.getName());
-                LogManager.debug(TAG, "mCurrentFolder item name : \t" + mCurrentDirectory.getName());
-
-                try {
-                    LogManager.error(TAG, "list file : " + mCurrentDirectory.getName() + "/" + lItem.getName());
-                    // TODO : Need a thread
-                    lFiles = mFTPClient.listFiles(mCurrentDirectory.getName() + "/" + lItem.getName());
-                } catch (IOException iE) {
-                    iE.printStackTrace();
-                }
-
-                oPendingFiles.addAll(Arrays.asList(
-                        createPendingFiles(lItem.getName(), iServerId, lFiles, iLoadDirection)));
-            } else {
-                oPendingFiles.add(new PendingFile(
-                        iServerId,
-                        iLoadDirection,
-                        false,
-                        mCurrentDirectory.getName() + "/" + lItem.getName(),
-                        iEnclosureName
-                ));
-            }
-        }
-        return (PendingFile[]) oPendingFiles.toArray();
-    }
-
     public FTPServer getFTPServer() {
         return mFTPServer;
     }
@@ -407,25 +369,5 @@ public abstract class AFTPConnection {
         void onConnectionRecover();
 
         void onConnectionDenied(ErrorCodeDescription iErrorEnum, int iErrorCode);
-    }
-
-    public abstract class AOnDownloadListener {
-
-        public void onStartDownloadFile(PendingFile iPendingFile) {
-            iPendingFile.setStarted(true);
-            DataBase.getPendingFileDAO().update(iPendingFile);
-        }
-
-        public abstract void onTotalPendingFileProgress(int iProgress, int iTotalPendingFile);
-
-        public abstract void onDownloadProgress(PendingFile iPendingFile, int iProgress, int iSize);
-
-        public void oNDownloadSuccess(PendingFile iPendingFile) {
-            DataBase.getPendingFileDAO().delete(iPendingFile);
-        }
-
-        public abstract void onRightAccessFail(PendingFile iPendingFile);
-
-        public abstract void onFail(PendingFile iPendingFile);
     }
 }
