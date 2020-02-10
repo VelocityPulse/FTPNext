@@ -18,7 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import com.example.ftpnext.FTPConnection.ERROR_CODE_DESCRIPTION;
+import com.example.ftpnext.FTPConnection.ErrorCodeDescription;
 import com.example.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
@@ -244,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
 
         final FTPConnection lNewFTPConnection = new FTPConnection(lFTPServer);
 
-        lNewFTPConnection.connect(new FTPConnection.OnConnectResult() {
+        lNewFTPConnection.connect(new FTPConnection.IOnConnectResult() {
             @Override
             public void onSuccess() {
                 Utils.cancelAlertDialogOnUIThread(MainActivity.this, lLoadingAlertDialog);
@@ -254,8 +254,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFail(final ERROR_CODE_DESCRIPTION iErrorEnum, final int iErrorCode) {
-                if (iErrorEnum == ERROR_CODE_DESCRIPTION.ERROR_CONNECTION_INTERRUPTED)
+            public void onFail(final FTPConnection.ErrorCodeDescription iErrorEnum, final int iErrorCode) {
+                if (iErrorEnum == ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED)
                     return;
                 runOnUiThread(new Runnable() {
                     @Override
