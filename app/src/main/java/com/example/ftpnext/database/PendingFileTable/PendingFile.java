@@ -90,5 +90,4 @@ public class PendingFile extends ABaseTable {
     protected void setDataBaseId(int iDataBaseId) {
         mDataBaseId = iDataBaseId;
     }
-
 }

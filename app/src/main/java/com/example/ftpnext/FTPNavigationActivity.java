@@ -1001,6 +1001,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         DataBase.getPendingFileDAO().add(lPendingFiles);
 
+
+
     }
 
     private void createDialogDeleteSelection() {

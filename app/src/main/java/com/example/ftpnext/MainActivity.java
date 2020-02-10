@@ -6,7 +6,6 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
@@ -29,14 +28,13 @@ import com.example.ftpnext.database.DataBaseTests;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.example.ftpnext.database.PendingFileTable.PendingFile;
-import com.example.ftpnext.database.TableTest1.TableTest1;
 
 import java.util.List;
 
 /*
 TODO : Resume when screen change orientation
 TODO : Add a security network connection / network authorisation
-
+TODO : Securities authorization popups
 Ideas :
     - Research mode in FTPNavigationActivity
     - Ask to respawn to the last folder visited if diff than root
@@ -56,6 +54,9 @@ Ideas :
     - Song after download...
     - Duplicate server
     - Sort per type, name, size, and date
+
+    - Log historic connection for the user
+
  */
 
 /*
