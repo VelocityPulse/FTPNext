@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FTPServices extends FTPConnection {
+public class FTPServices extends AFTPConnection {
 
     private static final String TAG = "FTP SERVICES";
 
@@ -425,6 +425,7 @@ public class FTPServices extends FTPConnection {
         return mPauseDeleting;
     }
 
+    @Override
     public boolean isBusy() {
         // Display :
 //        LogManager.debug(TAG, " " + isConnecting() + " " + isReconnecting() + " " + isFetchingFolders() + " "

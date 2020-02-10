@@ -25,7 +25,7 @@ import java.util.List;
 
 // TODO : Download save when app is killed
 
-public class FTPConnection {
+public abstract class AFTPConnection {
 
     private static final String TAG = "FTP CONNECTION";
 
@@ -47,14 +47,14 @@ public class FTPConnection {
 
     private boolean mAbortReconnect;
 
-    public FTPConnection(FTPServer iFTPServer) {
+    public AFTPConnection(FTPServer iFTPServer) {
         mFTPServerDAO = DataBase.getFTPServerDAO();
         mFTPServer = iFTPServer;
         mFTPClient = new FTPClient();
         initializeNetworkMonitoring();
     }
 
-    public FTPConnection(int iServerId) {
+    public AFTPConnection(int iServerId) {
         mFTPServerDAO = DataBase.getFTPServerDAO();
         mFTPServer = mFTPServerDAO.fetchById(iServerId);
         mFTPClient = new FTPClient();
@@ -348,6 +348,8 @@ public class FTPConnection {
         return mReconnectThread != null && mReconnectThread.isAlive();
     }
 
+    public abstract boolean isBusy();
+
     public void setIOnConnectionLost(IOnConnectionLost iIOnConnectionLost) {
         mIOnConnectionLost = iIOnConnectionLost;
     }
@@ -390,7 +392,6 @@ public class FTPConnection {
         ERROR_EXECUTE_PERMISSION_MISSED,
         ERROR_READ_PERMISSION_MISSED,
     }
-
 
     public interface IOnConnectionResult {
         void onSuccess();
