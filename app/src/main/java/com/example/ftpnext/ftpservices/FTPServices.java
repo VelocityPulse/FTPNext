@@ -1,7 +1,5 @@
 package com.example.ftpnext.ftpservices;
 
-import android.util.Log;
-
 import com.example.ftpnext.commons.FTPFileUtils;
 import com.example.ftpnext.core.LoadDirection;
 import com.example.ftpnext.core.LogManager;
@@ -455,13 +453,17 @@ public class FTPServices extends AFTPConnection {
             @Override
             public void run() {
 
+                // While on the selected files visible by the user
                 for (FTPFile lItem : iSelectedFiles) {
                     if (Thread.interrupted()) {
                         iOnResult.onResult(false, null);
                         return;
                     }
                     if (lItem.isDirectory()) {
-                        recursiveCreatePendingFiles(lItem, lItem.getName());
+                        // Passing the folder and the folder name as the relative path to directory
+                        // In recursive folder, it can't be lItem.getName() to iEnclosureName
+                        // Because iRelativePathToDirectory is used to move in the hierarchy
+                        recursiveFolder(lItem, lItem.getName());
                         if (Thread.interrupted()) {
                             iOnResult.onResult(false, null);
                             return;
@@ -484,43 +486,47 @@ public class FTPServices extends AFTPConnection {
                 iOnResult.onResult(true, oPendingFiles.toArray(new PendingFile[0]));
             }
 
-            private void recursiveCreatePendingFiles(FTPFile iDirectory, String iRelativePath) {
-                LogManager.error(TAG, "Recursive create pending files");
-                LogManager.debug(TAG,
-                        "Params :\niFTPFile :\t\t\t" + iDirectory.getName() +
-                                "\niEnclosureName :\t" + iRelativePath);
+            private void recursiveFolder(FTPFile iDirectory, String iRelativePathToDirectory) {
+                LogManager.info(TAG, "Recursive create pending files");
+//                LogManager.debug(TAG,
+//                        "Params :\niFTPFile :\t\t\t" + iDirectory.getName() +
+//                                "\niEnclosureName :\t" + iRelativePathToDirectory);
 
                 if (Thread.interrupted())
                     return;
 
-                FTPFile[] lFiles = new FTPFile[0];
+                FTPFile[] lFilesOfFolder = new FTPFile[0];
 
                 try {
-                    LogManager.debug(TAG, "list file : " + mCurrentDirectory.getName() + "/" + iRelativePath);
-                    lFiles = mFTPClient.listFiles(mCurrentDirectory.getName() + "/" + iRelativePath);
+//                    LogManager.debug(TAG, "list file   : " + mCurrentDirectory.getName() + "/" + iRelativePathToDirectory);
+//                    LogManager.debug(TAG, "list file 2 : " + iDirectory.getName());
+                    // Necessary to use iRelativePathToDirectory because iDirectory always represents
+                    // the directory name, and not his own sub path
+                    lFilesOfFolder = mFTPClient.listFiles(mCurrentDirectory.getName() + "/" + iRelativePathToDirectory);
                     if (Thread.interrupted())
                         return;
                 } catch (IOException iE) {
                     iE.printStackTrace();
                 }
 
-                for (FTPFile lItem : lFiles) {
+                for (FTPFile lItem : lFilesOfFolder) {
+
                     if (lItem.isDirectory()) {
-                        recursiveCreatePendingFiles(lItem, iRelativePath + "/" + lItem.getName());
+                        // Adding a directory to the relative path to directory
+                        recursiveFolder(lItem, iRelativePathToDirectory + "/" + lItem.getName());
                         if (Thread.interrupted())
                             return;
+
                     } else {
-                        LogManager.debug(TAG, "Adding file :\t" + lItem.getName());
-                        LogManager.debug(TAG, "Adding path :" + mCurrentDirectory.getName() + iRelativePath + lItem.getName());
-
-                        LogManager.debug(TAG, "Adding for iEnclosureName:\t" + iRelativePath);
-
+//                        LogManager.debug(TAG, "Adding file :\t" + lItem.getName());
+//                        LogManager.debug(TAG, "Adding path :" + mCurrentDirectory.getName() + "/" + iRelativePathToDirectory + lItem.getName());
+//                        LogManager.debug(TAG, "Adding for iEnclosureName:\t" + iRelativePathToDirectory);
                         oPendingFiles.add(new PendingFile(
                                 iServerId,
                                 iLoadDirection,
                                 false,
-                                mCurrentDirectory.getName() + "/" + iRelativePath + lItem.getName(),
-                                iRelativePath
+                                mCurrentDirectory.getName() + "/" + iRelativePathToDirectory + lItem.getName(),
+                                iRelativePathToDirectory
                         ));
                     }
                 }
