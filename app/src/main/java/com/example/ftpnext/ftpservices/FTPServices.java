@@ -447,12 +447,13 @@ public class FTPServices extends AFTPConnection {
 
         LogManager.info(TAG, "Create pending files");
         final List<PendingFile> oPendingFiles = new ArrayList<>();
+        // Removing "/" if we are at the root
+        final String mCurrentLocation = "/".equals(mCurrentDirectory.getName()) ? "" : mCurrentDirectory.getName();
 
         mCreatePendingFilesThread = new Thread(new Runnable() {
 
             @Override
             public void run() {
-
                 iIndexingListener.onStart();
 
                 // While on the selected files visible by the user
@@ -461,11 +462,13 @@ public class FTPServices extends AFTPConnection {
                         iIndexingListener.onResult(false, null);
                         return;
                     }
+
                     if (lItem.isDirectory()) {
                         // Passing the folder and the folder name as the relative path to directory
                         // In recursive folder, it can't be lItem.getName() to iEnclosureName
                         // Because iRelativePathToDirectory is used to move in the hierarchy
                         recursiveFolder(lItem, lItem.getName());
+
                         LogManager.error(TAG, "is interrupted1 : " + Thread.interrupted());
                         if (Thread.interrupted()) {
                             iIndexingListener.onResult(false, null);
@@ -476,7 +479,7 @@ public class FTPServices extends AFTPConnection {
                                 iServerId,
                                 iLoadDirection,
                                 false,
-                                mCurrentDirectory.getName() + "/" + lItem.getName(),
+                                mCurrentLocation+ "/" + lItem.getName(),
                                 null
                         );
                         oPendingFiles.add(lPendingFile);
@@ -495,16 +498,10 @@ public class FTPServices extends AFTPConnection {
             private void recursiveFolder(FTPFile iDirectory, String iRelativePathToDirectory) {
                 LogManager.info(TAG, "Recursive create pending files");
 
-                if (iRelativePathToDirectory.length() > 2 && iRelativePathToDirectory.startsWith("//"))
-                    iRelativePathToDirectory.replace("//", "/");
-//                LogManager.debug(TAG,
-//                        "Params :\niFTPFile :\t\t\t" + iDirectory.getName() +
-//                                "\niEnclosureName :\t" + iRelativePathToDirectory);
+                FTPFile[] lFilesOfFolder;
 
                 if (Thread.interrupted())
                     return;
-
-                FTPFile[] lFilesOfFolder;
 
                 // TODO : Curious bug. Function not responding
                 try {
@@ -526,6 +523,7 @@ public class FTPServices extends AFTPConnection {
                     if (lItem.isDirectory()) {
                         // Adding a directory to the relative path to directory
                         recursiveFolder(lItem, iRelativePathToDirectory + "/" + lItem.getName());
+
                         if (Thread.interrupted())
                             return;
 
@@ -537,7 +535,7 @@ public class FTPServices extends AFTPConnection {
                                 iServerId,
                                 iLoadDirection,
                                 false,
-                                mCurrentDirectory.getName() + "/" + iRelativePathToDirectory + "/" + lItem.getName(),
+                                mCurrentLocation + "/" + iRelativePathToDirectory + "/" + lItem.getName(),
                                 iRelativePathToDirectory
                         );
                         oPendingFiles.add(lPendingFile);
