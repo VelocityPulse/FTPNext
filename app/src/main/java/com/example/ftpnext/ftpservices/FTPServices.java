@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.security.auth.login.LoginException;
+
 public class FTPServices extends AFTPConnection {
 
     private static final String TAG = "FTP SERVICES";
@@ -505,14 +507,13 @@ public class FTPServices extends AFTPConnection {
 
                 // TODO : Curious bug. Function not responding
                 try {
-//                    LogManager.debug(TAG, "list file   : " + mCurrentDirectory.getName() + "/" + iRelativePathToDirectory);
-//                    LogManager.debug(TAG, "list file 2 : " + iDirectory.getName());
                     // Necessary to use iRelativePathToDirectory because iDirectory always represents
                     // the directory name, and not his own sub path
                     lFilesOfFolder = mFTPClient.listFiles(mCurrentDirectory.getName() + "/" + iRelativePathToDirectory);
                     if (Thread.interrupted())
                         return;
                 } catch (IOException iE) {
+                    LogManager.error(TAG, "Interruption");
                     mCreatePendingFilesThread.interrupt();
                     iE.printStackTrace();
                     return;

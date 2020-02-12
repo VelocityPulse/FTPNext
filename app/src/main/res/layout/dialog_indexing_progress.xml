@@ -11,9 +11,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:lines="2"
-        android:ellipsize="start"
-        android:text="file"
+        android:ellipsize="end"
         android:textColor="@android:color/black"
         android:textSize="20dp" />
+
+<!--    <TextView-->
+<!--        android:id="@+id/dialog_indexing_file"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:ellipsize="start"-->
+<!--        android:singleLine="true"-->
+<!--        android:text="file"-->
+<!--        android:textColor="@android:color/black"-->
+<!--        android:textSize="20dp" />-->
 
 </LinearLayout>
