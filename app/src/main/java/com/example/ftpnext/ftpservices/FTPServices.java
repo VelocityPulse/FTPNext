@@ -466,6 +466,7 @@ public class FTPServices extends AFTPConnection {
                         // In recursive folder, it can't be lItem.getName() to iEnclosureName
                         // Because iRelativePathToDirectory is used to move in the hierarchy
                         recursiveFolder(lItem, lItem.getName());
+                        LogManager.error(TAG, "is interrupted1 : " + Thread.interrupted());
                         if (Thread.interrupted()) {
                             iIndexingListener.onResult(false, null);
                             return;
@@ -483,6 +484,7 @@ public class FTPServices extends AFTPConnection {
                     }
                 }
 
+                LogManager.error(TAG, "is interrupted2 : " + Thread.interrupted());
                 if (Thread.interrupted()) {
                     iIndexingListener.onResult(false, null);
                     return;
@@ -492,6 +494,9 @@ public class FTPServices extends AFTPConnection {
 
             private void recursiveFolder(FTPFile iDirectory, String iRelativePathToDirectory) {
                 LogManager.info(TAG, "Recursive create pending files");
+
+                if (iRelativePathToDirectory.length() > 2 && iRelativePathToDirectory.startsWith("//"))
+                    iRelativePathToDirectory.replace("//", "/");
 //                LogManager.debug(TAG,
 //                        "Params :\niFTPFile :\t\t\t" + iDirectory.getName() +
 //                                "\niEnclosureName :\t" + iRelativePathToDirectory);
@@ -520,7 +525,7 @@ public class FTPServices extends AFTPConnection {
 
                     if (lItem.isDirectory()) {
                         // Adding a directory to the relative path to directory
-                        recursiveFolder(lItem, iRelativePathToDirectory + "/" + lItem.getName() + "/");
+                        recursiveFolder(lItem, iRelativePathToDirectory + "/" + lItem.getName());
                         if (Thread.interrupted())
                             return;
 
@@ -532,7 +537,7 @@ public class FTPServices extends AFTPConnection {
                                 iServerId,
                                 iLoadDirection,
                                 false,
-                                mCurrentDirectory.getName() + "/" + iRelativePathToDirectory + lItem.getName(),
+                                mCurrentDirectory.getName() + "/" + iRelativePathToDirectory + "/" + lItem.getName(),
                                 iRelativePathToDirectory
                         );
                         oPendingFiles.add(lPendingFile);

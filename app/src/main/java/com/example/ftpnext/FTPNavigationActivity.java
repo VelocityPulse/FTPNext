@@ -1045,12 +1045,13 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 if (mIndexingPendingFilesDialog != null)
                     mIndexingPendingFilesDialog.cancel();
 
-                LogManager.debug(TAG, "Creating pending file result : " + isSuccess);
-                LogManager.debug(TAG, "Listing all PendingFile : ");
+//                LogManager.debug(TAG, "Creating pending file result : " + isSuccess);
+//                LogManager.debug(TAG, "Listing all PendingFile : ");
 
                 if (isSuccess) {
                     for (PendingFile lItem : iPendingFiles) {
-                        LogManager.debug(TAG, lItem.toString());
+                        LogManager.debug(TAG, lItem.getPath());
+//                        LogManager.debug(TAG, lItem.toString());
                     }
                 }
             }
