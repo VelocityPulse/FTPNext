@@ -55,7 +55,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private static final String TAG = "FTP NAVIGATION ACTIVITY";
     private static final int LARGE_DIRECTORY_SIZE = 30000;
-    private static final int BAD_CONNECTION_TIME = 400;
+    private static final int BAD_CONNECTION_TIME = 50;
 
     private static final int NAVIGATION_MESSAGE_CONNECTION_SUCCESS = 10;
     private static final int NAVIGATION_MESSAGE_CONNECTION_FAIL = 11;
@@ -95,6 +95,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private ProgressDialog mReconnectDialog;
     private AlertDialog mErrorAlertDialog;
     private AlertDialog mCreateFolderDialog;
+    private AlertDialog mIndexingPendingFilesDialog;
     private AlertDialog mDownloadingConfirmationDialog;
     private AlertDialog mDownloadingInfoDialog;
     private AlertDialog mDeletingInfoDialog;
@@ -408,7 +409,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH");
                         mDirectoryFetchFinished = true;
                         lErrorDescription = (AFTPConnection.ErrorCodeDescription) msg.obj;
-                        mCurrentAdapter.setItemsClickable(true);
+                        if (mCurrentAdapter != null)
+                            mCurrentAdapter.setItemsClickable(true);
                         if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
                             mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
                                     .setTitle("Error") // TODO string
@@ -750,6 +752,17 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void initializeDialogs() {
+        // Loading dialog
+        mLoadingDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface iDialog, int iWhich) {
+                iDialog.dismiss();
+                onBackPressed();
+            }
+        });
+        mLoadingDialog.setTitle("Loading..."); // TODO : strings
+        mLoadingDialog.create();
+
         // Reconnection dialog
         mReconnectDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
             @Override
@@ -775,17 +788,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mLargeDirDialog.setCancelable(false);
         mLargeDirDialog.setTitle("Large directory"); // TODO : strings
         mLargeDirDialog.create();
-
-        // Loading dialog
-        mLoadingDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface iDialog, int iWhich) {
-                iDialog.dismiss();
-                onBackPressed();
-            }
-        });
-        mLoadingDialog.setTitle("Loading..."); //TODO : strings
-        mLoadingDialog.create();
 
         mCancelingDialog = new ProgressDialog(this);
         mCancelingDialog.setContentView(R.layout.loading_icon);
@@ -942,6 +944,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void createFolder(String iName) {
+
         mFTPServices.createDirectory(mDirectoryPath, iName, new FTPServices.IOnCreateDirectoryResult() {
             @Override
             public void onSuccess(final FTPFile iNewDirectory) {
@@ -991,19 +994,64 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
-    private void downloadFile(FTPFile[] iSelectedFiles) {
+    private void downloadFile(final FTPFile[] iSelectedFiles) {
         LogManager.info(TAG, "Download file");
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
 
+        mFTPServices.indexingPendingFilesProcedure(iSelectedFiles, new FTPServices.IOnIndexingPendingFilesListener() {
 
-        mFTPServices.createPendingFilesProcedure(iSelectedFiles, new FTPServices.IOnCreatePendingFilesResult() {
+            TextView mIndexingFileText;
+
+            @Override
+            public void onStart() {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
+                        View mIndexingPendingFilesView = View.inflate(FTPNavigationActivity.this,
+                                R.layout.dialog_indexing_progress, null);
+
+                        mIndexingFileText = mIndexingPendingFilesView.findViewById(R.id.dialog_indexing_file);
+
+                        lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface iDialog, int iWhich) {
+                                iDialog.dismiss();
+                                mFTPServices.abortIndexingPendingFiles();
+                            }
+                        });
+
+                        lBuilder.setView(mIndexingPendingFilesView);
+                        lBuilder.setMessage("Indexing files..."); // TODO : strings
+                        mIndexingPendingFilesDialog = lBuilder.create();
+                        mIndexingPendingFilesDialog.show();
+                    }
+                });
+            }
+
+            @Override
+            public void onNewIndexedFile(final PendingFile iPendingFile) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mIndexingFileText.setText(iPendingFile.getPath());
+                    }
+                });
+            }
+
             @Override
             public void onResult(boolean isSuccess, PendingFile[] iPendingFiles) {
+                if (mIndexingPendingFilesDialog != null)
+                    mIndexingPendingFilesDialog.cancel();
+
                 LogManager.debug(TAG, "Creating pending file result : " + isSuccess);
                 LogManager.debug(TAG, "Listing all PendingFile : ");
 
-                for (PendingFile lItem : iPendingFiles) {
-                    LogManager.debug(TAG, lItem.toString());
+                if (isSuccess) {
+                    for (PendingFile lItem : iPendingFiles) {
+                        LogManager.debug(TAG, lItem.toString());
+                    }
                 }
             }
         });
@@ -1056,7 +1104,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                         lBuilder.setView(lDialogDoubleProgress);
                         lBuilder.setCancelable(false);
-                        lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() { // TODO : Strings
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_STOP_DELETING);
@@ -1224,12 +1272,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void dismissAllDialogs() {
+        if (mLoadingDialog != null)
+            mLoadingDialog.cancel();
+        if (mIndexingPendingFilesDialog != null)
+            mIndexingPendingFilesDialog.cancel();
         if (mReconnectDialog != null)
             mReconnectDialog.cancel();
         if (mLargeDirDialog != null)
             mLargeDirDialog.cancel();
-        if (mLoadingDialog != null)
-            mLoadingDialog.cancel();
         if (mErrorAlertDialog != null)
             mErrorAlertDialog.cancel();
         if (mDownloadingConfirmationDialog != null)

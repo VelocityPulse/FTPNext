@@ -77,7 +77,7 @@ public class FTPServices extends AFTPConnection {
             if (isDeletingFiles() && !isReconnecting())
                 abortDeleting();
             if (isCreatingPendingFiles())
-                abortCreatingPendingFiles();
+                abortIndexingPendingFiles();
             super.disconnect();
         }
     }
@@ -109,7 +109,7 @@ public class FTPServices extends AFTPConnection {
             mDirectoryFetchThread.interrupt();
     }
 
-    public void abortCreatingPendingFiles() {
+    public void abortIndexingPendingFiles() {
         LogManager.info(TAG, "Abort creating pending files");
 
         if (isCreatingPendingFiles())
@@ -417,7 +417,7 @@ public class FTPServices extends AFTPConnection {
         mDeleteFileThread.start();
     }
 
-    public void createPendingFilesProcedure(final FTPFile[] iSelectedFiles, IOnCreatePendingFilesResult iOnResult) {
+    public void indexingPendingFilesProcedure(final FTPFile[] iSelectedFiles, IOnIndexingPendingFilesListener iOnResult) {
         LogManager.info(TAG, "Create pending files procedure");
         if (!isConnected()) {
             LogManager.error(TAG, "Is not connected");
@@ -433,7 +433,7 @@ public class FTPServices extends AFTPConnection {
             return;
         }
 
-        createPendingFiles(
+        indexingPendingFiles(
                 mFTPServer.getDataBaseId(),
                 iSelectedFiles,
                 null,
@@ -441,9 +441,9 @@ public class FTPServices extends AFTPConnection {
                 iOnResult);
     }
 
-    private void createPendingFiles(
+    private void indexingPendingFiles(
             final int iServerId, final FTPFile[] iSelectedFiles, final String iEnclosureName,
-            final LoadDirection iLoadDirection, final IOnCreatePendingFilesResult iOnResult) {
+            final LoadDirection iLoadDirection, @NotNull final IOnIndexingPendingFilesListener iIndexingListener) {
 
         LogManager.info(TAG, "Create pending files");
         final List<PendingFile> oPendingFiles = new ArrayList<>();
@@ -453,10 +453,12 @@ public class FTPServices extends AFTPConnection {
             @Override
             public void run() {
 
+                iIndexingListener.onStart();
+
                 // While on the selected files visible by the user
                 for (FTPFile lItem : iSelectedFiles) {
                     if (Thread.interrupted()) {
-                        iOnResult.onResult(false, null);
+                        iIndexingListener.onResult(false, null);
                         return;
                     }
                     if (lItem.isDirectory()) {
@@ -465,25 +467,27 @@ public class FTPServices extends AFTPConnection {
                         // Because iRelativePathToDirectory is used to move in the hierarchy
                         recursiveFolder(lItem, lItem.getName());
                         if (Thread.interrupted()) {
-                            iOnResult.onResult(false, null);
+                            iIndexingListener.onResult(false, null);
                             return;
                         }
                     } else {
-                        oPendingFiles.add(new PendingFile(
+                        PendingFile lPendingFile = new PendingFile(
                                 iServerId,
                                 iLoadDirection,
                                 false,
                                 mCurrentDirectory.getName() + "/" + lItem.getName(),
                                 null
-                        ));
+                        );
+                        oPendingFiles.add(lPendingFile);
+                        iIndexingListener.onNewIndexedFile(lPendingFile);
                     }
                 }
 
                 if (Thread.interrupted()) {
-                    iOnResult.onResult(false, null);
+                    iIndexingListener.onResult(false, null);
                     return;
                 }
-                iOnResult.onResult(true, oPendingFiles.toArray(new PendingFile[0]));
+                iIndexingListener.onResult(true, oPendingFiles.toArray(new PendingFile[0]));
             }
 
             private void recursiveFolder(FTPFile iDirectory, String iRelativePathToDirectory) {
@@ -495,8 +499,9 @@ public class FTPServices extends AFTPConnection {
                 if (Thread.interrupted())
                     return;
 
-                FTPFile[] lFilesOfFolder = new FTPFile[0];
+                FTPFile[] lFilesOfFolder;
 
+                // TODO : Curious bug. Function not responding
                 try {
 //                    LogManager.debug(TAG, "list file   : " + mCurrentDirectory.getName() + "/" + iRelativePathToDirectory);
 //                    LogManager.debug(TAG, "list file 2 : " + iDirectory.getName());
@@ -506,14 +511,16 @@ public class FTPServices extends AFTPConnection {
                     if (Thread.interrupted())
                         return;
                 } catch (IOException iE) {
+                    mCreatePendingFilesThread.interrupt();
                     iE.printStackTrace();
+                    return;
                 }
 
                 for (FTPFile lItem : lFilesOfFolder) {
 
                     if (lItem.isDirectory()) {
                         // Adding a directory to the relative path to directory
-                        recursiveFolder(lItem, iRelativePathToDirectory + "/" + lItem.getName());
+                        recursiveFolder(lItem, iRelativePathToDirectory + "/" + lItem.getName() + "/");
                         if (Thread.interrupted())
                             return;
 
@@ -521,13 +528,15 @@ public class FTPServices extends AFTPConnection {
 //                        LogManager.debug(TAG, "Adding file :\t" + lItem.getName());
 //                        LogManager.debug(TAG, "Adding path :" + mCurrentDirectory.getName() + "/" + iRelativePathToDirectory + lItem.getName());
 //                        LogManager.debug(TAG, "Adding for iEnclosureName:\t" + iRelativePathToDirectory);
-                        oPendingFiles.add(new PendingFile(
+                        PendingFile lPendingFile = new PendingFile(
                                 iServerId,
                                 iLoadDirection,
                                 false,
                                 mCurrentDirectory.getName() + "/" + iRelativePathToDirectory + lItem.getName(),
                                 iRelativePathToDirectory
-                        ));
+                        );
+                        oPendingFiles.add(lPendingFile);
+                        iIndexingListener.onNewIndexedFile(lPendingFile);
                     }
                 }
             }
@@ -598,7 +607,11 @@ public class FTPServices extends AFTPConnection {
         void onFail(ErrorCodeDescription iErrorEnum, int iErrorCode);
     }
 
-    public interface IOnCreatePendingFilesResult {
+    public interface IOnIndexingPendingFilesListener {
+
+        void onStart();
+
+        void onNewIndexedFile(PendingFile iPendingFile);
 
         void onResult(boolean isSuccess, PendingFile[] iPendingFiles);
 
