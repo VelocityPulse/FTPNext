@@ -14,6 +14,14 @@ import java.util.Locale;
 
 public final class Utils {
 
+    public static void sleep(long iMillis) {
+        try {
+            Thread.sleep(iMillis);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void hideKeyboard(Activity iActivity) {
         InputMethodManager lImm = (InputMethodManager) iActivity.getSystemService(Activity.INPUT_METHOD_SERVICE);
         //Find the currently focused view, so we can grab the correct window token from it.

@@ -1005,6 +1005,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
             @Override
             public void onStart() {
+                LogManager.info(TAG, "Indexing listener : On start");
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -1026,7 +1027,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                         lBuilder.setCancelable(false);
                         lBuilder.setView(mIndexingPendingFilesView);
-                        lBuilder.setMessage("Indexing files..."); // TODO : strings
+                        lBuilder.setMessage("Indexing files :"); // TODO : strings
                         mIndexingPendingFilesDialog = lBuilder.create();
                         mIndexingPendingFilesDialog.show();
                     }
@@ -1056,18 +1057,21 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
             @Override
             public void onResult(boolean isSuccess, PendingFile[] iPendingFiles) {
+                LogManager.info(TAG, "Indexing : On result");
                 if (mIndexingPendingFilesDialog != null)
                     mIndexingPendingFilesDialog.cancel();
+                if (!isSuccess)
+                    return;
 
-//                LogManager.debug(TAG, "Creating pending file result : " + isSuccess);
-//                LogManager.debug(TAG, "Listing all PendingFile : ");
+                LogManager.debug(TAG, "Creating pending file result : " + isSuccess);
 
-                if (isSuccess) {
-                    for (PendingFile lItem : iPendingFiles) {
-                        LogManager.debug(TAG, lItem.getPath());
-//                        LogManager.debug(TAG, lItem.toString());
-                    }
-                }
+//                if (isSuccess) {
+//                    for (PendingFile lItem : iPendingFiles) {
+//                        LogManager.debug(TAG, lItem.getPath());
+//                    }
+//                }
+                LogManager.debug(TAG, "Listing " + iPendingFiles.length + " PendingFile ");
+
             }
         });
 
