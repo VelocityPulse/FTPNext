@@ -469,7 +469,7 @@ public class FTPServices extends AFTPConnection {
                         // Passing the folder and the folder name as the relative path to directory
                         // In recursive folder, it can't be lItem.getName() to iEnclosureName
                         // Because iRelativePathToDirectory is used to move in the hierarchy
-                        recursiveFolder(lItem, lItem.getName());
+                        recursiveFolder(lItem.getName());
 
                         LogManager.error(TAG, "is interrupted1 : " + Thread.interrupted());
                         if (Thread.interrupted()) {
@@ -481,6 +481,7 @@ public class FTPServices extends AFTPConnection {
                                 iServerId,
                                 iLoadDirection,
                                 false,
+                                lItem.getName(),
                                 mCurrentLocation+ "/" + lItem.getName(),
                                 null
                         );
@@ -497,7 +498,7 @@ public class FTPServices extends AFTPConnection {
                 iIndexingListener.onResult(true, oPendingFiles.toArray(new PendingFile[0]));
             }
 
-            private void recursiveFolder(FTPFile iDirectory, String iRelativePathToDirectory) {
+            private void recursiveFolder(String iRelativePathToDirectory) {
                 LogManager.info(TAG, "Recursive create pending files");
 
                 FTPFile[] lFilesOfFolder;
@@ -505,11 +506,11 @@ public class FTPServices extends AFTPConnection {
                 if (Thread.interrupted())
                     return;
 
-                // TODO : Curious bug. Function not responding
                 try {
                     // Necessary to use iRelativePathToDirectory because iDirectory always represents
                     // the directory name, and not his own sub path
-                    lFilesOfFolder = mFTPClient.listFiles(mCurrentDirectory.getName() + "/" + iRelativePathToDirectory);
+                    iIndexingListener.onFetchingFolder(mCurrentLocation + "/" + iRelativePathToDirectory + "/");
+                    lFilesOfFolder = mFTPClient.listFiles(mCurrentLocation + "/" + iRelativePathToDirectory);
                     if (Thread.interrupted())
                         return;
                 } catch (IOException iE) {
@@ -523,23 +524,26 @@ public class FTPServices extends AFTPConnection {
 
                     if (lItem.isDirectory()) {
                         // Adding a directory to the relative path to directory
-                        recursiveFolder(lItem, iRelativePathToDirectory + "/" + lItem.getName());
+                        recursiveFolder(iRelativePathToDirectory + "/" + lItem.getName());
 
                         if (Thread.interrupted())
                             return;
 
                     } else {
-//                        LogManager.debug(TAG, "Adding file :\t" + lItem.getName());
-//                        LogManager.debug(TAG, "Adding path :" + mCurrentDirectory.getName() + "/" + iRelativePathToDirectory + lItem.getName());
-//                        LogManager.debug(TAG, "Adding for iEnclosureName:\t" + iRelativePathToDirectory);
                         PendingFile lPendingFile = new PendingFile(
                                 iServerId,
                                 iLoadDirection,
                                 false,
+                                lItem.getName(),
                                 mCurrentLocation + "/" + iRelativePathToDirectory + "/" + lItem.getName(),
                                 iRelativePathToDirectory
                         );
                         oPendingFiles.add(lPendingFile);
+                        try {
+                            Thread.sleep(1);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         iIndexingListener.onNewIndexedFile(lPendingFile);
                     }
                 }
@@ -614,6 +618,8 @@ public class FTPServices extends AFTPConnection {
     public interface IOnIndexingPendingFilesListener {
 
         void onStart();
+
+        void onFetchingFolder(String iPath);
 
         void onNewIndexedFile(PendingFile iPendingFile);
 

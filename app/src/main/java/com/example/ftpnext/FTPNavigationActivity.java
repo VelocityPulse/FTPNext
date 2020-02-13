@@ -1000,6 +1000,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         mFTPServices.indexingPendingFilesProcedure(iSelectedFiles, new FTPServices.IOnIndexingPendingFilesListener() {
 
+            TextView mIndexingFolderText;
             TextView mIndexingFileText;
 
             @Override
@@ -1012,6 +1013,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         View mIndexingPendingFilesView = View.inflate(FTPNavigationActivity.this,
                                 R.layout.dialog_indexing_progress, null);
 
+                        mIndexingFolderText = mIndexingPendingFilesView.findViewById(R.id.dialog_indexing_folder);
                         mIndexingFileText = mIndexingPendingFilesView.findViewById(R.id.dialog_indexing_file);
 
                         lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -1022,6 +1024,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             }
                         });
 
+                        lBuilder.setCancelable(false);
                         lBuilder.setView(mIndexingPendingFilesView);
                         lBuilder.setMessage("Indexing files..."); // TODO : strings
                         mIndexingPendingFilesDialog = lBuilder.create();
@@ -1031,11 +1034,22 @@ public class FTPNavigationActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onFetchingFolder(final String iPath) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mIndexingFolderText.setText(iPath);
+//                        mIndexingFileText.setText("");
+                    }
+                });
+            }
+
+            @Override
             public void onNewIndexedFile(final PendingFile iPendingFile) {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        mIndexingFileText.setText(iPendingFile.getPath());
+                        mIndexingFileText.setText(iPendingFile.getName());
                     }
                 });
             }

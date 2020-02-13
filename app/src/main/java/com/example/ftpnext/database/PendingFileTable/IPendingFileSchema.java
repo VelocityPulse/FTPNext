@@ -9,8 +9,9 @@ public interface IPendingFileSchema {
     String COLUMN_SERVER_ID = "column_server_id";
     String COLUMN_LOAD_DIRECTION = "column_load_direction";
     String COLUMN_STARTED = "column_started";
+    String COLUMN_NAME = "column_name";
     String COLUMN_PATH = "column_path";
-    String COLUMN_ENCLOSING_NAME = "column_is_folder";
+    String COLUMN_ENCLOSING_NAME = "column_enclosing_name";
 
     //Columns list
     String[] COLUMNS = new String[]{
@@ -18,6 +19,7 @@ public interface IPendingFileSchema {
             COLUMN_SERVER_ID,
             COLUMN_LOAD_DIRECTION,
             COLUMN_STARTED,
+            COLUMN_NAME,
             COLUMN_PATH,
             COLUMN_ENCLOSING_NAME
     };
@@ -28,6 +30,7 @@ public interface IPendingFileSchema {
             + COLUMN_SERVER_ID + " INTEGER, "
             + COLUMN_LOAD_DIRECTION + " INTEGER, "
             + COLUMN_STARTED + " INTEGER, "
+            + COLUMN_NAME + " TEXT, "
             + COLUMN_PATH + " TEXT, "
             + COLUMN_ENCLOSING_NAME + " TEXT"
             + ")";

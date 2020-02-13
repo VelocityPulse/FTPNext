@@ -1,7 +1,6 @@
 package com.example.ftpnext.database.PendingFileTable;
 
 import android.support.annotation.NonNull;
-import android.view.View;
 
 import com.example.ftpnext.core.LoadDirection;
 import com.example.ftpnext.database.ABaseTable;
@@ -13,18 +12,21 @@ public class PendingFile extends ABaseTable {
     private int mServerId;
     private LoadDirection mLoadDirection;
     private boolean mStarted;
+    private String mName;
     private String mPath;
-    private String mEnclosureName;
+    private String mEnclosingName;
 
     public PendingFile() {
     }
 
-    public PendingFile(int iServerId, LoadDirection iLoadDirection, boolean iStarted, String iPath, String iEnclosureName) {
+    public PendingFile(int iServerId, LoadDirection iLoadDirection, boolean iStarted,
+                       String iName, String iPath, String iEnclosureName) {
         mServerId = iServerId;
         mLoadDirection = iLoadDirection;
         mStarted = iStarted;
+        mName = iName;
         mPath = iPath;
-        mEnclosureName = iEnclosureName;
+        mEnclosingName = iEnclosureName;
     }
 
     public int getServerId() {
@@ -51,6 +53,14 @@ public class PendingFile extends ABaseTable {
         mStarted = iStarted;
     }
 
+    public String getName() {
+        return mName;
+    }
+
+    public void setName(String iName) {
+        mName = iName;
+    }
+
     public String getPath() {
         return mPath;
     }
@@ -59,12 +69,12 @@ public class PendingFile extends ABaseTable {
         mPath = iPath;
     }
 
-    public String getEnclosureName() {
-        return mEnclosureName;
+    public String getEnclosingName() {
+        return mEnclosingName;
     }
 
     public void setEnclosureName(String iEnclosureName) {
-        mEnclosureName = iEnclosureName;
+        mEnclosingName = iEnclosureName;
     }
 
     @Override
@@ -81,7 +91,7 @@ public class PendingFile extends ABaseTable {
                 ", LoadDirection: " + mLoadDirection.toString() +
                 ", Started: " + mStarted +
                 "\nPath:\t\t\t" + mPath +
-                "\nEnclosureName:\t" + mEnclosureName;
+                "\nEnclosureName:\t" + mEnclosingName;
         return oToString;
     }
 }
