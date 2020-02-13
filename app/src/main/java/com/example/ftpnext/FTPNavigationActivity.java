@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.view.ViewCompat;
@@ -1058,24 +1059,18 @@ public class FTPNavigationActivity extends AppCompatActivity {
             @Override
             public void onResult(boolean isSuccess, PendingFile[] iPendingFiles) {
                 LogManager.info(TAG, "Indexing : On result");
-                if (mIndexingPendingFilesDialog != null)
-                    mIndexingPendingFilesDialog.cancel();
                 if (!isSuccess)
                     return;
 
-                LogManager.debug(TAG, "Creating pending file result : " + isSuccess);
+                DataBase.getPendingFileDAO().add(iPendingFiles);
 
-//                if (isSuccess) {
-//                    for (PendingFile lItem : iPendingFiles) {
-//                        LogManager.debug(TAG, lItem.getPath());
-//                    }
-//                }
-                LogManager.debug(TAG, "Listing " + iPendingFiles.length + " PendingFile ");
+                if (mIndexingPendingFilesDialog != null)
+                    mIndexingPendingFilesDialog.cancel();
+
+                PendingFile[] lol = DataBase.getPendingFileDAO().fetchAll().toArray(new PendingFile[0]);
 
             }
         });
-
-        //DataBase.getPendingFileDAO().add(lPendingFiles);
     }
 
     private void createDialogDeleteSelection() {
