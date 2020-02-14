@@ -29,6 +29,7 @@ public class AppCore {
         mApplicationStarted = true;
     }
 
+    // TODO : Maybe remove this
     public static DataBase getDataBase() {
         return mDataBase;
     }

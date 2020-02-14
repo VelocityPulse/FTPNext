@@ -31,8 +31,6 @@ public class DataBase {
     private static DataBase sSingleton = null;
     private static boolean sDataBaseIsOpen = false;
 
-    private DataBaseOpenHelper mDataBaseOpenHelper;
-
     private DataBase() {
     }
 
@@ -80,7 +78,7 @@ public class DataBase {
         lTableSchemaToCreate.add(IFTPServerSchema.TABLE_CREATE);
         lTableSchemaToCreate.add(IPendingFileSchema.TABLE_CREATE);
 
-        mDataBaseOpenHelper = new DataBaseOpenHelper(iContext, lTableSchemaToCreate);
+        DataBaseOpenHelper mDataBaseOpenHelper = new DataBaseOpenHelper(iContext, lTableSchemaToCreate);
         SQLiteDatabase lDataBase = mDataBaseOpenHelper.getWritableDatabase();
 
         //DAO list

@@ -2,8 +2,10 @@ package com.example.ftpnext.ftpservices;
 
 import com.example.ftpnext.commons.FTPFileUtils;
 import com.example.ftpnext.commons.Utils;
+import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LoadDirection;
 import com.example.ftpnext.core.LogManager;
+import com.example.ftpnext.core.NetworkManager;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.PendingFileTable.PendingFile;
 
@@ -471,7 +473,6 @@ public class FTPServices extends AFTPConnection {
                         // Because iRelativePathToDirectory is used to move in the hierarchy
                         recursiveFolder(lItem.getName());
 
-                        LogManager.error(TAG, "is interrupted1 : " + mIndexingFilesThread.isInterrupted());
                         if (mIndexingFilesThread.isInterrupted()) {
                             iIndexingListener.onResult(false, null);
                             return;
@@ -490,7 +491,6 @@ public class FTPServices extends AFTPConnection {
                     }
                 }
 
-                LogManager.error(TAG, "is interrupted2 : " + mIndexingFilesThread.isInterrupted());
                 if (mIndexingFilesThread.isInterrupted()) {
                     iIndexingListener.onResult(false, null);
                     return;
@@ -523,8 +523,11 @@ public class FTPServices extends AFTPConnection {
                             return;
                     } catch (IOException iE) {
                         LogManager.error(TAG, "Interruption");
+                        if (!isConnected() || AppCore.getNetworkManager().isNetworkAvailable()) {
+                            mIndexingFilesThread.interrupt();
+                            return;
+                        }
                         iE.printStackTrace();
-//                      mIndexingFilesThread.interrupt();
 //                      return;
                     }
                 }
