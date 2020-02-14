@@ -3,25 +3,19 @@ package com.example.ftpnext.ftpservices;
 import android.net.Network;
 
 import com.example.ftpnext.core.AppCore;
-import com.example.ftpnext.core.LoadDirection;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.core.NetworkManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
-import com.example.ftpnext.database.PendingFileTable.PendingFile;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 // TODO : Download save when app is killed
 
@@ -125,7 +119,7 @@ public abstract class AFTPConnection {
         }
     }
 
-    public void reconnect(final IOnConnectionRecover iOnConnectionRecover) {
+    public void reconnect(final OnConnectionRecover onConnectionRecover) {
         LogManager.info(TAG, "Reconnect");
         mAbortReconnect = false;
 
@@ -145,12 +139,12 @@ public abstract class AFTPConnection {
 
                 while (!isConnected() && !mAbortReconnect) {
                     if (!isConnecting()) {
-                        connect(new IOnConnectionResult() {
+                        connect(new OnConnectionResult() {
                             @Override
                             public void onSuccess() {
                                 LogManager.info(TAG, "Reconnect success");
-                                if (iOnConnectionRecover != null) {
-                                    iOnConnectionRecover.onConnectionRecover();
+                                if (onConnectionRecover != null) {
+                                    onConnectionRecover.onConnectionRecover();
                                 }
                             }
 
@@ -158,7 +152,7 @@ public abstract class AFTPConnection {
                             public void onFail(ErrorCodeDescription iErrorEnum, int iErrorCode) {
                                 LogManager.info(TAG, "Reconnect fail");
                                 if (iErrorEnum == ErrorCodeDescription.ERROR_FAILED_LOGIN) {
-                                    iOnConnectionRecover.onConnectionDenied(iErrorEnum,
+                                    onConnectionRecover.onConnectionDenied(iErrorEnum,
                                             iErrorCode);
                                     mAbortReconnect = true;
                                 }
@@ -190,29 +184,28 @@ public abstract class AFTPConnection {
         }
     }
 
-
-    public void connect(final IOnConnectionResult iOnConnectionResult) {
+    public void connect(final OnConnectionResult onConnectionResult) {
         LogManager.info(TAG, "Connect");
         if (isConnected()) {
             LogManager.error(TAG, "Trying a connection but is already connected");
             new Exception("already connected").printStackTrace();
-            if (iOnConnectionResult != null)
-                iOnConnectionResult.onFail(ErrorCodeDescription.ERROR_ALREADY_CONNECTED,
+            if (onConnectionResult != null)
+                onConnectionResult.onFail(ErrorCodeDescription.ERROR_ALREADY_CONNECTED,
                         FTPReply.CANNOT_OPEN_DATA_CONNECTION);
             return;
         } else if (isConnecting()) {
             LogManager.error(TAG, "Trying a connection but is already connecting");
             new Exception("already connecting").printStackTrace();
-            if (iOnConnectionResult != null)
-                iOnConnectionResult.onFail(ErrorCodeDescription.ERROR_ALREADY_CONNECTING,
+            if (onConnectionResult != null)
+                onConnectionResult.onFail(ErrorCodeDescription.ERROR_ALREADY_CONNECTING,
                         FTPReply.CANNOT_OPEN_DATA_CONNECTION);
             return;
         }
 
         if (!AppCore.getNetworkManager().isNetworkAvailable()) {
             LogManager.error(TAG, "Connection : Network not available");
-            if (iOnConnectionResult != null)
-                iOnConnectionResult.onFail(ErrorCodeDescription.ERROR_NO_INTERNET,
+            if (onConnectionResult != null)
+                onConnectionResult.onFail(ErrorCodeDescription.ERROR_NO_INTERNET,
                         FTPReply.CANNOT_OPEN_DATA_CONNECTION);
             return;
         }
@@ -228,8 +221,8 @@ public abstract class AFTPConnection {
                     mFTPClient.setSoTimeout(15000); // 15s
                     if (Thread.interrupted()) {
                         mFTPClient.disconnect();
-                        if (iOnConnectionResult != null)
-                            iOnConnectionResult.onFail(ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED,
+                        if (onConnectionResult != null)
+                            onConnectionResult.onFail(ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED,
                                     426);
                         return;
                     }
@@ -237,8 +230,8 @@ public abstract class AFTPConnection {
                     mFTPClient.login(mFTPServer.getUser(), mFTPServer.getPass());
                     if (Thread.interrupted()) {
                         mFTPClient.disconnect();
-                        if (iOnConnectionResult != null)
-                            iOnConnectionResult.onFail(ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED,
+                        if (onConnectionResult != null)
+                            onConnectionResult.onFail(ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED,
                                     426);
                         return;
                     }
@@ -247,12 +240,12 @@ public abstract class AFTPConnection {
                         LogManager.info(TAG, "FTPClient code : " + mFTPClient.getReplyCode());
                         mFTPClient.disconnect();
                         LogManager.error(TAG, "FTP server refused connection.");
-                        if (iOnConnectionResult != null) {
+                        if (onConnectionResult != null) {
                             if (mFTPClient.getReplyCode() == FTPReply.NOT_LOGGED_IN)
-                                iOnConnectionResult.onFail(ErrorCodeDescription.ERROR_FAILED_LOGIN,
+                                onConnectionResult.onFail(ErrorCodeDescription.ERROR_FAILED_LOGIN,
                                         mFTPClient.getReplyCode());
                             else
-                                iOnConnectionResult.onFail(ErrorCodeDescription.ERROR,
+                                onConnectionResult.onFail(ErrorCodeDescription.ERROR,
                                         mFTPClient.getReplyCode());
                         }
                         return;
@@ -264,22 +257,22 @@ public abstract class AFTPConnection {
                     if (isConnected()) {
                         startReplyStatusThread();
                         LogManager.info(TAG, "FTPClient connected");
-                        if (iOnConnectionResult != null)
-                            iOnConnectionResult.onSuccess();
+                        if (onConnectionResult != null)
+                            onConnectionResult.onSuccess();
                     } else
                         LogManager.error(TAG, "FTPClient not connected");
                 } catch (UnknownHostException iE) {
                     iE.printStackTrace();
-                    if (iOnConnectionResult != null)
-                        iOnConnectionResult.onFail(ErrorCodeDescription.ERROR_UNKNOWN_HOST,
+                    if (onConnectionResult != null)
+                        onConnectionResult.onFail(ErrorCodeDescription.ERROR_UNKNOWN_HOST,
                                 mFTPClient.getReplyCode());
-//                      iOnConnectionResult.onFail(ErrorCodeDescription.ERROR_UNKNOWN_HOST, 434);
+//                      onConnectionResult.onFail(ErrorCodeDescription.ERROR_UNKNOWN_HOST, 434);
                 } catch (Exception iE) {
                     iE.printStackTrace();
-                    if (iOnConnectionResult != null)
-                        iOnConnectionResult.onFail(ErrorCodeDescription.ERROR,
+                    if (onConnectionResult != null)
+                        onConnectionResult.onFail(ErrorCodeDescription.ERROR,
                                 mFTPClient.getReplyCode());
-//                      iOnConnectionResult.onFail(ErrorCodeDescription.ERROR, FTPReply.UNRECOGNIZED_COMMAND);
+//                      onConnectionResult.onFail(ErrorCodeDescription.ERROR, FTPReply.UNRECOGNIZED_COMMAND);
                 }
             }
         });
@@ -355,7 +348,7 @@ public abstract class AFTPConnection {
         ERROR_READ_PERMISSION_MISSED,
     }
 
-    public interface IOnConnectionResult {
+    public interface OnConnectionResult {
         void onSuccess();
 
         void onFail(ErrorCodeDescription iErrorEnum, int iErrorCode);
@@ -365,7 +358,7 @@ public abstract class AFTPConnection {
         void onConnectionLost();
     }
 
-    public interface IOnConnectionRecover {
+    public interface OnConnectionRecover {
         void onConnectionRecover();
 
         void onConnectionDenied(ErrorCodeDescription iErrorEnum, int iErrorCode);

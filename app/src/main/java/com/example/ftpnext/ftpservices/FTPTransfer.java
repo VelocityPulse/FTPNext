@@ -16,7 +16,10 @@ public class FTPTransfer extends AFTPConnection {
 
     private static List<FTPTransfer> sFTPTransferInstances;
 
-    private Thread mDownloadThread;
+    private OnTransferListener mTransferListener;
+    private PendingFile mCandidate;
+
+    private Thread mTransferThread;
 
     public FTPTransfer(FTPServer iFTPServer) {
         super(iFTPServer);
@@ -34,38 +37,87 @@ public class FTPTransfer extends AFTPConnection {
         sFTPTransferInstances.add(this);
     }
 
-    public static FTPTransfer getFTPTransferInstance(int iServerId) {
+    public static FTPTransfer[] getFTPTransferInstance(int iServerId) {
         LogManager.info(TAG, "Get FTP transfer instance");
         if (sFTPTransferInstances == null)
             sFTPTransferInstances = new ArrayList<>();
 
-        for (FTPTransfer lFTPTransfer : sFTPTransferInstances) {
-            if (lFTPTransfer.getFTPServerId() == iServerId)
-                return lFTPTransfer;
+        List<FTPTransfer> lFTPTransferList = new ArrayList<>();
+        for (FTPTransfer lItem : sFTPTransferInstances) {
+            if (lItem.getFTPServerId() == iServerId)
+                lFTPTransferList.add(lItem);
         }
-        return null;
+        return lFTPTransferList.toArray(new FTPTransfer[0]);
     }
 
+    private void initializeListeners() {
+        setIOnConnectionLost(new IOnConnectionLost() {
+            @Override
+            public void onConnectionLost() {
+                if (mTransferListener != null)
+                    mTransferListener.onConnectionLost(mCandidate);
+
+                reconnect(new OnConnectionRecover() {
+                    @Override
+                    public void onConnectionRecover() {
+                        if (mTransferListener != null)
+                            mTransferListener.onConnected(mCandidate);
+                    }
+
+                    @Override
+                    public void onConnectionDenied(ErrorCodeDescription iErrorEnum, int iErrorCode) {
+                        if (mTransferListener != null)
+                            mTransferListener.onStop();
+                    }
+                });
+            }
+        });
+    }
 
     @Override
     public boolean isBusy() {
-        return false;
+        return mTransferThread != null;
     }
 
-    public void downloadFiles(final PendingFile[] iSelection, @NotNull final AOnDownloadListener iAOnDownloadListener) {
+    public void downloadFiles(final PendingFile[] iSelection, @NotNull final OnTransferListener iOnTransferListener) {
+        if (mTransferThread != null) {
+            LogManager.error(TAG, "Transfer not finished");
+            return;
+        }
 
-//        if (isDownloading) {
-//
-//        }
+        mTransferThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
 
-//        mCreatePendingFilesThread
+                synchronized (this) {
+                    for (PendingFile lItem : iSelection) {
+                        if (!lItem.isStarted()) {
+                            mCandidate = lItem;
+                            mCandidate.setStarted(true);
+                            break;
+                        }
+                    }
+                }
 
+                if (!isConnected()) {
+                    connect(null);
+                }
+                // TODO : Continue here / While on connect until it connects
+
+                mTransferListener = null;
+            }
+        });
+
+        mTransferThread.start();
     }
 
-
-    public abstract class AOnDownloadListener {
+    public abstract class OnTransferListener {
 
         public abstract void onStart();
+
+        public abstract void onConnected(PendingFile iPendingFile);
+
+        public abstract void onConnectionLost(PendingFile iPendingFile);
 
         public void onStartNewFile(PendingFile iPendingFile) {
             iPendingFile.setStarted(true);
@@ -76,7 +128,7 @@ public class FTPTransfer extends AFTPConnection {
 
         public abstract void onDownloadProgress(PendingFile iPendingFile, int iProgress, int iSize);
 
-        public void oNDownloadSuccess(PendingFile iPendingFile) {
+        public void onDownloadSuccess(PendingFile iPendingFile) {
             DataBase.getPendingFileDAO().delete(iPendingFile);
         }
 

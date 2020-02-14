@@ -15,6 +15,8 @@ public class PendingFile extends ABaseTable {
     private String mName;
     private String mPath;
     private String mEnclosingName;
+    private boolean finished;
+    private int mProgress;
 
     public PendingFile() {
     }

@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.view.ViewCompat;
@@ -97,8 +96,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private AlertDialog mErrorAlertDialog;
     private AlertDialog mCreateFolderDialog;
     private AlertDialog mIndexingPendingFilesDialog;
-    private AlertDialog mDownloadingConfirmationDialog;
-    private AlertDialog mDownloadingInfoDialog;
+    private AlertDialog mDownloadingDialog;
     private AlertDialog mDeletingInfoDialog;
     private AlertDialog mDeletingErrorDialog;
 
@@ -323,7 +321,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             dismissAllDialogs();
                         mReconnectDialog.show();
 
-                        mFTPServices.reconnect(new AFTPConnection.IOnConnectionRecover() {
+                        mFTPServices.reconnect(new AFTPConnection.OnConnectionRecover() {
                             @Override
                             public void onConnectionRecover() {
                                 mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_RECONNECT_SUCCESS);
@@ -980,14 +978,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
         if (lSelectedFiles.length == 0)
             createDialogError("Select something.").show();
         else {
-            mDownloadingInfoDialog = new AlertDialog.Builder(this)
+            mIndexingPendingFilesDialog = new AlertDialog.Builder(this)
                     .setTitle("Downloading :") // TODO : Strings
                     .setMessage("Do you confirm the download of " + lSelectedFiles.length + " files ?")
                     .setPositiveButton("yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface iDialog, int iWhich) {
                             iDialog.dismiss();
-                            downloadFile(lSelectedFiles);
+                            indexesFilesForDownload(lSelectedFiles);
                         }
                     })
                     .setNegativeButton("cancel", null)
@@ -995,7 +993,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
-    private void downloadFile(final FTPFile[] iSelectedFiles) {
+    private void indexesFilesForDownload(final FTPFile[] iSelectedFiles) {
         LogManager.info(TAG, "Download file");
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
 
@@ -1067,10 +1065,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 if (mIndexingPendingFilesDialog != null)
                     mIndexingPendingFilesDialog.cancel();
 
-                PendingFile[] lol = DataBase.getPendingFileDAO().fetchAll().toArray(new PendingFile[0]);
+                DownloadFiles(iPendingFiles);
 
             }
         });
+    }
+
+    private void DownloadFiles(PendingFile[] iPendingFiles) {
+//        mFTPServices.initDownload()
     }
 
     private void createDialogDeleteSelection() {
@@ -1296,10 +1298,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mLargeDirDialog.cancel();
         if (mErrorAlertDialog != null)
             mErrorAlertDialog.cancel();
-        if (mDownloadingConfirmationDialog != null)
-            mDownloadingConfirmationDialog.cancel();
-        if (mDownloadingInfoDialog != null)
-            mDownloadingInfoDialog.cancel();
+        if (mDownloadingDialog != null)
+            mDownloadingDialog.cancel();
         if (mDeletingInfoDialog != null)
             mDeletingInfoDialog.cancel();
         if (mDeletingErrorDialog != null)
@@ -1323,7 +1323,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mLoadingDialog.setTitle("Connection..."); // TODO : strings
         mLoadingDialog.show();
 
-        mFTPServices.connect(new AFTPConnection.IOnConnectionResult() {
+        mFTPServices.connect(new AFTPConnection.OnConnectionResult() {
             @Override
             public void onSuccess() {
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);

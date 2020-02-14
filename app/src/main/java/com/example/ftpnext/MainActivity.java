@@ -246,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
 
         final FTPServices lNewFTPServices = new FTPServices(lFTPServer);
 
-        lNewFTPServices.connect(new AFTPConnection.IOnConnectionResult() {
+        lNewFTPServices.connect(new AFTPConnection.OnConnectionResult() {
             @Override
             public void onSuccess() {
                 Utils.cancelAlertDialogOnUIThread(MainActivity.this, lLoadingAlertDialog);

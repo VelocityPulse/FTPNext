@@ -440,14 +440,13 @@ public class FTPServices extends AFTPConnection {
         indexingPendingFiles(
                 mFTPServer.getDataBaseId(),
                 iSelectedFiles,
-                null,
                 LoadDirection.DOWNLOAD,
                 iOnResult);
     }
 
     private void indexingPendingFiles(
-            final int iServerId, final FTPFile[] iSelectedFiles, final String iEnclosureName,
-            final LoadDirection iLoadDirection, @NotNull final IOnIndexingPendingFilesListener iIndexingListener) {
+            final int iServerId, final FTPFile[] iSelectedFiles, final LoadDirection iLoadDirection,
+            @NotNull final IOnIndexingPendingFilesListener iIndexingListener) {
 
         LogManager.info(TAG, "Create pending files");
         final List<PendingFile> oPendingFiles = new ArrayList<>();
