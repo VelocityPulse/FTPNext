@@ -40,6 +40,7 @@ import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.example.ftpnext.database.PendingFileTable.PendingFile;
 import com.example.ftpnext.ftpservices.AFTPConnection;
 import com.example.ftpnext.ftpservices.FTPServices;
+import com.example.ftpnext.ftpservices.FTPTransfer;
 
 import org.apache.commons.net.ftp.FTPFile;
 
@@ -1072,7 +1073,38 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void DownloadFiles(PendingFile[] iPendingFiles) {
-//        mFTPServices.initDownload()
+
+        final FTPTransfer lFTPTransfer = new FTPTransfer(mFTPServer.getDataBaseId());
+
+        final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
+
+        View mDownloadingDialogView = View.inflate(FTPNavigationActivity.this,
+                R.layout.dialog_download_progress, null);
+
+//        mIndexingFolderText = mIndexingPendingFilesView.findViewById(R.id.dialog_indexing_folder);
+//        mIndexingFileText = mIndexingPendingFilesView.findViewById(R.id.dialog_indexing_file);
+
+        lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface iDialog, int iWhich) {
+                iDialog.dismiss();
+                lFTPTransfer.abortDownload();
+            }
+        });
+
+        lBuilder.setNeutralButton("Background", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface iDialog, int iWhich) {
+                iDialog.dismiss();
+            }
+        });
+
+        lBuilder.setCancelable(false);
+        lBuilder.setView(mDownloadingDialogView);
+        lBuilder.setMessage("Downloading ..."); // TODO : strings
+        mDownloadingDialog = lBuilder.create();
+        mDownloadingDialog.show();
+
     }
 
     private void createDialogDeleteSelection() {

@@ -148,7 +148,6 @@ public class FTPTransfer extends AFTPConnection {
         mTransferThread.start();
     }
 
-
     public void uploadFiles(final PendingFile[] iSelection, @NotNull final OnTransferListener iOnTransferListener) {
         // TODO : Guard of if it's not already downloading
     }
