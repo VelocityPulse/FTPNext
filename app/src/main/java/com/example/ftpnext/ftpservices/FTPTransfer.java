@@ -123,7 +123,7 @@ public class FTPTransfer extends AFTPConnection {
 
                     while (!isConnected()) {
                         LogManager.info(TAG, "Download files : Waiting connection");
-                        Utils.sleep(10);
+                        Utils.sleep(100);
 
                         if (mTransferThread.isInterrupted()) {
                             if (mCandidate != null && mCandidate.isStarted()) {
@@ -134,8 +134,13 @@ public class FTPTransfer extends AFTPConnection {
                         }
                     }
 
+                    iOnTransferListener.onConnected(mCandidate);
 
 
+
+
+
+                    // While end
                 }
             }
         });
@@ -154,7 +159,7 @@ public class FTPTransfer extends AFTPConnection {
         PendingFile oRet;
         synchronized (this) {
             for (PendingFile lItem : iSelection) {
-                if (!lItem.isStarted()) {
+                if (!lItem.isStarted() && !lItem.isFinished()) {
                     oRet = lItem;
                     oRet.setStarted(true);
                     LogManager.info(TAG, "Leaving select not started candidate");
