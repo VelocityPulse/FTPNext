@@ -18,7 +18,8 @@ import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerViewAdapter.CustomItemViewAdapter> {
+public class MainRecyclerViewAdapter extends
+        RecyclerView.Adapter<MainRecyclerViewAdapter.CustomItemViewAdapter> {
 
     private static final String TAG = "MAIN RECYCLER VIEW ADAPTER";
     private List<FTPServer> mItemList;
@@ -42,8 +43,8 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     @NonNull
     @Override
     public CustomItemViewAdapter onCreateViewHolder(@NonNull ViewGroup iViewGroup, int iI) {
-        LinearLayout lLayout = (LinearLayout) LayoutInflater.
-                from(iViewGroup.getContext()).inflate(R.layout.main_list_item, iViewGroup, false);
+        LinearLayout lLayout = (LinearLayout) LayoutInflater.from(iViewGroup.getContext()).inflate(
+                        R.layout.list_item_main, iViewGroup, false);
 
         return new CustomItemViewAdapter(lLayout,
                 (TextView) lLayout.findViewById(R.id.main_recycler_item_main_text),
@@ -161,7 +162,8 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         TextView mMainText;
         TextView mSecondaryText;
 
-        public CustomItemViewAdapter(@NonNull View iMainView, TextView iMainText, TextView iSecondaryText) {
+        public CustomItemViewAdapter(@NonNull View iMainView, TextView iMainText,
+                                     TextView iSecondaryText) {
             super(iMainView);
             mMainLayout = iMainView;
             mMainText = iMainText;

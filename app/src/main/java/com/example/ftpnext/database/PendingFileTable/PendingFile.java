@@ -3,6 +3,7 @@ package com.example.ftpnext.database.PendingFileTable;
 import android.support.annotation.NonNull;
 
 import com.example.ftpnext.core.LoadDirection;
+import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.ABaseTable;
 
 public class PendingFile extends ABaseTable {
@@ -108,6 +109,22 @@ public class PendingFile extends ABaseTable {
         mDataBaseId = iDataBaseId;
     }
 
+    public void updateContent(PendingFile iPendingFile) {
+        if (this == iPendingFile) {
+            LogManager.info(TAG, "Useless updating content");
+            return;
+        }
+
+        mServerId = iPendingFile.mServerId;
+        mLoadDirection = iPendingFile.mLoadDirection;
+        mStarted = iPendingFile.mStarted;
+        mName = iPendingFile.mName;
+        mPath = iPendingFile.mPath;
+        mEnclosingName = iPendingFile.mEnclosingName;
+        mFinished = iPendingFile.mFinished;
+        mProgress = iPendingFile.mProgress;
+    }
+
     @NonNull
     @Override
     public String toString() {
@@ -117,7 +134,9 @@ public class PendingFile extends ABaseTable {
                 ", LoadDirection: " + mLoadDirection.toString() +
                 ", Started: " + mStarted +
                 "\nPath:\t\t\t" + mPath +
-                "\nEnclosureName:\t" + mEnclosingName;
+                "\nEnclosureName:\t" + mEnclosingName +
+                "\nFinished: " + mFinished +
+                "\nmProgress: " + mProgress;
         return oToString;
     }
 }

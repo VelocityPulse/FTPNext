@@ -30,6 +30,7 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.example.ftpnext.adapters.NarrowTransferRecyclerViewAdapter;
 import com.example.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
@@ -101,13 +102,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private AlertDialog mDeletingInfoDialog;
     private AlertDialog mDeletingErrorDialog;
 
-    private Bundle mBundle;
+    private Handler mHandler;
 
     private boolean mIsFABOpen;
     private FloatingActionButton mMainFAB;
     private FloatingActionButton mCreateFolderFAB;
     private FloatingActionButton mUploadFileFAB;
-    private Handler mHandler;
 
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
@@ -153,10 +153,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         dismissAllDialogs();
 
+        if (mFTPServices != null && mFTPServices.isFetchingFolders())
+            mFTPServices.abortFetchDirectoryContent();
         if (mFTPServices != null)
             mFTPServices.destroyConnection();
-        else if (mFTPServices != null && mFTPServices.isFetchingFolders())
-            mFTPServices.abortFetchDirectoryContent();
 
         super.onDestroy();
     }
@@ -554,8 +554,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mDirectoryPath = mCurrentAdapter.getDirectoryPath();
     }
 
-
-    // TODO : Make a connection, then receive a call. Creates a disconnection bug
     private void inflateNewAdapter(FTPFile[] iFTPFiles, String iDirectoryPath, final boolean iForceVerticalAppear) {
         LogManager.info(TAG, "Inflate new adapter");
         SwipeRefreshLayout lSwipeRefreshLayout = (SwipeRefreshLayout) View.inflate(this, R.layout.navigation_recycler_layout, null);
@@ -572,6 +570,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 R.color.colorPrimaryDark);
 
         mRecyclerSection.addView(lSwipeRefreshLayout);
+
         RecyclerView lNewRecyclerView = lSwipeRefreshLayout.findViewById(R.id.navigation_recycler_view);
         lNewRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         final NavigationRecyclerViewAdapter lNewAdapter = new NavigationRecyclerViewAdapter(
@@ -582,9 +581,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 iDirectoryPath,
                 false);
 
-        DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
+        DividerItemDecoration lDividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
 
-        lNewRecyclerView.addItemDecoration(mDividerItemDecoration);
+        lNewRecyclerView.addItemDecoration(lDividerItemDecoration);
         lNewRecyclerView.setAdapter(lNewAdapter);
         lNewAdapter.setOnClickListener(new NavigationRecyclerViewAdapter.OnClickListener() {
             @Override
@@ -660,10 +659,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         mFTPServerDAO = DataBase.getFTPServerDAO();
 
-        mBundle = this.getIntent().getExtras();
+        Bundle lBundle = this.getIntent().getExtras();
 
         // Server ID
-        int lServerId = mBundle.getInt(KEY_DATABASE_ID);
+        int lServerId = lBundle.getInt(KEY_DATABASE_ID);
         if (lServerId != NO_DATABASE_ID) {
             mFTPServer = mFTPServerDAO.fetchById(lServerId);
         } else {
@@ -679,7 +678,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         // Directory path
         if (mDirectoryPath == null)
-            mDirectoryPath = mBundle.getString(KEY_DIRECTORY_PATH, ROOT_DIRECTORY);
+            mDirectoryPath = lBundle.getString(KEY_DIRECTORY_PATH, ROOT_DIRECTORY);
 
         // FTP Connection
         mFTPServices = FTPServices.getFTPServicesInstance(lServerId);
@@ -945,7 +944,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private void createFolder(String iName) {
 
-        mFTPServices.createDirectory(mDirectoryPath, iName, new FTPServices.IOnCreateDirectoryResult() {
+        mFTPServices.createDirectory(mDirectoryPath, iName, new FTPServices.OnCreateDirectoryResult() {
             @Override
             public void onSuccess(final FTPFile iNewDirectory) {
 
@@ -998,7 +997,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         LogManager.info(TAG, "Download file");
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
 
-        mFTPServices.indexingPendingFilesProcedure(iSelectedFiles, new FTPServices.IOnIndexingPendingFilesListener() {
+        mFTPServices.indexingPendingFilesProcedure(iSelectedFiles, new FTPServices.OnIndexingPendingFilesListener() {
 
             TextView mIndexingFolderText;
             TextView mIndexingFileText;
@@ -1073,16 +1072,25 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void DownloadFiles(PendingFile[] iPendingFiles) {
-
         final FTPTransfer lFTPTransfer = new FTPTransfer(mFTPServer.getDataBaseId());
+
 
         final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
 
-        View mDownloadingDialogView = View.inflate(FTPNavigationActivity.this,
+        View lDownloadingDialogView = View.inflate(FTPNavigationActivity.this,
                 R.layout.dialog_download_progress, null);
 
-//        mIndexingFolderText = mIndexingPendingFilesView.findViewById(R.id.dialog_indexing_folder);
-//        mIndexingFileText = mIndexingPendingFilesView.findViewById(R.id.dialog_indexing_file);
+        RecyclerView lNarrowTransferRecyclerView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_recycler_view);
+        lNarrowTransferRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        final NarrowTransferRecyclerViewAdapter lNarrowTransferAdapter = new NarrowTransferRecyclerViewAdapter(
+                this,
+                iPendingFiles,
+                lNarrowTransferRecyclerView);
+
+        DividerItemDecoration lDividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
+        lNarrowTransferRecyclerView.addItemDecoration(lDividerItemDecoration);
+
+        lNarrowTransferRecyclerView.setAdapter(lNarrowTransferAdapter);
 
         lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
@@ -1100,11 +1108,52 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
 
         lBuilder.setCancelable(false);
-        lBuilder.setView(mDownloadingDialogView);
+        lBuilder.setView(lDownloadingDialogView);
         lBuilder.setMessage("Downloading ..."); // TODO : strings
         mDownloadingDialog = lBuilder.create();
         mDownloadingDialog.show();
 
+        lFTPTransfer.downloadFiles(iPendingFiles, lFTPTransfer.new OnTransferListener() {
+            @Override
+            public void onConnected(PendingFile iPendingFile) {
+
+            }
+
+            @Override
+            public void onConnectionLost(PendingFile iPendingFile) {
+
+            }
+
+            @Override
+            public void onStartNewFile(PendingFile iPendingFile) {
+                lNarrowTransferAdapter.updatePendingFile(iPendingFile);
+            }
+
+            @Override
+            public void onDownloadProgress(PendingFile iPendingFile, int iProgress, int iSize) {
+                lNarrowTransferAdapter.updatePendingFile(iPendingFile);
+            }
+
+            @Override
+            public void onDownloadSuccess(PendingFile iPendingFile) {
+
+            }
+
+            @Override
+            public void onRightAccessFail(PendingFile iPendingFile) {
+
+            }
+
+            @Override
+            public void onFail(PendingFile iPendingFile) {
+
+            }
+
+            @Override
+            public void onStop() {
+
+            }
+        });
     }
 
     private void createDialogDeleteSelection() {
@@ -1129,7 +1178,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private void deleteFile(FTPFile[] iSelectedFiles) {
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
-        mFTPServices.deleteFiles(iSelectedFiles, mFTPServices.new AOnDeleteListener() {
+        mFTPServices.deleteFiles(iSelectedFiles, mFTPServices.new OnDeleteListener() {
 
             ProgressBar mProgressDirectory;
             ProgressBar mProgressSubDirectory;

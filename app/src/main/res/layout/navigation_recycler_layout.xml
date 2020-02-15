@@ -10,6 +10,6 @@
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
         android:orientation="vertical"
-        tools:listitem="@layout/navigation_list_item" />
+        tools:listitem="@layout/list_item_navigation" />
 
 </android.support.v4.widget.SwipeRefreshLayout>

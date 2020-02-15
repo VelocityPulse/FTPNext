@@ -5,13 +5,11 @@ import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
 import com.example.ftpnext.core.LoadDirection;
 import com.example.ftpnext.core.LogManager;
-import com.example.ftpnext.core.NetworkManager;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.PendingFileTable.PendingFile;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
-import org.apache.commons.net.io.Util;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -220,7 +218,7 @@ public class FTPServices extends AFTPConnection {
         mDirectoryFetchThread.start();
     }
 
-    public void createDirectory(final String iPath, final String iName, final IOnCreateDirectoryResult iOnCreateDirectoryResult) {
+    public void createDirectory(final String iPath, final String iName, final OnCreateDirectoryResult iOnCreateDirectoryResult) {
         if (!isConnected()) {
             LogManager.error(TAG, "Connection not established");
             return;
@@ -258,11 +256,11 @@ public class FTPServices extends AFTPConnection {
         mCreateDirectoryThread.start();
     }
 
-    public void deleteFile(FTPFile iFTPFile, @NotNull final AOnDeleteListener iAOnDeleteListener) {
-        deleteFiles(new FTPFile[]{iFTPFile}, iAOnDeleteListener);
+    public void deleteFile(FTPFile iFTPFile, @NotNull final OnDeleteListener iOnDeleteListener) {
+        deleteFiles(new FTPFile[]{iFTPFile}, iOnDeleteListener);
     }
 
-    public void deleteFiles(final FTPFile[] iSelection, @NotNull final AOnDeleteListener iAOnDeleteListener) {
+    public void deleteFiles(final FTPFile[] iSelection, @NotNull final OnDeleteListener iOnDeleteListener) {
         LogManager.info(TAG, "Delete files");
         if (!isConnected()) {
             LogManager.error(TAG, "Connection not established");
@@ -270,7 +268,7 @@ public class FTPServices extends AFTPConnection {
         } else if (isDeletingFiles()) {
             LogManager.error(TAG, "Is already deleting files");
             return;
-        } else if (iAOnDeleteListener == null) {
+        } else if (iOnDeleteListener == null) {
             LogManager.error(TAG, "Delete listener is null");
             new NullPointerException("Delete listener is null").printStackTrace();
             return;
@@ -292,7 +290,7 @@ public class FTPServices extends AFTPConnection {
 
                 if (iFTPFile.isDirectory()) {
 
-                    iAOnDeleteListener.onProgressDirectory(
+                    iOnDeleteListener.onProgressDirectory(
                             iProgress,
                             iTotal,
                             iFTPFile.getName());
@@ -303,7 +301,7 @@ public class FTPServices extends AFTPConnection {
                         FTPFile[] lFiles = mFTPClient.listFiles(iFTPFile.getName());
                         int lProgress = 0;
                         for (FTPFile lFile : lFiles) {
-                            iAOnDeleteListener.onProgressDirectory(
+                            iOnDeleteListener.onProgressDirectory(
                                     iProgress,
                                     iTotal,
                                     iFTPFile.getName());
@@ -317,12 +315,12 @@ public class FTPServices extends AFTPConnection {
                                 return;
                         }
 
-                        iAOnDeleteListener.onProgressDirectory(
+                        iOnDeleteListener.onProgressDirectory(
                                 iProgress,
                                 iTotal,
                                 iFTPFile.getName());
 
-                        iAOnDeleteListener.onProgressSubDirectory(
+                        iOnDeleteListener.onProgressSubDirectory(
                                 0,
                                 0,
                                 "");
@@ -337,18 +335,18 @@ public class FTPServices extends AFTPConnection {
                             boolean lReply = mFTPClient.removeDirectory(iFTPFile.getName());
 
                             if (!lReply && !mByPassDeletingFailErrors)
-                                iAOnDeleteListener.onFail(iFTPFile); // TODO : Watch folder error is not triggered !
+                                iOnDeleteListener.onFail(iFTPFile); // TODO : Watch folder error is not triggered !
 
                         } else if (!mByPassDeletingRightErrors)
-                            iAOnDeleteListener.onRightAccessFail(iFTPFile);
+                            iOnDeleteListener.onRightAccessFail(iFTPFile);
 
                     } else if (!mByPassDeletingRightErrors)
-                        iAOnDeleteListener.onRightAccessFail(iFTPFile);
+                        iOnDeleteListener.onRightAccessFail(iFTPFile);
 
                 } else if (iFTPFile.isFile()) {
                     // FILE
 
-                    iAOnDeleteListener.onProgressSubDirectory(
+                    iOnDeleteListener.onProgressSubDirectory(
                             iProgress,
                             iTotal,
                             FTPFileUtils.getFileName(iFTPFile));
@@ -358,10 +356,10 @@ public class FTPServices extends AFTPConnection {
                         boolean lReply = mFTPClient.deleteFile(iFTPFile.getName());
 
                         if (!lReply)
-                            iAOnDeleteListener.onFail(iFTPFile);
+                            iOnDeleteListener.onFail(iFTPFile);
                     } else if (!mByPassDeletingRightErrors) {
                         mPauseDeleting = true;
-                        iAOnDeleteListener.onRightAccessFail(iFTPFile);
+                        iOnDeleteListener.onRightAccessFail(iFTPFile);
                     }
                 }
             }
@@ -372,7 +370,7 @@ public class FTPServices extends AFTPConnection {
                 try {
                     mFTPClient.enterLocalPassiveMode(); // PASSIVE MODE
 
-                    iAOnDeleteListener.onStartDelete();
+                    iOnDeleteListener.onStartDelete();
 
                     int lProgress = 0;
                     for (FTPFile lFTPFile : iSelection) {
@@ -384,7 +382,7 @@ public class FTPServices extends AFTPConnection {
                         if (lAbsoluteFile != null) {
                             LogManager.debug(TAG, "Absolute name : " + lAbsoluteFile.getName());
 
-                            iAOnDeleteListener.onProgressDirectory(
+                            iOnDeleteListener.onProgressDirectory(
                                     lProgress,
                                     iSelection.length,
                                     lFTPFile.getName());
@@ -392,11 +390,11 @@ public class FTPServices extends AFTPConnection {
                             recursiveDeletion(lAbsoluteFile, lProgress++, iSelection.length);
                         } else {
                             LogManager.error(TAG, "Error with : " + lFTPFile.toFormattedString());
-                            iAOnDeleteListener.onFail(lFTPFile);
+                            iOnDeleteListener.onFail(lFTPFile);
                             mPauseDeleting = true;
                         }
 
-                        iAOnDeleteListener.onProgressDirectory(
+                        iOnDeleteListener.onProgressDirectory(
                                 lProgress,
                                 iSelection.length,
                                 lFTPFile.getName());
@@ -415,13 +413,13 @@ public class FTPServices extends AFTPConnection {
                 if (mDeleteFileThread.isInterrupted())
                     return;
 
-                iAOnDeleteListener.onFinish();
+                iOnDeleteListener.onFinish();
             }
         });
         mDeleteFileThread.start();
     }
 
-    public void indexingPendingFilesProcedure(final FTPFile[] iSelectedFiles, IOnIndexingPendingFilesListener iOnResult) {
+    public void indexingPendingFilesProcedure(final FTPFile[] iSelectedFiles, OnIndexingPendingFilesListener iOnResult) {
         LogManager.info(TAG, "Create pending files procedure");
         if (!isConnected()) {
             LogManager.error(TAG, "Is not connected");
@@ -446,7 +444,7 @@ public class FTPServices extends AFTPConnection {
 
     private void indexingPendingFiles(
             final int iServerId, final FTPFile[] iSelectedFiles, final LoadDirection iLoadDirection,
-            @NotNull final IOnIndexingPendingFilesListener iIndexingListener) {
+            @NotNull final OnIndexingPendingFilesListener iIndexingListener) {
 
         LogManager.info(TAG, "Create pending files");
         final List<PendingFile> oPendingFiles = new ArrayList<>();
@@ -619,13 +617,13 @@ public class FTPServices extends AFTPConnection {
         void onInterrupt();
     }
 
-    public interface IOnCreateDirectoryResult {
+    public interface OnCreateDirectoryResult {
         void onSuccess(FTPFile iNewDirectory);
 
         void onFail(ErrorCodeDescription iErrorEnum, int iErrorCode);
     }
 
-    public interface IOnIndexingPendingFilesListener {
+    public interface OnIndexingPendingFilesListener {
 
         void onStart();
 
@@ -637,7 +635,7 @@ public class FTPServices extends AFTPConnection {
 
     }
 
-    public abstract class AOnDeleteListener {
+    public abstract class OnDeleteListener {
         public abstract void onStartDelete();
 
         public abstract void onProgressDirectory(int iDirectoryProgress, int iTotalDirectories, String iDirectoryName);

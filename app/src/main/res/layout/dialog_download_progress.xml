@@ -5,7 +5,6 @@
     android:orientation="vertical"
     android:padding="?dialogPreferredPadding">
 
-
-
+    <include layout="@layout/narrow_transfer_recycler_layout" />
 
 </LinearLayout>

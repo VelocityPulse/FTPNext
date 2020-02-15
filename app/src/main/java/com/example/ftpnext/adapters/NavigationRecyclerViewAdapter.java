@@ -84,7 +84,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         }
 
         LinearLayout lLayout = (LinearLayout) LayoutInflater.
-                from(iViewGroup.getContext()).inflate(R.layout.navigation_list_item, iViewGroup, false);
+                from(iViewGroup.getContext()).inflate(R.layout.list_item_navigation, iViewGroup, false);
 
         CustomItemViewAdapter oViewHolder = new CustomItemViewAdapter(
                 lLayout,

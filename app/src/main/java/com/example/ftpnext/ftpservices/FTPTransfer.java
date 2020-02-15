@@ -184,12 +184,9 @@ public class FTPTransfer extends AFTPConnection {
 
         public abstract void onDownloadProgress(PendingFile iPendingFile, int iProgress, int iSize);
 
-        public void onDownloadSuccess(PendingFile iPendingFile) {
-            DataBase.getPendingFileDAO().delete(iPendingFile); // TODO : Delete this line when we know where to use that func
-        }
+        public abstract void onDownloadSuccess(PendingFile iPendingFile);
 
         public abstract void onRightAccessFail(PendingFile iPendingFile);
-
 
         /**
          * @param iPendingFile File that it's impossible to download for any error
