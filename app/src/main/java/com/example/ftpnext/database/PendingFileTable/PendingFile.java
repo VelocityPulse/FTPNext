@@ -15,7 +15,7 @@ public class PendingFile extends ABaseTable {
     private String mName;
     private String mPath;
     private String mEnclosingName;
-    private boolean finished;
+    private boolean mFinished;
     private int mProgress;
 
     public PendingFile() {
@@ -35,48 +35,72 @@ public class PendingFile extends ABaseTable {
         return mServerId;
     }
 
-    public void setServerId(int iServerId) {
+    public PendingFile setServerId(int iServerId) {
         mServerId = iServerId;
+        return this;
     }
 
     public LoadDirection getLoadDirection() {
         return mLoadDirection;
     }
 
-    public void setLoadDirection(LoadDirection iLoadDirection) {
+    public PendingFile setLoadDirection(LoadDirection iLoadDirection) {
         mLoadDirection = iLoadDirection;
+        return this;
     }
 
     public boolean isStarted() {
         return mStarted;
     }
 
-    public void setStarted(boolean iStarted) {
+    public PendingFile setStarted(boolean iStarted) {
         mStarted = iStarted;
+        return this;
     }
 
     public String getName() {
         return mName;
     }
 
-    public void setName(String iName) {
+    public PendingFile setName(String iName) {
         mName = iName;
+        return this;
     }
 
     public String getPath() {
         return mPath;
     }
 
-    public void setPath(String iPath) {
+    public PendingFile setPath(String iPath) {
         mPath = iPath;
+        return this;
     }
 
     public String getEnclosingName() {
         return mEnclosingName;
     }
 
-    public void setEnclosureName(String iEnclosureName) {
+    public PendingFile setEnclosureName(String iEnclosureName) {
         mEnclosingName = iEnclosureName;
+        return this;
+    }
+
+    public boolean isFinished() {
+        return mFinished;
+    }
+
+    public PendingFile setFinished(boolean iFinished) {
+        mFinished = iFinished;
+        return this;
+    }
+
+    public int getProgress() {
+        return mProgress;
+    }
+
+    public PendingFile setProgress(int iProgress) {
+        mProgress = iProgress;
+        return this;
     }
 
     @Override

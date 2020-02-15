@@ -12,6 +12,8 @@ public interface IPendingFileSchema {
     String COLUMN_NAME = "column_name";
     String COLUMN_PATH = "column_path";
     String COLUMN_ENCLOSING_NAME = "column_enclosing_name";
+    String COLUMN_FINISHED = "column_finished";
+    String COLUMN_PROGRESS = "column_progress";
 
     //Columns list
     String[] COLUMNS = new String[]{
@@ -21,7 +23,9 @@ public interface IPendingFileSchema {
             COLUMN_STARTED,
             COLUMN_NAME,
             COLUMN_PATH,
-            COLUMN_ENCLOSING_NAME
+            COLUMN_ENCLOSING_NAME,
+            COLUMN_FINISHED,
+            COLUMN_PROGRESS
     };
 
     //Create
@@ -32,7 +36,9 @@ public interface IPendingFileSchema {
             + COLUMN_STARTED + " INTEGER, "
             + COLUMN_NAME + " TEXT, "
             + COLUMN_PATH + " TEXT, "
-            + COLUMN_ENCLOSING_NAME + " TEXT"
+            + COLUMN_ENCLOSING_NAME + " TEXT, "
+            + COLUMN_FINISHED + " INTEGER, "
+            + COLUMN_FINISHED + " INTEGER"
             + ")";
 
 }

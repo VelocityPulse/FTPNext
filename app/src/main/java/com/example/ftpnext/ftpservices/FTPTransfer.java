@@ -1,5 +1,6 @@
 package com.example.ftpnext.ftpservices;
 
+import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
@@ -74,68 +75,126 @@ public class FTPTransfer extends AFTPConnection {
         });
     }
 
+    public void abortDownload() {
+        if (mTransferThread != null)
+            mTransferThread.interrupt();
+    }
+
     @Override
     public boolean isBusy() {
         return mTransferThread != null;
     }
 
     public void downloadFiles(final PendingFile[] iSelection, @NotNull final OnTransferListener iOnTransferListener) {
+        // TODO : Guard of if it's not already uploading
         if (mTransferThread != null) {
             LogManager.error(TAG, "Transfer not finished");
             return;
         }
 
+        // TODO : Interrupts
         mTransferThread = new Thread(new Runnable() {
             @Override
             public void run() {
 
-                synchronized (this) {
-                    for (PendingFile lItem : iSelection) {
-                        if (!lItem.isStarted()) {
-                            mCandidate = lItem;
-                            mCandidate.setStarted(true);
-                            break;
+                while (true) {
+
+                    if (mTransferThread.isInterrupted()) {
+                        mTransferThread = null;
+                        return;
+                    }
+
+                    mCandidate = selectNotStartedCandidate(iSelection);
+
+                    // Stopping all transfer activities
+                    if (mCandidate == null) {
+                        mTransferListener = null;
+                        iOnTransferListener.onStop();
+                        return;
+                        // TODO : y a plus rien a DL blablabla
+                    }
+
+                    DataBase.getPendingFileDAO().update(mCandidate);
+                    iOnTransferListener.onStartNewFile(mCandidate);
+
+                    if (!isConnected()) {
+                        connect(null);
+                    }
+
+                    while (!isConnected()) {
+                        LogManager.info(TAG, "Download files : Waiting connection");
+                        Utils.sleep(10);
+
+                        if (mTransferThread.isInterrupted()) {
+                            if (mCandidate != null && mCandidate.isStarted()) {
+                                DataBase.getPendingFileDAO().update(mCandidate.setStarted(false));
+                            }
+                            mTransferThread = null;
+                            return;
                         }
                     }
-                }
 
-                if (!isConnected()) {
-                    connect(null);
-                }
-                // TODO : Continue here / While on connect until it connects
 
-                mTransferListener = null;
+
+                }
             }
         });
 
         mTransferThread.start();
     }
 
-    public abstract class OnTransferListener {
 
-        public abstract void onStart();
+    public void uploadFiles(final PendingFile[] iSelection, @NotNull final OnTransferListener iOnTransferListener) {
+        // TODO : Guard of if it's not already downloading
+    }
+
+    private PendingFile selectNotStartedCandidate(PendingFile[] iSelection) {
+        LogManager.info(TAG, "Select not started candidate");
+
+        PendingFile oRet;
+        synchronized (this) {
+            for (PendingFile lItem : iSelection) {
+                if (!lItem.isStarted()) {
+                    oRet = lItem;
+                    oRet.setStarted(true);
+                    LogManager.info(TAG, "Leaving select not started candidate");
+                    return oRet;
+                }
+            }
+        }
+
+        LogManager.info(TAG, "Leaving select not started candidate");
+        return null;
+    }
+
+    public abstract class OnTransferListener {
 
         public abstract void onConnected(PendingFile iPendingFile);
 
         public abstract void onConnectionLost(PendingFile iPendingFile);
 
-        public void onStartNewFile(PendingFile iPendingFile) {
-            iPendingFile.setStarted(true);
-            DataBase.getPendingFileDAO().update(iPendingFile);
-        }
-
-        public abstract void onTotalPendingFileProgress(int iProgress, int iTotalPendingFile);
+        /**
+         * @param iPendingFile File which has been selected for download
+         */
+        public abstract void onStartNewFile(PendingFile iPendingFile);
 
         public abstract void onDownloadProgress(PendingFile iPendingFile, int iProgress, int iSize);
 
         public void onDownloadSuccess(PendingFile iPendingFile) {
-            DataBase.getPendingFileDAO().delete(iPendingFile);
+            DataBase.getPendingFileDAO().delete(iPendingFile); // TODO : Delete this line when we know where to use that func
         }
 
         public abstract void onRightAccessFail(PendingFile iPendingFile);
 
-        public abstract void onFail(PendingFile iPendingFile);
 
+        /**
+         * @param iPendingFile File that it's impossible to download for any error
+         */
+        public abstract void onFail(PendingFile iPendingFile); // TODO : Maybe add a error status
+
+        /**
+         * FTPTransfer has nothing to do anymore
+         */
         public abstract void onStop();
     }
 }
