@@ -61,7 +61,7 @@ public class PendingFile extends ABaseTable {
         return mStarted;
     }
 
-    public PendingFile setStarted(boolean iStarted) {
+    public PendingFile  setStarted(boolean iStarted) {
         mStarted = iStarted;
         return this;
     }

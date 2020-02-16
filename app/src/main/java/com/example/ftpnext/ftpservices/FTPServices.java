@@ -540,6 +540,7 @@ public class FTPServices extends AFTPConnection {
                             return;
 
                     } else {
+                        LogManager.debug(TAG, "Fucking size : " + lItem.getSize());
                         PendingFile lPendingFile = new PendingFile(
                                 iServerId,
                                 iLoadDirection,

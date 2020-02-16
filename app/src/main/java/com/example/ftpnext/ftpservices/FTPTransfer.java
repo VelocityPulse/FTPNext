@@ -6,7 +6,6 @@ import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.PendingFileTable.PendingFile;
 
-import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.io.CopyStreamEvent;
 import org.apache.commons.net.io.CopyStreamListener;
@@ -24,12 +23,15 @@ public class FTPTransfer extends AFTPConnection {
 
     private static final String TAG = "FTP TRANSFER";
 
+    private static final int UPDATE_TRANSFER_TIMER = 300;
+
     private static List<FTPTransfer> sFTPTransferInstances;
 
     private OnTransferListener mTransferListener;
     private PendingFile mCandidate;
 
     private Thread mTransferThread;
+    private long mTimer;
 
     public FTPTransfer(FTPServer iFTPServer) {
         super(iFTPServer);
@@ -93,13 +95,27 @@ public class FTPTransfer extends AFTPConnection {
 
             @Override
             public void bytesTransferred(long iTotalBytesTransferred, int iBytesTransferred, long iStreamSize) {
-                iOnTransferListener.onDownloadProgress(mCandidate, iTotalBytesTransferred, iStreamSize);
 
+                long lCurrentTimeMillis = System.currentTimeMillis();
+                long lElapsedTime = lCurrentTimeMillis - mTimer;
+
+                if (lElapsedTime > UPDATE_TRANSFER_TIMER) {
+                    mTimer = lCurrentTimeMillis;
+
+                    mCandidate.setProgress((int) iTotalBytesTransferred);
+                    iOnTransferListener.onDownloadProgress(mCandidate, iTotalBytesTransferred, iStreamSize);
+                    //code to run
+                }
+
+//                LogManager.info(TAG,
+//                        "Total transferred : " + iTotalBytesTransferred +
+//                                "\tBytes transferred : " + iBytesTransferred +
+//                                "\tStream size : " + iStreamSize);
             }
         });
     }
 
-    public void abortDownload() {
+    public void abortTransfer() {
         if (mTransferThread != null) {
             mTransferThread.interrupt();
 
@@ -175,23 +191,6 @@ public class FTPTransfer extends AFTPConnection {
 
                     initCopyStreamListener(iOnTransferListener);
 
-                    mFTPClient.setCopyStreamListener(new CopyStreamListener() {
-                        @Override
-                        public void bytesTransferred(CopyStreamEvent event) {
-
-                        }
-
-                        @Override
-                        public void bytesTransferred(long totalBytesTransferred, int bytesTransferred, long streamSize) {
-                            LogManager.info(TAG,
-                                    "Total transferred :\t" + totalBytesTransferred +
-                                            "bytes transferred :\t" + bytesTransferred +
-                                            "stream size:\t\t\t" + streamSize);
-
-                            iOnTransferListener.onDownloadProgress(mCandidate, totalBytesTransferred, streamSize);
-                        }
-                    });
-
                     iOnTransferListener.onConnected(mCandidate);
 
                     try {
@@ -203,14 +202,18 @@ public class FTPTransfer extends AFTPConnection {
                                 "\nGoing to fetch from the server path :\n\t" +
                                 mCandidate.getPath());
 
-//                        FTPFile lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
-//                        mCandidate.setSize((int) lFTPFile.getSize());
+                        FTPFile lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
+                        if (lFTPFile != null)
+                            mCandidate.setSize((int) lFTPFile.getSize());
+                        else
+                            ;// TODO : File not findable
 
-                        FTPFile[] lFTPFiles = mFTPClient.mlistDir(mCandidate.getPath());
-                        if (lFTPFiles.length > 0)
-                            mCandidate.setSize((int) lFTPFiles[0].getSize());
-                        // TODO : File not findable
-
+//                        String lFolderPath = mCandidate.getPath().substring(0, mCandidate.getPath().lastIndexOf('/'));
+//
+//                        FTPFile[] lFTPFiles = mFTPClient.mlistDir(lFolderPath);
+//                        if (lFTPFiles.length > 0)
+//                            mCandidate.setSize((int) lFTPFiles[0].getSize());
+//                        LogManager.debug(TAG, "Size identified : " + lFTPFiles[0].getSize());
 
                         File lLocalFile = new File(mFTPServer.getAbsolutePath() + "/" +
                                 mCandidate.getEnclosingName() + mCandidate.getName());

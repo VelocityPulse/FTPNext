@@ -1151,14 +1151,13 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                 RecyclerView lNarrowTransferRecyclerView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_recycler_view);
                 lNarrowTransferRecyclerView.setLayoutManager(new LinearLayoutManager(FTPNavigationActivity.this));
-                mNarrowTransferAdapter = new NarrowTransferAdapter(
-                        FTPNavigationActivity.this,
-                        iPendingFiles,
-                        lNarrowTransferRecyclerView);
+                mNarrowTransferAdapter = new NarrowTransferAdapter(iPendingFiles);
 
-                DividerItemDecoration lDividerItemDecoration = new DividerItemDecoration(
-                        FTPNavigationActivity.this, DividerItemDecoration.VERTICAL);
-                lNarrowTransferRecyclerView.addItemDecoration(lDividerItemDecoration);
+                if (iPendingFiles.length > 1) {
+                    DividerItemDecoration lDividerItemDecoration = new DividerItemDecoration(
+                            FTPNavigationActivity.this, DividerItemDecoration.VERTICAL);
+                    lNarrowTransferRecyclerView.addItemDecoration(lDividerItemDecoration);
+                }
 
                 lNarrowTransferRecyclerView.setAdapter(mNarrowTransferAdapter);
 
@@ -1166,16 +1165,16 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface iDialog, int iWhich) {
                         iDialog.dismiss();
-                        lFTPTransfer.abortDownload();
+                        lFTPTransfer.abortTransfer();
                     }
                 });
 
-                lBuilder.setNeutralButton("Background", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface iDialog, int iWhich) {
-                        iDialog.dismiss();
-                    }
-                });
+//                lBuilder.setNeutralButton("Background", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface iDialog, int iWhich) {
+//                        iDialog.dismiss();
+//                    }
+//                });
 
                 lBuilder.setCancelable(false);
                 lBuilder.setView(lDownloadingDialogView);
@@ -1214,11 +1213,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                LogManager.info(TAG,
-                                        "\nTotal transferred :" + iProgress + "  " +
-//                                                "  Bytes transferred :" + bytesTransferred + "  " +
-                                                "  Stream size :" + iSize);
-
                                 mNarrowTransferAdapter.updatePendingFile(iPendingFile);
                             }
                         });

@@ -1,6 +1,5 @@
 package com.example.ftpnext.adapters;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -24,19 +23,13 @@ public class NarrowTransferAdapter
     private static final String TAG = "NARROW TRANSFER ADAPTER";
 
     private List<PendingFile> mPendingFileList;
-    private RecyclerView mRecyclerView;
-    private Context mContext;
 
-    public NarrowTransferAdapter(Context iContext, PendingFile[] iPendingFiles, RecyclerView iRecyclerView) {
+    public NarrowTransferAdapter(PendingFile[] iPendingFiles) {
         mPendingFileList = Arrays.asList(iPendingFiles);
-        mRecyclerView = iRecyclerView;
-        mContext = iContext;
     }
 
-    public NarrowTransferAdapter(Context iContext, RecyclerView iRecyclerView) {
+    public NarrowTransferAdapter() {
         mPendingFileList = new ArrayList<>();
-        mRecyclerView = iRecyclerView;
-        mContext = iContext;
     }
 
     @NonNull
@@ -56,15 +49,22 @@ public class NarrowTransferAdapter
         LogManager.info(TAG, "On bind view holder");
         final PendingFile lPendingFile = mPendingFileList.get(iPosition);
 
-        iCustomItemViewAdapter.mTextView.setText(lPendingFile.getPath());
+        // TODO : Continue on speed display
+
+        if (!iCustomItemViewAdapter.mTextView.getText().equals(lPendingFile.getPath()))
+            iCustomItemViewAdapter.mTextView.setText(lPendingFile.getPath());
+
         if (lPendingFile.isStarted()) {
             if (!iCustomItemViewAdapter.mMainLayout.isEnabled())
                 iCustomItemViewAdapter.mMainLayout.setEnabled(true);
-            iCustomItemViewAdapter.mProgressBar.setMax(lPendingFile.getSize());
+
+            if (iCustomItemViewAdapter.mProgressBar.getMax() != lPendingFile.getSize())
+                iCustomItemViewAdapter.mProgressBar.setMax(lPendingFile.getSize());
             iCustomItemViewAdapter.mProgressBar.setProgress(lPendingFile.getProgress());
         } else {
+            LogManager.debug(TAG, "Set enabled : false");
             iCustomItemViewAdapter.mMainLayout.setEnabled(false);
-            iCustomItemViewAdapter.mProgressBar.setProgress(0);
+//            iCustomItemViewAdapter.mProgressBar.setProgress(0);
         }
     }
 
@@ -77,10 +77,13 @@ public class NarrowTransferAdapter
         for (PendingFile lItem : mPendingFileList) {
             if (lItem.getDataBaseId() == iPendingFile.getDataBaseId()) {
 //                lItem.updateContent(iPendingFile);
+
+//                notifyDataSetChanged();
                 notifyItemChanged(mPendingFileList.indexOf(lItem));
             }
         }
     }
+
 
     static class CustomItemViewAdapter extends RecyclerView.ViewHolder {
         View mMainLayout;
