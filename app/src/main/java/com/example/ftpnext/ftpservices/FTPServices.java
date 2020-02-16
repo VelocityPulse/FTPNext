@@ -374,13 +374,13 @@ public class FTPServices extends AFTPConnection {
 
                     int lProgress = 0;
                     for (FTPFile lFTPFile : iSelection) {
-                        LogManager.debug(TAG, "Selected file : " + lFTPFile.getName());
-                        LogManager.debug(TAG, "Absolute path : " + mCurrentDirectory.getName() + "/" + lFTPFile.getName());
+//                        LogManager.debug(TAG, "Selected file : " + lFTPFile.getName());
+//                        LogManager.debug(TAG, "Absolute path : " + mCurrentDirectory.getName() + "/" + lFTPFile.getName());
                         FTPFile lAbsoluteFile = mFTPClient.mlistFile(mCurrentDirectory.getName() + "/" + lFTPFile.getName());
-                        LogManager.debug(TAG, "File name : " + lAbsoluteFile.getName());
+//                        LogManager.debug(TAG, "File name : " + lAbsoluteFile.getName());
 
                         if (lAbsoluteFile != null) {
-                            LogManager.debug(TAG, "Absolute name : " + lAbsoluteFile.getName());
+//                            LogManager.debug(TAG, "Absolute name : " + lAbsoluteFile.getName());
 
                             iOnDeleteListener.onProgressDirectory(
                                     lProgress,

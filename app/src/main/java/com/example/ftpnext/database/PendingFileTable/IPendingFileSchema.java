@@ -1,5 +1,7 @@
 package com.example.ftpnext.database.PendingFileTable;
 
+import android.media.MediaCodecInfo;
+
 public interface IPendingFileSchema {
 
     String TABLE = "pending_file";
@@ -38,7 +40,7 @@ public interface IPendingFileSchema {
             + COLUMN_PATH + " TEXT, "
             + COLUMN_ENCLOSING_NAME + " TEXT, "
             + COLUMN_FINISHED + " INTEGER, "
-            + COLUMN_FINISHED + " INTEGER"
+            + COLUMN_PROGRESS + " INTEGER"
             + ")";
 
 }

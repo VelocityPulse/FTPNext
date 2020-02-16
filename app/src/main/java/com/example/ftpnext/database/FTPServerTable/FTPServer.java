@@ -161,14 +161,14 @@ public class FTPServer extends ABaseTable {
         oToString += mServer + "\n";
         oToString += mUser + "\n";
 
-        MessageDigest m = null;
+        MessageDigest lMD = null;
         try {
-            m = MessageDigest.getInstance("MD5");
+            lMD = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
             oToString += ">> No MD5 instance";
         }
-        m.update(mPass.getBytes(), 0, mPass.length());
-        oToString += "MD5 pass : " + new BigInteger(1, m.digest()).toString(16);
+        lMD.update(mPass.getBytes(), 0, mPass.length());
+        oToString += "MD5 pass : " + new BigInteger(1, lMD.digest()).toString(16);
 
         oToString += mPort + "\n";
         oToString += mFTPType.name() + "\n";

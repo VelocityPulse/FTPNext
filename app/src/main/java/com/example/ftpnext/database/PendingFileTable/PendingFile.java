@@ -19,6 +19,8 @@ public class PendingFile extends ABaseTable {
     private boolean mFinished;
     private int mProgress;
 
+    private int mSize;
+
     public PendingFile() {
     }
 
@@ -29,7 +31,10 @@ public class PendingFile extends ABaseTable {
         mStarted = iStarted;
         mName = iName;
         mPath = iPath;
-        mEnclosingName = iEnclosureName;
+        if (iEnclosureName == null)
+            mEnclosingName = "";
+        else
+            mEnclosingName = iEnclosureName;
     }
 
     public int getServerId() {
@@ -102,6 +107,22 @@ public class PendingFile extends ABaseTable {
     public PendingFile setProgress(int iProgress) {
         mProgress = iProgress;
         return this;
+    }
+
+
+    /**
+     * This value is set only after FTPTransfer has begun its transfer
+     * @return Size of the pending file
+     */
+    public int getSize() {
+        return mSize;
+    }
+
+    /**
+     * Important : Only FTPTransfer can touch this
+     */
+    public void setSize(int iSize) {
+        mSize = iSize;
     }
 
     @Override

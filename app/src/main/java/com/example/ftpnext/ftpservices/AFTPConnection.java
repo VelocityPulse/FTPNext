@@ -10,6 +10,7 @@ import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPClientConfig;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
@@ -216,6 +217,7 @@ public abstract class AFTPConnection {
                 try {
                     LogManager.info(TAG, "Will connect with : \n" + mFTPServer.toString());
 
+                    mFTPClient.setControlEncoding("UTF-8");
                     mFTPClient.setDefaultPort(mFTPServer.getPort());
                     mFTPClient.connect(InetAddress.getByName(mFTPServer.getServer()));
                     mFTPClient.setSoTimeout(15000); // 15s

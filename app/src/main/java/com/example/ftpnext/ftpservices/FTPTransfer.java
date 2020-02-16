@@ -6,8 +6,16 @@ import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.PendingFileTable.PendingFile;
 
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.io.CopyStreamEvent;
+import org.apache.commons.net.io.CopyStreamListener;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,6 +94,7 @@ public class FTPTransfer extends AFTPConnection {
     }
 
     public void downloadFiles(final PendingFile[] iSelection, @NotNull final OnTransferListener iOnTransferListener) {
+        LogManager.info(TAG, "Download files");
         // TODO : Guard of if it's not already uploading
         if (mTransferThread != null) {
             LogManager.error(TAG, "Transfer not finished");
@@ -133,10 +142,54 @@ public class FTPTransfer extends AFTPConnection {
                             return;
                         }
                     }
+                    LogManager.info(TAG, "Download files : Connected");
 
                     iOnTransferListener.onConnected(mCandidate);
 
+                    LogManager.info(TAG, "Going to write on the local path :\n" +
+                            mFTPServer.getAbsolutePath() + "/" +
+                            mCandidate.getEnclosingName() + "/" + mCandidate.getName());
 
+                    File lLocalFile = new File(mFTPServer.getAbsolutePath() + "/" +
+                            mCandidate.getEnclosingName() + "/" + mCandidate.getName());
+
+                    try {
+                        mFTPClient.enterLocalPassiveMode();
+
+                        LogManager.info(TAG, "going to fetch from the server path :\n" + mCandidate.getPath());
+//                        FTPFile lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
+//                        mCandidate.setSize((int) lFTPFile.getSize());
+
+                        FTPFile[] lFTPFiles = mFTPClient.mlistDir(mCandidate.getPath());
+                        if (lFTPFiles.length > 0)
+                            mCandidate.setSize((int) lFTPFiles[0].getSize());
+                        // TODO : File not findable
+
+                        mFTPClient.setCopyStreamListener(new CopyStreamListener() {
+                            @Override
+                            public void bytesTransferred(CopyStreamEvent event) {
+
+                            }
+
+                            @Override
+                            public void bytesTransferred(long totalBytesTransferred, int bytesTransferred, long streamSize) {
+                                LogManager.info(TAG,
+                                        "Total transferred :\t" + totalBytesTransferred +
+                                                "bytes transferred :\t" + bytesTransferred +
+                                                "stream size:\t\t\t" + streamSize);
+
+                                iOnTransferListener.onDownloadProgress(mCandidate, totalBytesTransferred, streamSize);
+                            }
+                        });
+
+                        OutputStream lOutputStream = new BufferedOutputStream(new FileOutputStream(lLocalFile));
+                        boolean lSuccess = mFTPClient.retrieveFile(mCandidate.getPath(), lOutputStream);
+                        LogManager.info(TAG, "Leaving retrieve file with result : " + lSuccess);
+
+                        mFTPClient.enterLocalActiveMode();
+                    } catch (IOException iE) {
+                        iE.printStackTrace();
+                    }
 
 
 
@@ -182,7 +235,7 @@ public class FTPTransfer extends AFTPConnection {
          */
         public abstract void onStartNewFile(PendingFile iPendingFile);
 
-        public abstract void onDownloadProgress(PendingFile iPendingFile, int iProgress, int iSize);
+        public abstract void onDownloadProgress(PendingFile iPendingFile, long iProgress, long iSize);
 
         public abstract void onDownloadSuccess(PendingFile iPendingFile);
 

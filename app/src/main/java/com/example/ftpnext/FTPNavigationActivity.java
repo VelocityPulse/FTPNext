@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.view.ViewCompat;
@@ -30,7 +31,7 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.example.ftpnext.adapters.NarrowTransferRecyclerViewAdapter;
+import com.example.ftpnext.adapters.NarrowTransferAdapter;
 import com.example.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.example.ftpnext.commons.Utils;
 import com.example.ftpnext.core.AppCore;
@@ -86,6 +87,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private int mErrorCode;
 
     private NavigationRecyclerViewAdapter mCurrentAdapter;
+    private NarrowTransferAdapter mNarrowTransferAdapter;
     private FrameLayout mRecyclerSection;
     private String mDirectoryPath;
     private boolean mDirectoryFetchFinished;
@@ -1060,6 +1062,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 if (!isSuccess)
                     return;
 
+                DataBase.getPendingFileDAO().deleteAll(); // TODO : DATA BASE RESET HERE
                 DataBase.getPendingFileDAO().add(iPendingFiles);
 
                 if (mIndexingPendingFilesDialog != null)
@@ -1071,86 +1074,97 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
     }
 
-    private void DownloadFiles(PendingFile[] iPendingFiles) {
+    private void DownloadFiles(final PendingFile[] iPendingFiles) {
         final FTPTransfer lFTPTransfer = new FTPTransfer(mFTPServer.getDataBaseId());
 
-
-        final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
-
-        View lDownloadingDialogView = View.inflate(FTPNavigationActivity.this,
-                R.layout.dialog_download_progress, null);
-
-        RecyclerView lNarrowTransferRecyclerView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_recycler_view);
-        lNarrowTransferRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        final NarrowTransferRecyclerViewAdapter lNarrowTransferAdapter = new NarrowTransferRecyclerViewAdapter(
-                this,
-                iPendingFiles,
-                lNarrowTransferRecyclerView);
-
-        DividerItemDecoration lDividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
-        lNarrowTransferRecyclerView.addItemDecoration(lDividerItemDecoration);
-
-        lNarrowTransferRecyclerView.setAdapter(lNarrowTransferAdapter);
-
-        lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        mHandler.post(new Runnable() {
             @Override
-            public void onClick(DialogInterface iDialog, int iWhich) {
-                iDialog.dismiss();
-                lFTPTransfer.abortDownload();
+            public void run() {
+                final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
+
+                View lDownloadingDialogView = View.inflate(FTPNavigationActivity.this,
+                        R.layout.dialog_download_progress, null);
+
+                RecyclerView lNarrowTransferRecyclerView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_recycler_view);
+                lNarrowTransferRecyclerView.setLayoutManager(new LinearLayoutManager(FTPNavigationActivity.this));
+                mNarrowTransferAdapter = new NarrowTransferAdapter(
+                        FTPNavigationActivity.this,
+                        iPendingFiles,
+                        lNarrowTransferRecyclerView);
+
+                DividerItemDecoration lDividerItemDecoration = new DividerItemDecoration(
+                        FTPNavigationActivity.this, DividerItemDecoration.VERTICAL);
+                lNarrowTransferRecyclerView.addItemDecoration(lDividerItemDecoration);
+
+                lNarrowTransferRecyclerView.setAdapter(mNarrowTransferAdapter);
+
+                lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface iDialog, int iWhich) {
+                        iDialog.dismiss();
+                        lFTPTransfer.abortDownload();
+                    }
+                });
+
+                lBuilder.setNeutralButton("Background", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface iDialog, int iWhich) {
+                        iDialog.dismiss();
+                    }
+                });
+
+                lBuilder.setCancelable(false);
+                lBuilder.setView(lDownloadingDialogView);
+                lBuilder.setMessage("Downloading ..."); // TODO : strings
+                mDownloadingDialog = lBuilder.create();
+                mDownloadingDialog.show();
             }
         });
 
-        lBuilder.setNeutralButton("Background", new DialogInterface.OnClickListener() {
+        mHandler.post(new Runnable() {
             @Override
-            public void onClick(DialogInterface iDialog, int iWhich) {
-                iDialog.dismiss();
-            }
-        });
+            public void run() {
+                lFTPTransfer.downloadFiles(iPendingFiles, lFTPTransfer.new OnTransferListener() {
+                    @Override
+                    public void onConnected(PendingFile iPendingFile) {
 
-        lBuilder.setCancelable(false);
-        lBuilder.setView(lDownloadingDialogView);
-        lBuilder.setMessage("Downloading ..."); // TODO : strings
-        mDownloadingDialog = lBuilder.create();
-        mDownloadingDialog.show();
+                    }
 
-        lFTPTransfer.downloadFiles(iPendingFiles, lFTPTransfer.new OnTransferListener() {
-            @Override
-            public void onConnected(PendingFile iPendingFile) {
+                    @Override
+                    public void onConnectionLost(PendingFile iPendingFile) {
 
-            }
+                    }
 
-            @Override
-            public void onConnectionLost(PendingFile iPendingFile) {
+                    @Override
+                    public void onStartNewFile(PendingFile iPendingFile) {
+                        mNarrowTransferAdapter.updatePendingFile(iPendingFile);
+                    }
 
-            }
+                    @Override
+                    public void onDownloadProgress(PendingFile iPendingFile, long iProgress, long iSize) {
+                        mNarrowTransferAdapter.updatePendingFile(iPendingFile);
+                    }
 
-            @Override
-            public void onStartNewFile(PendingFile iPendingFile) {
-                lNarrowTransferAdapter.updatePendingFile(iPendingFile);
-            }
+                    @Override
+                    public void onDownloadSuccess(PendingFile iPendingFile) {
 
-            @Override
-            public void onDownloadProgress(PendingFile iPendingFile, int iProgress, int iSize) {
-                lNarrowTransferAdapter.updatePendingFile(iPendingFile);
-            }
+                    }
 
-            @Override
-            public void onDownloadSuccess(PendingFile iPendingFile) {
+                    @Override
+                    public void onRightAccessFail(PendingFile iPendingFile) {
 
-            }
+                    }
 
-            @Override
-            public void onRightAccessFail(PendingFile iPendingFile) {
+                    @Override
+                    public void onFail(PendingFile iPendingFile) {
 
-            }
+                    }
 
-            @Override
-            public void onFail(PendingFile iPendingFile) {
+                    @Override
+                    public void onStop() {
 
-            }
-
-            @Override
-            public void onStop() {
+                    }
+                });
 
             }
         });
