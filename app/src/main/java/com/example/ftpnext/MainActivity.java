@@ -1,22 +1,25 @@
 package com.example.ftpnext;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.LinearLayout;
 
 import com.example.ftpnext.ftpservices.AFTPConnection;
 import com.example.ftpnext.ftpservices.AFTPConnection.ErrorCodeDescription;
@@ -30,6 +33,8 @@ import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.example.ftpnext.database.PendingFileTable.PendingFile;
 import com.example.ftpnext.ftpservices.FTPServices;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -68,14 +73,14 @@ Parameters ideas :
 
 public class MainActivity extends AppCompatActivity {
 
-    private static String TAG = "MAIN ACTIVITY";
+    private static final String TAG = "MAIN ACTIVITY";
 
-    private AppCore mAppCore = null;
+    private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
+    private static final int ACTIVITY_REQUEST_CODE_CONFIGURE_SERVER = 2;
+    private static final int ACTIVITY_REQUEST_CODE = 3;
 
-    private LinearLayout mMainRootLinearLayout;
+
     private MainRecyclerViewAdapter mAdapter;
-    private FloatingActionButton mFloatingActionButton;
-    private boolean mIsBlockedScrollView;
     private boolean mIsRunning;
     private boolean mIsBusy;
 
@@ -93,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
         initializeGUI();
         initializeAdapter();
         initialize();
+        initializePermissions();
 
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.loading_icon, null);
@@ -140,8 +146,8 @@ public class MainActivity extends AppCompatActivity {
         Toolbar lToolBar = findViewById(R.id.toolbar);
         setSupportActionBar(lToolBar);
 
-        mFloatingActionButton = findViewById(R.id.navigation_floating_action_button);
-        mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton lFloatingActionButton = findViewById(R.id.navigation_floating_action_button);
+        lFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startFTPConfigureServerActivity(FTPConfigureServerActivity.NO_DATABASE_ID);
@@ -196,8 +202,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initialize() {
-        mAppCore = new AppCore(this);
-        mAppCore.startApplication();
+        AppCore.getInstance().startApplication(this);
+
         mFTPServerDAO = DataBase.getFTPServerDAO();
         mIsRunning = true;
 
@@ -207,9 +213,33 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void initializePermissions() {
+        if (AppCore.isTheFirstRun()) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int iRequestCode,
+                                           @NotNull String[] iPermissions, int[] iGrantResults) {
+        switch (iRequestCode) {
+            case ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (iGrantResults.length > 0 && iGrantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    LogManager.info(TAG, "PERMISSION OK : READ_EXTERNAL_STORAGE");
+                } else {
+                    LogManager.info(TAG, "PERMISSION DENY : READ_EXTERNAL_STORAGE");
+                }
+            }
+        }
+    }
+
     public void onActivityResult(int iRequestCode, int iResultCode, Intent iResultData) {
-        if (iRequestCode == FTPConfigureServerActivity.ACTIVITY_REQUEST_CODE) {
+        if (iRequestCode == ACTIVITY_REQUEST_CODE_CONFIGURE_SERVER) {
             overridePendingTransition(R.anim.no_animation, R.anim.activity_fade_out_centered);
+
             if (iResultData != null) {
                 int lId = iResultData.getIntExtra(FTPConfigureServerActivity.KEY_DATABASE_ID, -1);
 
@@ -295,14 +325,14 @@ public class MainActivity extends AppCompatActivity {
         Intent lIntent = new Intent(MainActivity.this, FTPNavigationActivity.class);
         lIntent.putExtra(FTPNavigationActivity.KEY_DATABASE_ID, iServerID);
         lIntent.putExtra(FTPNavigationActivity.KEY_DIRECTORY_PATH, FTPNavigationActivity.ROOT_DIRECTORY);
-        startActivityForResult(lIntent, FTPNavigationActivity.ACTIVITY_REQUEST_CODE);
+        startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE);
     }
 
     private void startFTPConfigureServerActivity(int iFTPServerId) {
         Intent lIntent = new Intent(MainActivity.this, FTPConfigureServerActivity.class);
 
         lIntent.putExtra(FTPConfigureServerActivity.KEY_DATABASE_ID, iFTPServerId);
-        startActivityForResult(lIntent, FTPConfigureServerActivity.ACTIVITY_REQUEST_CODE);
+        startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE_CONFIGURE_SERVER);
         overridePendingTransition(R.anim.activity_fade_in_centered, R.anim.no_animation);
     }
 

@@ -1,15 +1,19 @@
 package com.example.ftpnext;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -45,18 +49,22 @@ import com.example.ftpnext.ftpservices.FTPServices;
 import com.example.ftpnext.ftpservices.FTPTransfer;
 
 import org.apache.commons.net.ftp.FTPFile;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
 public class FTPNavigationActivity extends AppCompatActivity {
-    public static final int ACTIVITY_REQUEST_CODE = 1;
+
+    private static final String TAG = "FTP NAVIGATION ACTIVITY";
+
+    private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
+
     public static final int NO_DATABASE_ID = -1;
     public static final String ROOT_DIRECTORY = "/";
 
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
     public static final String KEY_DIRECTORY_PATH = "KEY_DIRECTORY_PATH";
 
-    private static final String TAG = "FTP NAVIGATION ACTIVITY";
     private static final int LARGE_DIRECTORY_SIZE = 30000;
     private static final int BAD_CONNECTION_TIME = 50;
 
@@ -80,6 +88,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private static final int NAVIGATION_ORDER_SELECTED_MODE_OFF = 105;
 
     private boolean mIsRunning;
+
+    private OnPermissionAnswer mOnPermissionAnswer;
 
     private FTPServer mFTPServer;
     private FTPServices mFTPServices;
@@ -211,12 +221,52 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     mCurrentAdapter.setSelectionMode(true);
                 return true;
             case R.id.action_download:
-                if (mCurrentAdapter.isInSelectionMode())
-                    createDialogDownloadSelection();
-                else
-                    createDialogError("Select something.").show();
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) !=
+                        PackageManager.PERMISSION_GRANTED) {
+                    requestPermission(
+                            this,
+                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                            ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE,
+                            new OnPermissionAnswer() {
+                                @Override
+                                public void onAccepted() {
+                                    onClickDownload();
+                                }
+                            });
+
+                }
+                onClickDownload();
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void requestPermission(Activity iActivity, final String[] iPermissions,
+                                   int iRequestCode, OnPermissionAnswer iOnPermissionAnswer) {
+
+        mOnPermissionAnswer = iOnPermissionAnswer;
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int iRequestCode,
+                                           @NotNull String[] iPermissions, @NotNull int[] iGrantResults) {
+
+        switch (iRequestCode) {
+            case ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (iGrantResults.length > 0 && iGrantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    LogManager.info(TAG, "PERMISSION OK : READ_EXTERNAL_STORAGE");
+                    if (mOnPermissionAnswer != null)
+                        mOnPermissionAnswer.onAccepted();
+                } else {
+                    LogManager.info(TAG, "PERMISSION DENY : READ_EXTERNAL_STORAGE");
+                    if (mOnPermissionAnswer != null)
+                        mOnPermissionAnswer.onDenied();
+                }
+            }
         }
     }
 
@@ -655,10 +705,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void initialize() {
-        if (!AppCore.isApplicationStarted()) {
-            new AppCore(this).startApplication();
-        }
-
         mFTPServerDAO = DataBase.getFTPServerDAO();
 
         Bundle lBundle = this.getIntent().getExtras();
@@ -995,6 +1041,13 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
+    private void onClickDownload() {
+        if (mCurrentAdapter.isInSelectionMode())
+            createDialogDownloadSelection();
+        else
+            createDialogError("Select something.").show();
+    }
+
     private void indexesFilesForDownload(final FTPFile[] iSelectedFiles) {
         LogManager.info(TAG, "Download file");
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
@@ -1041,7 +1094,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         mIndexingFolderText.setText(iPath);
-//                        mIndexingFileText.setText("");
                     }
                 });
             }
@@ -1065,8 +1117,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 DataBase.getPendingFileDAO().deleteAll(); // TODO : DATA BASE RESET HERE
                 DataBase.getPendingFileDAO().add(iPendingFiles);
 
-                if (mIndexingPendingFilesDialog != null)
-                    mIndexingPendingFilesDialog.cancel();
+                if (mIndexingPendingFilesDialog != null) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mIndexingPendingFilesDialog.cancel();
+                        }
+                    });
+                }
 
                 DownloadFiles(iPendingFiles);
 
@@ -1440,5 +1498,13 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         iErrorEnum));
             }
         });
+    }
+
+    private abstract class OnPermissionAnswer {
+        void onAccepted() {
+        }
+
+        void onDenied() {
+        }
     }
 }

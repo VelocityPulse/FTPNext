@@ -32,7 +32,6 @@ import java.io.File;
 
 public class FTPConfigureServerActivity extends AppCompatActivity {
 
-    public static final int ACTIVITY_REQUEST_CODE = 1;
     public static final int ACTIVITY_REQUEST_CODE_SELECT_FOLDER = 10;
     public static final int ACTIVITY_RESULT_ADD_SUCCESS = 0;
     public static final int ACTIVITY_RESULT_ADD_FAIL = 1;
