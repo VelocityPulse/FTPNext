@@ -19,7 +19,9 @@ public class PendingFile extends ABaseTable {
     private boolean mFinished;
     private int mProgress;
 
+    // Not in database :
     private int mSize;
+    private boolean mHasProblem;
 
     public PendingFile() {
     }
@@ -125,6 +127,17 @@ public class PendingFile extends ABaseTable {
         mSize = iSize;
     }
 
+    public boolean hasProblem() {
+        return mHasProblem;
+    }
+
+    /**
+     * Important : Only FTPTransfer can touch this
+     */
+    public void setHasProblem(boolean iHasProblem) {
+        mHasProblem = iHasProblem;
+    }
+
     @Override
     protected void setDataBaseId(int iDataBaseId) {
         mDataBaseId = iDataBaseId;
@@ -136,6 +149,7 @@ public class PendingFile extends ABaseTable {
             return;
         }
 
+        LogManager.debug(TAG, "Not useless updating content");
         mServerId = iPendingFile.mServerId;
         mLoadDirection = iPendingFile.mLoadDirection;
         mStarted = iPendingFile.mStarted;

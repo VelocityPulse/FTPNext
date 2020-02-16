@@ -6,6 +6,7 @@ import com.example.ftpnext.database.DataBase;
 import com.example.ftpnext.database.FTPServerTable.FTPServer;
 import com.example.ftpnext.database.PendingFileTable.PendingFile;
 
+import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.io.CopyStreamEvent;
 import org.apache.commons.net.io.CopyStreamListener;
@@ -83,9 +84,36 @@ public class FTPTransfer extends AFTPConnection {
         });
     }
 
+    private void initCopyStreamListener(final OnTransferListener iOnTransferListener) {
+        mFTPClient.setCopyStreamListener(new CopyStreamListener() {
+            @Override
+            public void bytesTransferred(CopyStreamEvent event) {
+
+            }
+
+            @Override
+            public void bytesTransferred(long iTotalBytesTransferred, int iBytesTransferred, long iStreamSize) {
+                iOnTransferListener.onDownloadProgress(mCandidate, iTotalBytesTransferred, iStreamSize);
+
+            }
+        });
+    }
+
     public void abortDownload() {
-        if (mTransferThread != null)
+        if (mTransferThread != null) {
             mTransferThread.interrupt();
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        mFTPClient.abort();
+                    } catch (IOException iE) {
+                        iE.printStackTrace();
+                    }
+                }
+            }).start();
+        }
     }
 
     @Override
@@ -113,7 +141,7 @@ public class FTPTransfer extends AFTPConnection {
                         return;
                     }
 
-                    mCandidate = selectNotStartedCandidate(iSelection);
+                    mCandidate = selectAvailableCandidate(iSelection);
 
                     // Stopping all transfer activities
                     if (mCandidate == null) {
@@ -130,7 +158,7 @@ public class FTPTransfer extends AFTPConnection {
                         connect(null);
                     }
 
-                    while (!isConnected()) {
+                    while (!isConnected() || isConnecting()) {
                         LogManager.info(TAG, "Download files : Waiting connection");
                         Utils.sleep(100);
 
@@ -142,21 +170,39 @@ public class FTPTransfer extends AFTPConnection {
                             return;
                         }
                     }
+
                     LogManager.info(TAG, "Download files : Connected");
 
+                    initCopyStreamListener(iOnTransferListener);
+
+                    mFTPClient.setCopyStreamListener(new CopyStreamListener() {
+                        @Override
+                        public void bytesTransferred(CopyStreamEvent event) {
+
+                        }
+
+                        @Override
+                        public void bytesTransferred(long totalBytesTransferred, int bytesTransferred, long streamSize) {
+                            LogManager.info(TAG,
+                                    "Total transferred :\t" + totalBytesTransferred +
+                                            "bytes transferred :\t" + bytesTransferred +
+                                            "stream size:\t\t\t" + streamSize);
+
+                            iOnTransferListener.onDownloadProgress(mCandidate, totalBytesTransferred, streamSize);
+                        }
+                    });
+
                     iOnTransferListener.onConnected(mCandidate);
-
-                    LogManager.info(TAG, "Going to write on the local path :\n" +
-                            mFTPServer.getAbsolutePath() + "/" +
-                            mCandidate.getEnclosingName() + "/" + mCandidate.getName());
-
-                    File lLocalFile = new File(mFTPServer.getAbsolutePath() + "/" +
-                            mCandidate.getEnclosingName() + "/" + mCandidate.getName());
 
                     try {
                         mFTPClient.enterLocalPassiveMode();
 
-                        LogManager.info(TAG, "going to fetch from the server path :\n" + mCandidate.getPath());
+                        LogManager.info(TAG, "\nGoing to write on the local path :\n\t" +
+                                mFTPServer.getAbsolutePath() + "/" +
+                                mCandidate.getEnclosingName() + mCandidate.getName() +
+                                "\nGoing to fetch from the server path :\n\t" +
+                                mCandidate.getPath());
+
 //                        FTPFile lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
 //                        mCandidate.setSize((int) lFTPFile.getSize());
 
@@ -165,23 +211,21 @@ public class FTPTransfer extends AFTPConnection {
                             mCandidate.setSize((int) lFTPFiles[0].getSize());
                         // TODO : File not findable
 
-                        mFTPClient.setCopyStreamListener(new CopyStreamListener() {
-                            @Override
-                            public void bytesTransferred(CopyStreamEvent event) {
 
+                        File lLocalFile = new File(mFTPServer.getAbsolutePath() + "/" +
+                                mCandidate.getEnclosingName() + mCandidate.getName());
+
+                        if (!lLocalFile.exists()) {
+                            if (!lLocalFile.createNewFile()) {
+                                LogManager.error(TAG, "Impossible to create new file");
+                                mCandidate.setHasProblem(true);
+                                iOnTransferListener.onFail(mCandidate);
+                                continue;
                             }
+                            LogManager.info(TAG, "Creation success");
+                        }
 
-                            @Override
-                            public void bytesTransferred(long totalBytesTransferred, int bytesTransferred, long streamSize) {
-                                LogManager.info(TAG,
-                                        "Total transferred :\t" + totalBytesTransferred +
-                                                "bytes transferred :\t" + bytesTransferred +
-                                                "stream size:\t\t\t" + streamSize);
-
-                                iOnTransferListener.onDownloadProgress(mCandidate, totalBytesTransferred, streamSize);
-                            }
-                        });
-
+                        // DOWNLOAD :
                         OutputStream lOutputStream = new BufferedOutputStream(new FileOutputStream(lLocalFile));
                         boolean lSuccess = mFTPClient.retrieveFile(mCandidate.getPath(), lOutputStream);
                         LogManager.info(TAG, "Leaving retrieve file with result : " + lSuccess);
@@ -190,7 +234,6 @@ public class FTPTransfer extends AFTPConnection {
                     } catch (IOException iE) {
                         iE.printStackTrace();
                     }
-
 
 
                     // While end
@@ -205,16 +248,16 @@ public class FTPTransfer extends AFTPConnection {
         // TODO : Guard of if it's not already downloading
     }
 
-    private PendingFile selectNotStartedCandidate(PendingFile[] iSelection) {
+    private PendingFile selectAvailableCandidate(PendingFile[] iSelection) {
         LogManager.info(TAG, "Select not started candidate");
 
         PendingFile oRet;
         synchronized (this) {
             for (PendingFile lItem : iSelection) {
-                if (!lItem.isStarted() && !lItem.isFinished()) {
+                if (!lItem.isStarted() && !lItem.isFinished() && !lItem.hasProblem()) {
                     oRet = lItem;
                     oRet.setStarted(true);
-                    LogManager.info(TAG, "Leaving select not started candidate");
+                    LogManager.info(TAG, "Leaving selectAvailableCandidate()");
                     return oRet;
                 }
             }

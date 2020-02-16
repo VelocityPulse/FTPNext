@@ -221,11 +221,16 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     mCurrentAdapter.setSelectionMode(true);
                 return true;
             case R.id.action_download:
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) !=
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
                         PackageManager.PERMISSION_GRANTED) {
+
+                    String[] lPermissions = new String[]{
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
                     requestPermission(
                             this,
-                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                            lPermissions,
                             ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE,
                             new OnPermissionAnswer() {
                                 @Override
@@ -236,6 +241,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                 }
                 onClickDownload();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -246,8 +252,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         mOnPermissionAnswer = iOnPermissionAnswer;
         ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE);
+                iPermissions,
+                iRequestCode);
     }
 
     @Override
@@ -1194,13 +1200,28 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onStartNewFile(PendingFile iPendingFile) {
-                        mNarrowTransferAdapter.updatePendingFile(iPendingFile);
+                    public void onStartNewFile(final PendingFile iPendingFile) {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                mNarrowTransferAdapter.updatePendingFile(iPendingFile);
+                            }
+                        });
                     }
 
                     @Override
-                    public void onDownloadProgress(PendingFile iPendingFile, long iProgress, long iSize) {
-                        mNarrowTransferAdapter.updatePendingFile(iPendingFile);
+                    public void onDownloadProgress(final PendingFile iPendingFile, final long iProgress, final long iSize) {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                LogManager.info(TAG,
+                                        "\nTotal transferred :" + iProgress + "  " +
+//                                                "  Bytes transferred :" + bytesTransferred + "  " +
+                                                "  Stream size :" + iSize);
+
+                                mNarrowTransferAdapter.updatePendingFile(iPendingFile);
+                            }
+                        });
                     }
 
                     @Override

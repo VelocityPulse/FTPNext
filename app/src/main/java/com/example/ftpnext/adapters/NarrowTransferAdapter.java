@@ -58,7 +58,8 @@ public class NarrowTransferAdapter
 
         iCustomItemViewAdapter.mTextView.setText(lPendingFile.getPath());
         if (lPendingFile.isStarted()) {
-            iCustomItemViewAdapter.mMainLayout.setEnabled(true);
+            if (!iCustomItemViewAdapter.mMainLayout.isEnabled())
+                iCustomItemViewAdapter.mMainLayout.setEnabled(true);
             iCustomItemViewAdapter.mProgressBar.setMax(lPendingFile.getSize());
             iCustomItemViewAdapter.mProgressBar.setProgress(lPendingFile.getProgress());
         } else {
@@ -75,7 +76,7 @@ public class NarrowTransferAdapter
     public void updatePendingFile(PendingFile iPendingFile) {
         for (PendingFile lItem : mPendingFileList) {
             if (lItem.getDataBaseId() == iPendingFile.getDataBaseId()) {
-                lItem.updateContent(iPendingFile);
+//                lItem.updateContent(iPendingFile);
                 notifyItemChanged(mPendingFileList.indexOf(lItem));
             }
         }

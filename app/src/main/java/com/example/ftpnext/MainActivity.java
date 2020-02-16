@@ -215,8 +215,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializePermissions() {
         if (AppCore.isTheFirstRun()) {
+            String[] lPermissions = new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    lPermissions,
                     ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE);
         }
     }

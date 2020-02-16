@@ -298,7 +298,7 @@ public abstract class AFTPConnection {
     }
 
     public boolean isConnecting() {
-        return !isConnected() && mConnectionThread != null && mConnectionThread.isAlive();
+        return mConnectionThread != null && mConnectionThread.isAlive();
     }
 
     public boolean isReconnecting() {
