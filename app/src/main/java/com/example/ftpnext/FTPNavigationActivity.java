@@ -1203,7 +1203,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                mNarrowTransferAdapter.updatePendingFile(iPendingFile);
+                                mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
                             }
                         });
                     }
@@ -1213,7 +1213,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                mNarrowTransferAdapter.updatePendingFile(iPendingFile);
+                                mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
                             }
                         });
                     }

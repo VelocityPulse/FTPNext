@@ -23,13 +23,16 @@ public class NarrowTransferAdapter
     private static final String TAG = "NARROW TRANSFER ADAPTER";
 
     private List<PendingFile> mPendingFileList;
+    private List<CustomItemViewAdapter> mCustomItemViewAdapterList;
 
     public NarrowTransferAdapter(PendingFile[] iPendingFiles) {
         mPendingFileList = Arrays.asList(iPendingFiles);
+        mCustomItemViewAdapterList = new ArrayList<>();
     }
 
     public NarrowTransferAdapter() {
         mPendingFileList = new ArrayList<>();
+        mCustomItemViewAdapterList = new ArrayList<>();
     }
 
     @NonNull
@@ -39,9 +42,13 @@ public class NarrowTransferAdapter
         LinearLayout lLayout = (LinearLayout) LayoutInflater.from(iViewGroup.getContext()).inflate(
                 R.layout.list_item_narrow_transfer, iViewGroup, false);
 
-        return new CustomItemViewAdapter(lLayout,
+        CustomItemViewAdapter lItem = new CustomItemViewAdapter(lLayout,
                 (TextView) lLayout.findViewById(R.id.item_narrow_transfer_text),
+                (TextView) lLayout.findViewById(R.id.item_narrow_transfer_speed),
                 (ProgressBar) lLayout.findViewById(R.id.item_narrow_transfer_progress_bar));
+
+        mCustomItemViewAdapterList.add(lItem);
+        return lItem;
     }
 
     @Override
@@ -49,10 +56,10 @@ public class NarrowTransferAdapter
         LogManager.info(TAG, "On bind view holder");
         final PendingFile lPendingFile = mPendingFileList.get(iPosition);
 
-        // TODO : Continue on speed display
+        iCustomItemViewAdapter.mPendingFile = lPendingFile;
 
-        if (!iCustomItemViewAdapter.mTextView.getText().equals(lPendingFile.getPath()))
-            iCustomItemViewAdapter.mTextView.setText(lPendingFile.getPath());
+        if (!iCustomItemViewAdapter.mTextFileView.getText().equals(lPendingFile.getPath()))
+            iCustomItemViewAdapter.mTextFileView.setText(lPendingFile.getPath());
 
         if (lPendingFile.isStarted()) {
             if (!iCustomItemViewAdapter.mMainLayout.isEnabled())
@@ -61,6 +68,14 @@ public class NarrowTransferAdapter
             if (iCustomItemViewAdapter.mProgressBar.getMax() != lPendingFile.getSize())
                 iCustomItemViewAdapter.mProgressBar.setMax(lPendingFile.getSize());
             iCustomItemViewAdapter.mProgressBar.setProgress(lPendingFile.getProgress());
+
+            if (lPendingFile.getSpeedInKo() > 1000) {
+                String lSpeed = lPendingFile.getSpeedInKo() / 1000L + " Mo/s";
+                iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
+            } else {
+                String lSpeed = lPendingFile.getSpeedInKo() + " Ko/s";
+                iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
+            }
         } else {
             LogManager.debug(TAG, "Set enabled : false");
             iCustomItemViewAdapter.mMainLayout.setEnabled(false);
@@ -73,28 +88,31 @@ public class NarrowTransferAdapter
         return mPendingFileList.size();
     }
 
-    public void updatePendingFile(PendingFile iPendingFile) {
-        for (PendingFile lItem : mPendingFileList) {
-            if (lItem.getDataBaseId() == iPendingFile.getDataBaseId()) {
-//                lItem.updateContent(iPendingFile);
-
-//                notifyDataSetChanged();
-                notifyItemChanged(mPendingFileList.indexOf(lItem));
+    public void updatePendingFileData(PendingFile iPendingFile) {
+        for (CustomItemViewAdapter lItem : mCustomItemViewAdapterList) {
+            if (lItem.mPendingFile == iPendingFile) {
+                onBindViewHolder(lItem, mPendingFileList.indexOf(iPendingFile));
+                return;
             }
         }
+        LogManager.error(TAG, "UpdatePendingFileData didn't find the item to update...");
     }
 
 
     static class CustomItemViewAdapter extends RecyclerView.ViewHolder {
+        PendingFile mPendingFile;
+
         View mMainLayout;
-        TextView mTextView;
+        TextView mTextFileView;
+        TextView mTextSpeedView;
         ProgressBar mProgressBar;
 
-        public CustomItemViewAdapter(@NonNull View iMainLayout,
-                                     TextView iTextView, ProgressBar iProgressBar) {
+        public CustomItemViewAdapter(@NonNull View iMainLayout, TextView iTextFileView,
+                                     TextView iTextSpeedView, ProgressBar iProgressBar) {
             super(iMainLayout);
             mMainLayout = iMainLayout;
-            mTextView = iTextView;
+            mTextFileView = iTextFileView;
+            mTextSpeedView = iTextSpeedView;
             mProgressBar = iProgressBar;
         }
     }

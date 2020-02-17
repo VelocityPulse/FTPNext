@@ -23,7 +23,7 @@ public class FTPTransfer extends AFTPConnection {
 
     private static final String TAG = "FTP TRANSFER";
 
-    private static final int UPDATE_TRANSFER_TIMER = 300;
+    private static final long UPDATE_TRANSFER_TIMER = 200;
 
     private static List<FTPTransfer> sFTPTransferInstances;
 
@@ -32,6 +32,14 @@ public class FTPTransfer extends AFTPConnection {
 
     private Thread mTransferThread;
     private long mTimer;
+    private long mBytesTransferred;
+
+    private int mTurn;
+    private long mSpeedAverage1;
+    private long mSpeedAverage2;
+    private long mSpeedAverage3;
+    private long mSpeedAverage4;
+    private long mSpeedAverage5;
 
     public FTPTransfer(FTPServer iFTPServer) {
         super(iFTPServer);
@@ -96,21 +104,27 @@ public class FTPTransfer extends AFTPConnection {
             @Override
             public void bytesTransferred(long iTotalBytesTransferred, int iBytesTransferred, long iStreamSize) {
 
+                mBytesTransferred += iBytesTransferred;
+
                 long lCurrentTimeMillis = System.currentTimeMillis();
                 long lElapsedTime = lCurrentTimeMillis - mTimer;
 
                 if (lElapsedTime > UPDATE_TRANSFER_TIMER) {
-                    mTimer = lCurrentTimeMillis;
+                    long lImmediateSpeedInKoS = ((mBytesTransferred * 1000) / UPDATE_TRANSFER_TIMER) / 1000;
+
+                    settingAverageSpeed(lImmediateSpeedInKoS);
+                    mCandidate.setSpeedInKo(getAverageSpeed());
+
+                    float lRemainingTime = (float) mCandidate.getSize() / (float) mCandidate.getSpeedInKo();
+                    mCandidate.setRemainingTimeInMin((int)lRemainingTime);
+//                    LogManager.debug(TAG, "Remaining time : " + lRemainingTime / 60 / 60 / 60 + "min");
 
                     mCandidate.setProgress((int) iTotalBytesTransferred);
                     iOnTransferListener.onDownloadProgress(mCandidate, iTotalBytesTransferred, iStreamSize);
-                    //code to run
-                }
 
-//                LogManager.info(TAG,
-//                        "Total transferred : " + iTotalBytesTransferred +
-//                                "\tBytes transferred : " + iBytesTransferred +
-//                                "\tStream size : " + iStreamSize);
+                    mBytesTransferred = 0;
+                    mTimer = lCurrentTimeMillis;
+                }
             }
         });
     }
@@ -268,6 +282,31 @@ public class FTPTransfer extends AFTPConnection {
 
         LogManager.info(TAG, "Leaving select not started candidate");
         return null;
+    }
+
+    private void settingAverageSpeed(long iValue) {
+        if (mTurn == 0)
+            mSpeedAverage1 = iValue;
+        else if (mTurn == 1)
+            mSpeedAverage2 = iValue;
+        else if (mTurn == 2)
+            mSpeedAverage3 = iValue;
+        else if (mTurn == 3)
+            mSpeedAverage4 = iValue;
+
+        mTurn++;
+        if (mTurn == 4) {
+            mSpeedAverage5 = iValue;
+            mTurn = 0;
+        }
+    }
+
+    private long getAverageSpeed() {
+        return (mSpeedAverage1 +
+                mSpeedAverage2 +
+                mSpeedAverage3 +
+                mSpeedAverage4 +
+                mSpeedAverage5) / 5;
     }
 
     public abstract class OnTransferListener {

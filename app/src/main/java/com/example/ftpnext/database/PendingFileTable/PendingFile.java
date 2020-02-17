@@ -22,6 +22,8 @@ public class PendingFile extends ABaseTable {
     // Not in database :
     private int mSize;
     private boolean mHasProblem;
+    private long mSpeedInKo;
+    private int remainingTimeInMin;
 
     public PendingFile() {
     }
@@ -61,7 +63,7 @@ public class PendingFile extends ABaseTable {
         return mStarted;
     }
 
-    public PendingFile  setStarted(boolean iStarted) {
+    public PendingFile setStarted(boolean iStarted) {
         mStarted = iStarted;
         return this;
     }
@@ -111,18 +113,22 @@ public class PendingFile extends ABaseTable {
         return this;
     }
 
+    @Override
+    protected void setDataBaseId(int iDataBaseId) {
+        mDataBaseId = iDataBaseId;
+    }
+
+    // Getter and Setter are not in DataBase from here
 
     /**
      * This value is set only after FTPTransfer has begun its transfer
+     *
      * @return Size of the pending file
      */
     public int getSize() {
         return mSize;
     }
 
-    /**
-     * Important : Only FTPTransfer can touch this
-     */
     public void setSize(int iSize) {
         mSize = iSize;
     }
@@ -131,16 +137,25 @@ public class PendingFile extends ABaseTable {
         return mHasProblem;
     }
 
-    /**
-     * Important : Only FTPTransfer can touch this
-     */
+
     public void setHasProblem(boolean iHasProblem) {
         mHasProblem = iHasProblem;
     }
 
-    @Override
-    protected void setDataBaseId(int iDataBaseId) {
-        mDataBaseId = iDataBaseId;
+    public long getSpeedInKo() {
+        return mSpeedInKo;
+    }
+
+    public void setSpeedInKo(long iSpeedInKo) {
+        mSpeedInKo = iSpeedInKo;
+    }
+
+    public int getRemainingTimeInMin() {
+        return remainingTimeInMin;
+    }
+
+    public void setRemainingTimeInMin(int iRemainingTimeInMin) {
+        remainingTimeInMin = iRemainingTimeInMin;
     }
 
     public void updateContent(PendingFile iPendingFile) {
