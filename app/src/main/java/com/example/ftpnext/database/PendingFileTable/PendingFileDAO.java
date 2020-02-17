@@ -50,17 +50,17 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
         return super.fetchAll(TABLE, COLUMNS, COLUMN_DATABASE_ID);
     }
 
-    public boolean add(PendingFile[] iObjects) {
+    public int add(PendingFile[] iObjects) {
         if (iObjects == null || iObjects.length == 0) {
             LogManager.error(TAG, "No object to add");
-            return false;
+            return 0;
         }
 
         int oErrors = 0;
         for (PendingFile lItem : iObjects) {
             oErrors += (super.add(lItem, TABLE) < 0) ? 1 : 0;
         }
-        return oErrors == 0;
+        return oErrors;
     }
 
     @Override

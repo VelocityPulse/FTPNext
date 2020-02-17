@@ -21,17 +21,26 @@ public class NarrowTransferAdapter
         extends RecyclerView.Adapter<NarrowTransferAdapter.CustomItemViewAdapter> {
 
     private static final String TAG = "NARROW TRANSFER ADAPTER";
+    private static final int MAX_REMOVE_REQUEST_IN_SEC = 15;
 
     private List<PendingFile> mPendingFileList;
+    private List<PendingFile> mToRemovePendingFileList;
     private List<CustomItemViewAdapter> mCustomItemViewAdapterList;
 
+    private boolean mRemovingInRangeMode;
+
+    private int mUpdateRequestedInSecond;
+    private long mTimer;
+
     public NarrowTransferAdapter(PendingFile[] iPendingFiles) {
-        mPendingFileList = Arrays.asList(iPendingFiles);
+        mPendingFileList = new ArrayList<>(Arrays.asList(iPendingFiles));
+        mToRemovePendingFileList = new ArrayList<>();
         mCustomItemViewAdapterList = new ArrayList<>();
     }
 
     public NarrowTransferAdapter() {
         mPendingFileList = new ArrayList<>();
+        mToRemovePendingFileList = new ArrayList<>();
         mCustomItemViewAdapterList = new ArrayList<>();
     }
 
@@ -53,7 +62,7 @@ public class NarrowTransferAdapter
 
     @Override
     public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iPosition) {
-        LogManager.info(TAG, "On bind view holder");
+//        LogManager.info(TAG, "On bind view holder");
         final PendingFile lPendingFile = mPendingFileList.get(iPosition);
 
         iCustomItemViewAdapter.mPendingFile = lPendingFile;
@@ -77,9 +86,9 @@ public class NarrowTransferAdapter
                 iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
             }
         } else {
-            LogManager.debug(TAG, "Set enabled : false");
             iCustomItemViewAdapter.mMainLayout.setEnabled(false);
-//            iCustomItemViewAdapter.mProgressBar.setProgress(0);
+            iCustomItemViewAdapter.mTextSpeedView.setText("");
+            iCustomItemViewAdapter.mProgressBar.setProgress(lPendingFile.getProgress());
         }
     }
 
@@ -96,6 +105,12 @@ public class NarrowTransferAdapter
             }
         }
         LogManager.error(TAG, "UpdatePendingFileData didn't find the item to update...");
+    }
+
+    public void removePendingFile(PendingFile iPendingFile) {
+        mRemovingInRangeMode = false;
+        notifyItemRemoved(mPendingFileList.indexOf(iPendingFile));
+        mPendingFileList.remove(iPendingFile);
     }
 
 

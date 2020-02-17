@@ -6,6 +6,8 @@ import com.example.ftpnext.core.LoadDirection;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.ABaseTable;
 
+import org.jetbrains.annotations.NotNull;
+
 public class PendingFile extends ABaseTable {
 
     private static final String TAG = "DATABASE : Pending file";
@@ -37,8 +39,11 @@ public class PendingFile extends ABaseTable {
         mPath = iPath;
         if (iEnclosureName == null)
             mEnclosingName = "";
-        else
+        else {
             mEnclosingName = iEnclosureName;
+            if (!mEnclosingName.endsWith("/"))
+                mEnclosingName += "/";
+        }
     }
 
     public int getServerId() {
@@ -158,6 +163,22 @@ public class PendingFile extends ABaseTable {
         remainingTimeInMin = iRemainingTimeInMin;
     }
 
+    @NonNull
+    @Override
+    public String toString() {
+        String oToString;
+
+        oToString = "Database id: " + mDataBaseId +
+                "\nServerId: " + mServerId +
+                "\nLoadDirection: " + mLoadDirection.toString() +
+                "\nStarted: " + mStarted +
+                "\nPath:\t\t\t" + mPath +
+                "\nEnclosureName:\t" + mEnclosingName +
+                "\nFinished: " + mFinished +
+                "\nmProgress: " + mProgress;
+        return oToString;
+    }
+
     public void updateContent(PendingFile iPendingFile) {
         if (this == iPendingFile) {
             LogManager.info(TAG, "Useless updating content");
@@ -173,20 +194,5 @@ public class PendingFile extends ABaseTable {
         mEnclosingName = iPendingFile.mEnclosingName;
         mFinished = iPendingFile.mFinished;
         mProgress = iPendingFile.mProgress;
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        String oToString;
-
-        oToString = "ServerId: " + mServerId +
-                ", LoadDirection: " + mLoadDirection.toString() +
-                ", Started: " + mStarted +
-                "\nPath:\t\t\t" + mPath +
-                "\nEnclosureName:\t" + mEnclosingName +
-                "\nFinished: " + mFinished +
-                "\nmProgress: " + mProgress;
-        return oToString;
     }
 }

@@ -51,20 +51,18 @@ import com.example.ftpnext.ftpservices.FTPTransfer;
 import org.apache.commons.net.ftp.FTPFile;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class FTPNavigationActivity extends AppCompatActivity {
 
-    private static final String TAG = "FTP NAVIGATION ACTIVITY";
-
-    private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
-
     public static final int NO_DATABASE_ID = -1;
     public static final String ROOT_DIRECTORY = "/";
-
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
     public static final String KEY_DIRECTORY_PATH = "KEY_DIRECTORY_PATH";
-
+    private static final String TAG = "FTP NAVIGATION ACTIVITY";
+    private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
     private static final int LARGE_DIRECTORY_SIZE = 30000;
     private static final int BAD_CONNECTION_TIME = 50;
 
@@ -1139,7 +1137,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void DownloadFiles(final PendingFile[] iPendingFiles) {
-        final FTPTransfer lFTPTransfer = new FTPTransfer(mFTPServer.getDataBaseId());
+        final List<FTPTransfer> lFTPTransferList = new ArrayList<>();
 
         mHandler.post(new Runnable() {
             @Override
@@ -1165,7 +1163,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface iDialog, int iWhich) {
                         iDialog.dismiss();
-                        lFTPTransfer.abortTransfer();
+                        for (FTPTransfer lItem : lFTPTransferList)
+                            lItem.abortTransfer();
                     }
                 });
 
@@ -1184,63 +1183,81 @@ public class FTPNavigationActivity extends AppCompatActivity {
             }
         });
 
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                lFTPTransfer.downloadFiles(iPendingFiles, lFTPTransfer.new OnTransferListener() {
-                    @Override
-                    public void onConnected(PendingFile iPendingFile) {
+        int lI = -1;
+        int lMaxSimultaneousDownload = AppCore.getMaxTransfer();
+        while (++lI < lMaxSimultaneousDownload && lI < iPendingFiles.length) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    final FTPTransfer lFTPTransfer = new FTPTransfer(mFTPServer.getDataBaseId());
+                    lFTPTransferList.add(lFTPTransfer);
 
-                    }
+                    lFTPTransfer.downloadFiles(iPendingFiles, lFTPTransfer.new OnTransferListener() {
+                        @Override
+                        public void onConnected(PendingFile iPendingFile) {
 
-                    @Override
-                    public void onConnectionLost(PendingFile iPendingFile) {
+                        }
 
-                    }
+                        @Override
+                        public void onConnectionLost(final PendingFile iPendingFile) {
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
+                                }
+                            });
+                        }
 
-                    @Override
-                    public void onStartNewFile(final PendingFile iPendingFile) {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
-                            }
-                        });
-                    }
+                        @Override
+                        public void onStartNewFile(final PendingFile iPendingFile) {
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
+                                }
+                            });
+                        }
 
-                    @Override
-                    public void onDownloadProgress(final PendingFile iPendingFile, final long iProgress, final long iSize) {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
-                            }
-                        });
-                    }
+                        @Override
+                        public void onDownloadProgress(final PendingFile iPendingFile, final long iProgress, final long iSize) {
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
+                                }
+                            });
+                        }
 
-                    @Override
-                    public void onDownloadSuccess(PendingFile iPendingFile) {
+                        @Override
+                        public void onDownloadSuccess(final PendingFile iPendingFile) {
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mNarrowTransferAdapter.removePendingFile(iPendingFile);
+                                    DataBase.getPendingFileDAO().delete(iPendingFile);
+                                }
+                            });
+                        }
 
-                    }
+                        @Override
+                        public void onRightAccessFail(PendingFile iPendingFile) {
 
-                    @Override
-                    public void onRightAccessFail(PendingFile iPendingFile) {
+                        }
 
-                    }
+                        @Override
+                        public void onFail(PendingFile iPendingFile) {
 
-                    @Override
-                    public void onFail(PendingFile iPendingFile) {
+                        }
 
-                    }
+                        @Override
+                        public void onStop() {
 
-                    @Override
-                    public void onStop() {
+                        }
+                    });
 
-                    }
-                });
-
-            }
-        });
+                }
+            });
+        }
     }
 
     private void createDialogDeleteSelection() {

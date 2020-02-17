@@ -76,7 +76,9 @@ public abstract class ADataAccessObject<T extends ABaseTable> extends ADataBaseS
         setContentValue(iObject);
 
         try {
-            return (int) super.insert(iTable, mContentValues);
+            int lNewId = (int) super.insert(iTable, mContentValues);
+            iObject.setDataBaseId(lNewId);
+            return lNewId;
         } catch (SQLiteConstraintException iEx) {
             LogManager.error(TAG, "Add error: " + iEx.getMessage());
             return -1;
@@ -88,14 +90,19 @@ public abstract class ADataAccessObject<T extends ABaseTable> extends ADataBaseS
         return super.delete(iTable, selection, null) > 0;
     }
 
-    protected boolean update(T iObject, int iId, String iTable, String iColumnId) {
-        setContentValue(iObject);
+    protected boolean update(T iObject, int iId, String iTable, String iColumnDataBaseId) {
+        synchronized (ADataAccessObject.class) {
+            setContentValue(iObject);
 
-        try {
-            final String lSelection = " " + iColumnId + " = " + iId;
-            return super.update(iTable, mContentValues, lSelection, null) > 0;
-        } catch (SQLiteConstraintException iEx) {
-            return LogManager.error(TAG, "Update error : " + iEx.getMessage()); //error
+            try {
+                final String lSelection = iColumnDataBaseId + " = ?";
+                final String[] lSelectionArgs = {String.valueOf(iId)};
+
+                return super.update(iTable, mContentValues, lSelection, lSelectionArgs) > 0;
+            } catch (SQLiteConstraintException iEx) {
+                return LogManager.error(TAG, "Update error :\nThread : " +
+                        Thread.currentThread().getId() + "\n" + iEx.getMessage() + "\n" + iObject.toString()); //error
+            }
         }
     }
 }

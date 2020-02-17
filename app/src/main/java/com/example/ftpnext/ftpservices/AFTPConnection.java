@@ -43,6 +43,7 @@ public abstract class AFTPConnection {
     private boolean mAbortReconnect;
 
     public AFTPConnection(FTPServer iFTPServer) {
+        LogManager.info(TAG, "Constructor");
         mFTPServerDAO = DataBase.getFTPServerDAO();
         mFTPServer = iFTPServer;
         mFTPClient = new FTPClient();
@@ -50,6 +51,7 @@ public abstract class AFTPConnection {
     }
 
     public AFTPConnection(int iServerId) {
+        LogManager.info(TAG, "Constructor");
         mFTPServerDAO = DataBase.getFTPServerDAO();
         mFTPServer = mFTPServerDAO.fetchById(iServerId);
         mFTPClient = new FTPClient();

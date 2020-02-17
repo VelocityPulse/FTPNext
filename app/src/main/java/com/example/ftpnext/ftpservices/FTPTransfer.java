@@ -24,6 +24,7 @@ public class FTPTransfer extends AFTPConnection {
     private static final String TAG = "FTP TRANSFER";
 
     private static final long UPDATE_TRANSFER_TIMER = 200;
+    private static final int TRANSFER_FINISH_BREAK = 200;
 
     private static List<FTPTransfer> sFTPTransferInstances;
 
@@ -51,6 +52,7 @@ public class FTPTransfer extends AFTPConnection {
 
     public FTPTransfer(int iServerId) {
         super(iServerId);
+        LogManager.info(TAG, "Constructor");
 
         if (sFTPTransferInstances == null)
             sFTPTransferInstances = new ArrayList<>();
@@ -74,8 +76,13 @@ public class FTPTransfer extends AFTPConnection {
         setIOnConnectionLost(new IOnConnectionLost() {
             @Override
             public void onConnectionLost() {
-                if (mTransferListener != null)
-                    mTransferListener.onConnectionLost(mCandidate);
+
+                if (mCandidate != null) {
+                    mCandidate.setRemainingTimeInMin(0);
+                    mCandidate.setSpeedInKo(0);
+                    if (mTransferListener != null)
+                        mTransferListener.onConnectionLost(mCandidate);
+                }
 
                 reconnect(new OnConnectionRecover() {
                     @Override
@@ -116,7 +123,7 @@ public class FTPTransfer extends AFTPConnection {
                     mCandidate.setSpeedInKo(getAverageSpeed());
 
                     float lRemainingTime = (float) mCandidate.getSize() / (float) mCandidate.getSpeedInKo();
-                    mCandidate.setRemainingTimeInMin((int)lRemainingTime);
+                    mCandidate.setRemainingTimeInMin((int) lRemainingTime);
 //                    LogManager.debug(TAG, "Remaining time : " + lRemainingTime / 60 / 60 / 60 + "min");
 
                     mCandidate.setProgress((int) iTotalBytesTransferred);
@@ -181,6 +188,7 @@ public class FTPTransfer extends AFTPConnection {
                         // TODO : y a plus rien a DL blablabla
                     }
 
+                    LogManager.info(TAG, "CANDIDATE : \n" + mCandidate.toString());
                     DataBase.getPendingFileDAO().update(mCandidate);
                     iOnTransferListener.onStartNewFile(mCandidate);
 
@@ -210,11 +218,14 @@ public class FTPTransfer extends AFTPConnection {
                     try {
                         mFTPClient.enterLocalPassiveMode();
 
+                        String lLocalPath = mFTPServer.getAbsolutePath() + "/" +
+                                mCandidate.getEnclosingName() + mCandidate.getName();
+                        String lRemotePath = mCandidate.getPath();
+
                         LogManager.info(TAG, "\nGoing to write on the local path :\n\t" +
-                                mFTPServer.getAbsolutePath() + "/" +
-                                mCandidate.getEnclosingName() + mCandidate.getName() +
+                                lLocalPath +
                                 "\nGoing to fetch from the server path :\n\t" +
-                                mCandidate.getPath());
+                                lRemotePath);
 
                         FTPFile lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
                         if (lFTPFile != null)
@@ -222,24 +233,20 @@ public class FTPTransfer extends AFTPConnection {
                         else
                             ;// TODO : File not findable
 
-//                        String lFolderPath = mCandidate.getPath().substring(0, mCandidate.getPath().lastIndexOf('/'));
-//
-//                        FTPFile[] lFTPFiles = mFTPClient.mlistDir(lFolderPath);
-//                        if (lFTPFiles.length > 0)
-//                            mCandidate.setSize((int) lFTPFiles[0].getSize());
-//                        LogManager.debug(TAG, "Size identified : " + lFTPFiles[0].getSize());
-
                         File lLocalFile = new File(mFTPServer.getAbsolutePath() + "/" +
                                 mCandidate.getEnclosingName() + mCandidate.getName());
 
                         if (!lLocalFile.exists()) {
+                            LogManager.error(TAG, "File not existing");
+                            if (lLocalFile.getParentFile().mkdirs())
+                                LogManager.info(TAG, "mkdir success");
                             if (!lLocalFile.createNewFile()) {
                                 LogManager.error(TAG, "Impossible to create new file");
                                 mCandidate.setHasProblem(true);
                                 iOnTransferListener.onFail(mCandidate);
                                 continue;
-                            }
-                            LogManager.info(TAG, "Creation success");
+                            } else
+                                LogManager.info(TAG, "Creation success");
                         }
 
                         // DOWNLOAD :
@@ -247,12 +254,22 @@ public class FTPTransfer extends AFTPConnection {
                         boolean lSuccess = mFTPClient.retrieveFile(mCandidate.getPath(), lOutputStream);
                         LogManager.info(TAG, "Leaving retrieve file with result : " + lSuccess);
 
+                        mCandidate.setSpeedInKo(0);
+                        mCandidate.setRemainingTimeInMin(0);
+
+                        if (lSuccess) {
+                            mCandidate.setFinished(true);
+                            iOnTransferListener.onDownloadProgress(mCandidate,
+                                    mCandidate.getProgress(), mCandidate.getSize());
+                            iOnTransferListener.onDownloadSuccess(mCandidate);
+                        }
+
                         mFTPClient.enterLocalActiveMode();
                     } catch (IOException iE) {
                         iE.printStackTrace();
                     }
 
-
+                    Utils.sleep(TRANSFER_FINISH_BREAK);
                     // While end
                 }
             }
@@ -266,10 +283,10 @@ public class FTPTransfer extends AFTPConnection {
     }
 
     private PendingFile selectAvailableCandidate(PendingFile[] iSelection) {
-        LogManager.info(TAG, "Select not started candidate");
+        synchronized (FTPTransfer.class) {
 
-        PendingFile oRet;
-        synchronized (this) {
+            PendingFile oRet;
+            LogManager.info(TAG, "Select not started candidate");
             for (PendingFile lItem : iSelection) {
                 if (!lItem.isStarted() && !lItem.isFinished() && !lItem.hasProblem()) {
                     oRet = lItem;
@@ -278,9 +295,9 @@ public class FTPTransfer extends AFTPConnection {
                     return oRet;
                 }
             }
+            LogManager.info(TAG, "Leaving select not started candidate");
         }
 
-        LogManager.info(TAG, "Leaving select not started candidate");
         return null;
     }
 

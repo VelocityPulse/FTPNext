@@ -6,6 +6,8 @@ import com.example.ftpnext.core.FTPType;
 import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.ABaseTable;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -153,6 +155,7 @@ public class FTPServer extends ABaseTable {
         return true;
     }
 
+    @NotNull
     @Override
     public String toString() {
         String oToString;

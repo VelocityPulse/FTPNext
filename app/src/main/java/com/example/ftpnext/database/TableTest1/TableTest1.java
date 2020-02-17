@@ -2,6 +2,8 @@ package com.example.ftpnext.database.TableTest1;
 
 import com.example.ftpnext.database.ABaseTable;
 
+import org.jetbrains.annotations.NotNull;
+
 public class TableTest1 extends ABaseTable {
 
     private int mValue = 0;
@@ -23,5 +25,11 @@ public class TableTest1 extends ABaseTable {
     @Override
     protected void setDataBaseId(int iDataBaseId) {
         mDataBaseId = iDataBaseId;
+    }
+
+    @NotNull
+    @Override
+    public String toString() {
+        return "test";
     }
 }
