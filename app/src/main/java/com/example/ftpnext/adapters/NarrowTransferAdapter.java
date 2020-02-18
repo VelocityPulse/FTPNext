@@ -16,20 +16,20 @@ import com.example.ftpnext.database.PendingFileTable.PendingFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Timer;
 
 public class NarrowTransferAdapter
         extends RecyclerView.Adapter<NarrowTransferAdapter.CustomItemViewAdapter> {
 
     private static final String TAG = "NARROW TRANSFER ADAPTER";
     private static final int MAX_REMOVE_REQUEST_IN_SEC = 15;
-
+    private static final int REMOVE_BREAK_TIMER = 1000;
+    private final List<PendingFile> mToRemovePendingFileList;
     private List<PendingFile> mPendingFileList;
-    private List<PendingFile> mToRemovePendingFileList;
     private List<CustomItemViewAdapter> mCustomItemViewAdapterList;
 
-    private boolean mRemovingInRangeMode;
-
     private int mUpdateRequestedInSecond;
+    private Timer mScheduleTimer;
     private long mTimer;
 
     public NarrowTransferAdapter(PendingFile[] iPendingFiles) {
@@ -78,15 +78,18 @@ public class NarrowTransferAdapter
                 iCustomItemViewAdapter.mProgressBar.setMax(lPendingFile.getSize());
             iCustomItemViewAdapter.mProgressBar.setProgress(lPendingFile.getProgress());
 
-            if (lPendingFile.getSpeedInKo() < 1000) {
-                String lSpeed = lPendingFile.getSpeedInKo() + " Ko/s";
-                iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
-            } else {
-                double lMoSpeed;
-                lMoSpeed = ((double) lPendingFile.getSpeedInKo()) / 1000d;
-                String lSpeed = lMoSpeed + " Mo/s";
-                iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
-            }
+            if (!lPendingFile.isFinished()) {
+                if (lPendingFile.getSpeedInKo() < 1000) {
+                    String lSpeed = lPendingFile.getSpeedInKo() + " Ko/s";
+                    iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
+                } else {
+                    double lMoSpeed;
+                    lMoSpeed = ((double) lPendingFile.getSpeedInKo()) / 1000d;
+                    String lSpeed = lMoSpeed + " Mo/s";
+                    iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
+                }
+            } else
+                iCustomItemViewAdapter.mTextSpeedView.setText("");
         } else {
             iCustomItemViewAdapter.mMainLayout.setEnabled(false);
             iCustomItemViewAdapter.mTextSpeedView.setText("");
@@ -106,13 +109,33 @@ public class NarrowTransferAdapter
                 return;
             }
         }
-        LogManager.error(TAG, "UpdatePendingFileData didn't find the item to update...");
     }
 
     public void removePendingFile(PendingFile iPendingFile) {
-        mRemovingInRangeMode = false;
-        notifyItemRemoved(mPendingFileList.indexOf(iPendingFile));
-        mPendingFileList.remove(iPendingFile);
+        synchronized (mToRemovePendingFileList) {
+            mToRemovePendingFileList.add(iPendingFile);
+        }
+
+        long lCurrentTimeMillis = System.currentTimeMillis();
+        long lElapsedTime = lCurrentTimeMillis - mTimer;
+
+        if (lElapsedTime > REMOVE_BREAK_TIMER) {
+
+            synchronized (mToRemovePendingFileList) {
+
+                int lIndex;
+                for (PendingFile lItem : mToRemovePendingFileList) {
+                    lIndex = mPendingFileList.indexOf(lItem);
+                    mPendingFileList.remove(lItem);
+                    notifyItemRemoved(lIndex);
+                }
+
+                mToRemovePendingFileList.clear();
+            }
+
+            mScheduleTimer = null;
+            mTimer = lCurrentTimeMillis;
+        }
     }
 
 
