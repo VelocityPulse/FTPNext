@@ -78,11 +78,13 @@ public class NarrowTransferAdapter
                 iCustomItemViewAdapter.mProgressBar.setMax(lPendingFile.getSize());
             iCustomItemViewAdapter.mProgressBar.setProgress(lPendingFile.getProgress());
 
-            if (lPendingFile.getSpeedInKo() > 1000) {
-                String lSpeed = lPendingFile.getSpeedInKo() / 1000L + " Mo/s";
+            if (lPendingFile.getSpeedInKo() < 1000) {
+                String lSpeed = lPendingFile.getSpeedInKo() + " Ko/s";
                 iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
             } else {
-                String lSpeed = lPendingFile.getSpeedInKo() + " Ko/s";
+                double lMoSpeed;
+                lMoSpeed = ((double) lPendingFile.getSpeedInKo()) / 1000d;
+                String lSpeed = lMoSpeed + " Mo/s";
                 iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
             }
         } else {

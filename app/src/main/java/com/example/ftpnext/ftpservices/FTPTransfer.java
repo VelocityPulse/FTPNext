@@ -227,6 +227,11 @@ public class FTPTransfer extends AFTPConnection {
                                 "\nGoing to fetch from the server path :\n\t" +
                                 lRemotePath);
 
+                        if (mTransferThread.isInterrupted()) {
+                            mTransferThread = null;
+                            return;
+                        }
+
                         FTPFile lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
                         if (lFTPFile != null)
                             mCandidate.setSize((int) lFTPFile.getSize());
@@ -256,6 +261,11 @@ public class FTPTransfer extends AFTPConnection {
 
                         mCandidate.setSpeedInKo(0);
                         mCandidate.setRemainingTimeInMin(0);
+
+                        if (mTransferThread.isInterrupted()) {
+                            mTransferThread = null;
+                            return;
+                        }
 
                         if (lSuccess) {
                             mCandidate.setFinished(true);

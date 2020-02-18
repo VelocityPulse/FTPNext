@@ -9,7 +9,6 @@ import com.example.ftpnext.core.LogManager;
 import com.example.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.example.ftpnext.database.FTPServerTable.IFTPServerSchema;
 import com.example.ftpnext.database.PendingFileTable.IPendingFileSchema;
-import com.example.ftpnext.database.PendingFileTable.PendingFile;
 import com.example.ftpnext.database.PendingFileTable.PendingFileDAO;
 import com.example.ftpnext.database.TableTest1.ITableTest1Schema;
 import com.example.ftpnext.database.TableTest1.TableTest1DAO;

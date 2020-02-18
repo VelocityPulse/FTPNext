@@ -29,9 +29,9 @@
             android:id="@+id/item_narrow_transfer_speed"
             android:gravity="center|right"
             android:textSize="10dp"
-            android:layout_width="50dp"
+            android:layout_width="55dp"
             android:layout_height="match_parent"
-            android:text="1000 ko/s"
+            android:text="1.100 Mo/s"
             />
 
     </LinearLayout>
