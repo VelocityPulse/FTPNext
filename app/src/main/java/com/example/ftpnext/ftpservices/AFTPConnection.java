@@ -27,9 +27,9 @@ public abstract class AFTPConnection {
     private static final int RECONNECTION_WAITING_TIME = 700;
     private static final boolean REPLY_THREAD_STATUS_ACTIVATED = true;
 
+    protected final FTPClient mFTPClient;
     protected FTPServerDAO mFTPServerDAO;
     protected FTPServer mFTPServer;
-    protected FTPClient mFTPClient;
     protected FTPFile mCurrentDirectory;
 
     private Thread mConnectionThread;

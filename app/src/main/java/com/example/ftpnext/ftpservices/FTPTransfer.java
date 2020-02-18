@@ -24,7 +24,7 @@ public class FTPTransfer extends AFTPConnection {
     private static final String TAG = "FTP TRANSFER";
 
     private static final long UPDATE_TRANSFER_TIMER = 200;
-    private static final int TRANSFER_FINISH_BREAK = 100;
+    private static final int TRANSFER_FINISH_BREAK = 50;
 
     private static List<FTPTransfer> sFTPTransferInstances;
 
@@ -32,6 +32,8 @@ public class FTPTransfer extends AFTPConnection {
     private PendingFile mCandidate;
 
     private Thread mTransferThread;
+    private boolean mIsInterrupted;
+
     private long mTimer;
     private long mBytesTransferred;
 
@@ -137,23 +139,24 @@ public class FTPTransfer extends AFTPConnection {
     }
 
     public void abortTransfer() {
-        LogManager.info(TAG, "Abort transfer");
-        if (mTransferThread != null) {
-            LogManager.info(TAG, "Interrupting");
-            mTransferThread.interrupt();
-            LogManager.debug(TAG, "After interrupt : " + mTransferThread.isInterrupted());
+//        LogManager.info(TAG, "Abort transfer");
+//        if (mTransferThread != null) {
+//            LogManager.info(TAG, "Interrupting");
+//            mTransferThread.interrupt();
+        mIsInterrupted = true;
+//            LogManager.debug(TAG, "After interrupt : " + mTransferThread.isInterrupted());
 
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        mFTPClient.abort();
-                    } catch (IOException iE) {
-                        iE.printStackTrace();
-                    }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mFTPClient.abort();
+                } catch (IOException iE) {
+                    iE.printStackTrace();
                 }
-            }).start();
-        }
+            }
+        }).start();
+//        }
     }
 
     @Override
@@ -170,11 +173,12 @@ public class FTPTransfer extends AFTPConnection {
         }
 
         // TODO : Interrupts
+        mIsInterrupted = false;
         mTransferThread = new Thread(new Runnable() {
             @Override
             public void run() {
 
-                while (!mTransferThread.isInterrupted()) {
+                while (!mIsInterrupted) {
 
                     mCandidate = selectAvailableCandidate(iSelection);
 
@@ -186,17 +190,18 @@ public class FTPTransfer extends AFTPConnection {
                         // TODO : y a plus rien a DL blablabla
                     }
 
-//                    LogManager.info(TAG, "CANDIDATE : \n" + mCandidate.toString());
+                    LogManager.info(TAG, "CANDIDATE : \n" + mCandidate.toString());
                     DataBase.getPendingFileDAO().update(mCandidate);
                     iOnTransferListener.onStartNewFile(mCandidate);
 
-//                    LogManager.debug(TAG, "IS INTERRUPTED : " + mTransferThread.isInterrupted());
-                    if (mTransferThread.isInterrupted()) {
+                    LogManager.debug(TAG, "IS INTERRUPTED : " + mIsInterrupted);
+                    if (mIsInterrupted) {
                         mTransferThread = null;
-                        return;
+                        break;
                     }
 
                     if (!isConnected()) {
+                        LogManager.info(TAG, "Not connected");
                         connect(null);
                     }
 
@@ -204,14 +209,19 @@ public class FTPTransfer extends AFTPConnection {
                         LogManager.info(TAG, "Download files : Waiting connection");
                         Utils.sleep(200);
 
-                        if (mTransferThread.isInterrupted()) {
+                        if (mIsInterrupted) {
                             if (mCandidate != null && mCandidate.isStarted()) {
                                 // TODO : Update database on each returns
                                 DataBase.getPendingFileDAO().update(mCandidate.setStarted(false));
                             }
                             mTransferThread = null;
-                            return;
+                            break;
                         }
+                    }
+
+                    if (mIsInterrupted) {
+                        mTransferThread = null;
+                        break;
                     }
 
                     LogManager.info(TAG, "Download files : Connected");
@@ -232,12 +242,19 @@ public class FTPTransfer extends AFTPConnection {
                                 "\nGoing to fetch from the server path :\n\t" +
                                 lRemotePath);
 
-                        if (mTransferThread.isInterrupted()) {
+                        if (mIsInterrupted) {
                             mTransferThread = null;
-                            return;
+                            break;
                         }
 
-                        FTPFile lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
+                        FTPFile lFTPFile = null;
+                        try {
+                            lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
+                        } catch (Exception iE) {
+                            LogManager.info(TAG, "TryCatch worth");
+                            iE.printStackTrace();
+                        }
+
                         if (lFTPFile != null)
                             mCandidate.setSize((int) lFTPFile.getSize());
                         else
@@ -254,18 +271,17 @@ public class FTPTransfer extends AFTPConnection {
                                 LogManager.error(TAG, "Impossible to create new file");
                                 mCandidate.setHasProblem(true);
                                 iOnTransferListener.onFail(mCandidate);
-                                if (mTransferThread.isInterrupted()) {
-                                    mTransferThread = null;
-                                    return;
-                                }
+
+                                if (mIsInterrupted)
+                                    break;
                                 continue;
                             } else
                                 LogManager.info(TAG, "Creation success");
                         }
 
-                        if (mTransferThread.isInterrupted()) {
+                        if (mIsInterrupted) {
                             mTransferThread = null;
-                            return;
+                            break;
                         }
 
                         // DOWNLOAD :
@@ -276,9 +292,9 @@ public class FTPTransfer extends AFTPConnection {
                         mCandidate.setSpeedInKo(0);
                         mCandidate.setRemainingTimeInMin(0);
 
-                        if (mTransferThread.isInterrupted()) {
+                        if (mIsInterrupted) {
                             mTransferThread = null;
-                            return;
+                            break;
                         }
 
                         if (lSuccess) {
@@ -292,11 +308,10 @@ public class FTPTransfer extends AFTPConnection {
                         mFTPClient.enterLocalActiveMode();
                     } catch (IOException iE) {
                         iE.printStackTrace();
-                        Thread.currentThread().interrupt();
-
-                        if (mTransferThread.isInterrupted()) {
+//                        Thread.currentThread().interrupt();
+                        if (mIsInterrupted) {
                             mTransferThread = null;
-                            return;
+                            break;
                         }
                     }
 
@@ -304,6 +319,7 @@ public class FTPTransfer extends AFTPConnection {
                     // While end
                 }
                 mTransferThread = null;
+                disconnect();
             }
         });
 
@@ -316,16 +332,18 @@ public class FTPTransfer extends AFTPConnection {
 
     private PendingFile selectAvailableCandidate(PendingFile[] iSelection) {
         synchronized (FTPTransfer.class) {
-            LogManager.info(TAG, "Select not started candidate");
 
             PendingFile oRet;
+            LogManager.info(TAG, "Select not started candidate");
             for (PendingFile lItem : iSelection) {
                 if (!lItem.isStarted() && !lItem.isFinished() && !lItem.hasProblem()) {
                     oRet = lItem;
                     oRet.setStarted(true);
+                    LogManager.info(TAG, "Leaving selectAvailableCandidate()");
                     return oRet;
                 }
             }
+            LogManager.info(TAG, "Leaving select not started candidate");
         }
 
         return null;
