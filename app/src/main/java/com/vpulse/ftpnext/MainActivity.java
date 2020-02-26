@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -77,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
     private static final int ACTIVITY_REQUEST_CODE_CONFIGURE_SERVER = 2;
     private static final int ACTIVITY_REQUEST_CODE = 3;
+    private static final int ACTIVITY_REQUEST_CODE_INTERNET = 4;
 
 
     private MainRecyclerViewAdapter mAdapter;
@@ -213,15 +215,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializePermissions() {
-        if (AppCore.isTheFirstRun()) {
-            String[] lPermissions = new String[]{
+//        if (AppCore.isTheFirstRun()) {
+            String[] lPermissionsReadWrite = new String[]{
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
             ActivityCompat.requestPermissions(this,
-                    lPermissions,
+                    lPermissionsReadWrite,
                     ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE);
-        }
+
     }
 
     @Override
@@ -235,6 +237,15 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     LogManager.info(TAG, "PERMISSION DENY : READ_EXTERNAL_STORAGE");
                 }
+
+                // TODO : Make an automatic permission algorithm
+                String[] lPermissionNetwork = new String[] {
+                        Manifest.permission.INTERNET
+                };
+                ActivityCompat.requestPermissions(this,
+                        lPermissionNetwork,
+                        ACTIVITY_REQUEST_CODE_INTERNET);
+
             }
         }
     }
@@ -261,6 +272,16 @@ public class MainActivity extends AppCompatActivity {
             LogManager.error(TAG, "Already trying a connection");
             return;
         }
+
+//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) !=
+//                PackageManager.PERMISSION_GRANTED) {
+//
+//            ActivityCompat.requestPermissions(this,
+//                    new String[] {Manifest.permission.INTERNET},
+//                    ACTIVITY_REQUEST_CODE_INTERNET);
+//            return;
+//        }
+
 
         final FTPServer lFTPServer = mFTPServerDAO.fetchById(iServerID);
         final ProgressDialog lLoadingAlertDialog;
