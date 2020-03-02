@@ -928,8 +928,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             return;
         }
 
-        mLoadingDialog.setTitle("Loading..."); //TODO : strings
-        mLoadingDialog.show();
+//        mLoadingDialog.setTitle("Loading..."); //TODO : strings
+//        mLoadingDialog.show();
 
         final AlertDialog.Builder lBuilder = new AlertDialog.Builder(this);
         lBuilder.setTitle("Create new folder"); // TODO : strings
@@ -998,9 +998,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
 
         mCreateFolderDialog = lBuilder.create();
-        mCreateFolderDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         mCreateFolderDialog.show();
         mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+        mCreateFolderDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
     }
 
     private void createFolder(String iName) {
