@@ -219,6 +219,10 @@ public class FTPServices extends AFTPConnection {
     }
 
     public void createDirectory(final String iPath, final String iName, final OnCreateDirectoryResult iOnCreateDirectoryResult) {
+        LogManager.info(TAG, "Create directory");
+        LogManager.info(TAG, "Directory Path : " + iPath);
+        LogManager.info(TAG, "Directory Name : " + iName);
+
         if (!isConnected()) {
             LogManager.error(TAG, "Connection not established");
             return;

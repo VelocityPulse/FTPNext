@@ -706,6 +706,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         lNewAdapter.setData(iFTPFiles);
         mCurrentAdapter = lNewAdapter;
+
+        if (iFTPFiles.length == 0)
+            mCurrentAdapter.getOnFirstViewHolderCreation().onCreation();
     }
 
     private void initialize() {
@@ -927,9 +930,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mErrorAlertDialog.show();
             return;
         }
-
-//        mLoadingDialog.setTitle("Loading..."); //TODO : strings
-//        mLoadingDialog.show();
 
         final AlertDialog.Builder lBuilder = new AlertDialog.Builder(this);
         lBuilder.setTitle("Create new folder"); // TODO : strings

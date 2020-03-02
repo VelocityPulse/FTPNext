@@ -191,6 +191,9 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     }
 
     public void insertItem(FTPFile iItem) {
+        LogManager.info(TAG, "Insert item");
+        LogManager.info(TAG, "Name : " + iItem.getName());
+
         if (mFTPFileItemList == null) {
             LogManager.error(TAG, "Cannot insert an item if the list of items isn't initialized.");
             return;
@@ -201,7 +204,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     }
 
     public void insertItem(FTPFile iItem, int iPosition) {
-        LogManager.info(TAG, "Insert item");
+        LogManager.info(TAG, "Insert item at position " + iPosition);
+        LogManager.info(TAG, "Name : " + iItem.getName());
         if (mFTPFileItemList == null) {
             LogManager.error(TAG, "Cannot insert an item if the list of items isn't initialized.");
             return;
@@ -368,6 +372,10 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
     public void setOnFirstViewHolderCreation(OnFirstViewHolderCreation iAction) {
         mOnFirstViewHolderCreation = iAction;
+    }
+
+    public OnFirstViewHolderCreation getOnFirstViewHolderCreation() {
+        return mOnFirstViewHolderCreation;
     }
 
     public String getDirectoryPath() {
