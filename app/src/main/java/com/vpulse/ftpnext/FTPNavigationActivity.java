@@ -938,6 +938,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         final TextInputLayout lTextInputLayout = lTextSection.findViewById(R.id.name_edit_text_layout);
         final AutoCompleteTextView lEditTextView = lTextSection.findViewById(R.id.name_edit_text);
 
+        final String[] lNames = mCurrentAdapter.getNames();
         lEditTextView.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence iS, int iStart, int iCount, int iAfter) {
@@ -951,12 +952,20 @@ public class FTPNavigationActivity extends AppCompatActivity {
             public void afterTextChanged(Editable iEditable) {
                 if (iEditable != null) {
                     String lString = iEditable.toString();
+
                     if (!Utils.isNullOrEmpty(lString.trim())) {
+                        for (String lItem : lNames) {
+                            if (lString.equals(lItem)) {
+                                lTextInputLayout.setError("Already used"); // TODO : Strings
+                                mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+                                return;
+                            }
+                        }
+
                         lTextInputLayout.setErrorEnabled(false);
                         mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(true);
-
                     } else {
-                        lTextInputLayout.setError("Obligatory");
+                        lTextInputLayout.setError("Obligatory"); // TODO : Strings
                         mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
                     }
                 }
