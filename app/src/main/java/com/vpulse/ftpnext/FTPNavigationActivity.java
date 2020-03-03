@@ -743,7 +743,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         // Reconnect dialog
         if (mFTPServices != null) {
-            mFTPServices.setIOnConnectionLost(new AFTPConnection.IOnConnectionLost() {
+            mFTPServices.setOnConnectionLost(new AFTPConnection.OnConnectionLost() {
                 @Override
                 public void onConnectionLost() {
                     mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
@@ -1266,6 +1266,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                 }
             });
+            mFTPServices.destroyConnection(); // TODO remove -------------------------------------------------------
         }
     }
 

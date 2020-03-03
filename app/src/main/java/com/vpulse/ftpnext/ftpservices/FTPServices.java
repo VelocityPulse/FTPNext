@@ -272,10 +272,6 @@ public class FTPServices extends AFTPConnection {
         } else if (isDeletingFiles()) {
             LogManager.error(TAG, "Is already deleting files");
             return;
-        } else if (iOnDeleteListener == null) {
-            LogManager.error(TAG, "Delete listener is null");
-            new NullPointerException("Delete listener is null").printStackTrace();
-            return;
         }
 
         mPauseDeleting = false;

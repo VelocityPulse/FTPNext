@@ -37,7 +37,7 @@ public abstract class AFTPConnection {
 
     private NetworkManager.OnNetworkAvailable mOnNetworkAvailableCallback;
     private NetworkManager.OnNetworkLost mOnNetworkLostCallback;
-    private IOnConnectionLost mIOnConnectionLost;
+    private OnConnectionLost mOnConnectionLost;
 
     private boolean mAbortReconnect;
 
@@ -81,8 +81,8 @@ public abstract class AFTPConnection {
                     LogManager.info(TAG, "Already reconnecting");
                     return;
                 }
-                if (mIOnConnectionLost != null)
-                    mIOnConnectionLost.onConnectionLost();
+                if (mOnConnectionLost != null)
+                    mOnConnectionLost.onConnectionLost();
             }
         };
         mOnNetworkLostCallback = new NetworkManager.OnNetworkLost() {
@@ -93,8 +93,8 @@ public abstract class AFTPConnection {
                     LogManager.info(TAG, "Already reconnecting");
                     return;
                 }
-                if (mIOnConnectionLost != null)
-                    mIOnConnectionLost.onConnectionLost();
+                if (mOnConnectionLost != null)
+                    mOnConnectionLost.onConnectionLost();
             }
         };
         AppCore.getNetworkManager().subscribeNetworkAvailable(mOnNetworkAvailableCallback);
@@ -141,6 +141,7 @@ public abstract class AFTPConnection {
 
                 while (!isConnected() && !mAbortReconnect) {
                     if (!isConnecting()) {
+
                         connect(new OnConnectionResult() {
                             @Override
                             public void onSuccess() {
@@ -308,8 +309,8 @@ public abstract class AFTPConnection {
 
     public abstract boolean isBusy();
 
-    public void setIOnConnectionLost(IOnConnectionLost iIOnConnectionLost) {
-        mIOnConnectionLost = iIOnConnectionLost;
+    public void setOnConnectionLost(OnConnectionLost iOnConnectionLost) {
+        mOnConnectionLost = iOnConnectionLost;
     }
 
     private void startReplyStatusThread() {
@@ -357,7 +358,7 @@ public abstract class AFTPConnection {
         void onFail(ErrorCodeDescription iErrorEnum, int iErrorCode);
     }
 
-    public interface IOnConnectionLost {
+    public interface OnConnectionLost {
         void onConnectionLost();
     }
 
