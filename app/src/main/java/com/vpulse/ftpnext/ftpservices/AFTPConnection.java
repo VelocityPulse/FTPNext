@@ -2,6 +2,7 @@ package com.vpulse.ftpnext.ftpservices;
 
 import android.net.Network;
 
+import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.core.NetworkManager;
@@ -132,11 +133,7 @@ public abstract class AFTPConnection {
                     disconnect();
 
                 while (isConnected()) {
-                    try {
-                        Thread.sleep(RECONNECTION_WAITING_TIME);
-                    } catch (InterruptedException iE) {
-                        iE.printStackTrace();
-                    }
+                    Utils.sleep(RECONNECTION_WAITING_TIME);
                 }
 
                 while (!isConnected() && !mAbortReconnect) {
@@ -161,12 +158,9 @@ public abstract class AFTPConnection {
                                 }
                             }
                         });
-                        try {
-                            LogManager.info(TAG, "Reconnection waiting...");
-                            Thread.sleep(RECONNECTION_WAITING_TIME);
-                        } catch (InterruptedException iE) {
-                            iE.printStackTrace();
-                        }
+
+                        LogManager.info(TAG, "Reconnection waiting...");
+                        Utils.sleep(RECONNECTION_WAITING_TIME);
                     }
                 }
             }

@@ -53,7 +53,8 @@ public class NarrowTransferAdapter
         CustomItemViewAdapter lItem = new CustomItemViewAdapter(lLayout,
                 (TextView) lLayout.findViewById(R.id.item_narrow_transfer_text),
                 (TextView) lLayout.findViewById(R.id.item_narrow_transfer_speed),
-                (ProgressBar) lLayout.findViewById(R.id.item_narrow_transfer_progress_bar));
+                (ProgressBar) lLayout.findViewById(R.id.item_narrow_transfer_progress_bar),
+                (ProgressBar) lLayout.findViewById(R.id.item_narrow_transfer_loading));
 
         mCustomItemViewAdapterList.add(lItem);
         return lItem;
@@ -61,23 +62,29 @@ public class NarrowTransferAdapter
 
     @Override
     public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iPosition) {
-//        LogManager.info(TAG, "On bind view holder");
         final PendingFile lPendingFile = mPendingFileList.get(iPosition);
 
         iCustomItemViewAdapter.mPendingFile = lPendingFile;
 
+        // Set text name
         if (!iCustomItemViewAdapter.mTextFileView.getText().equals(lPendingFile.getPath()))
             iCustomItemViewAdapter.mTextFileView.setText(lPendingFile.getPath());
 
         if (lPendingFile.isStarted()) {
-            if (!iCustomItemViewAdapter.mMainLayout.isEnabled())
-                iCustomItemViewAdapter.mMainLayout.setEnabled(true);
+            // Useless
+//            if (!iCustomItemViewAdapter.mMainLayout.isEnabled())
+//                iCustomItemViewAdapter.mMainLayout.setEnabled(true);
 
+            // Set progress bar
             if (iCustomItemViewAdapter.mProgressBar.getMax() != lPendingFile.getSize())
                 iCustomItemViewAdapter.mProgressBar.setMax(lPendingFile.getSize());
             iCustomItemViewAdapter.mProgressBar.setProgress(lPendingFile.getProgress());
 
-            if (!lPendingFile.isFinished()) {
+            // Set speed text
+            if (!lPendingFile.isFinished() && lPendingFile.isConnected()) {
+                iCustomItemViewAdapter.mLoading.setVisibility(View.INVISIBLE);
+                iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.VISIBLE);
+
                 if (lPendingFile.getSpeedInKo() < 1000) {
                     String lSpeed = lPendingFile.getSpeedInKo() + " Ko/s";
                     iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
@@ -87,8 +94,11 @@ public class NarrowTransferAdapter
                     String lSpeed = lMoSpeed + " Mo/s";
                     iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
                 }
-            } else
+            } else {
                 iCustomItemViewAdapter.mTextSpeedView.setText("");
+                iCustomItemViewAdapter.mLoading.setVisibility(View.VISIBLE);
+                iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.INVISIBLE);
+            }
         } else {
             iCustomItemViewAdapter.mMainLayout.setEnabled(false);
             iCustomItemViewAdapter.mTextSpeedView.setText("");
@@ -145,14 +155,17 @@ public class NarrowTransferAdapter
         TextView mTextFileView;
         TextView mTextSpeedView;
         ProgressBar mProgressBar;
+        ProgressBar mLoading;
 
         public CustomItemViewAdapter(@NonNull View iMainLayout, TextView iTextFileView,
-                                     TextView iTextSpeedView, ProgressBar iProgressBar) {
+                                     TextView iTextSpeedView, ProgressBar iProgressBar,
+                                     ProgressBar iLoading) {
             super(iMainLayout);
             mMainLayout = iMainLayout;
             mTextFileView = iTextFileView;
             mTextSpeedView = iTextSpeedView;
             mProgressBar = iProgressBar;
+            mLoading = iLoading;
         }
     }
 }

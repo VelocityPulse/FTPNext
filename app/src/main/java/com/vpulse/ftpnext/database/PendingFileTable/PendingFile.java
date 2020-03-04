@@ -21,6 +21,7 @@ public class PendingFile extends ABaseTable {
 
     // Not in database :
     private int mSize;
+    private boolean mIsConnected;
     private boolean mHasProblem;
     private long mSpeedInKo;
     private int remainingTimeInMin;
@@ -123,11 +124,6 @@ public class PendingFile extends ABaseTable {
 
     // Getter and Setter are not in DataBase from here
 
-    /**
-     * This value is set only after FTPTransfer has begun its transfer
-     *
-     * @return Size of the pending file
-     */
     public int getSize() {
         return mSize;
     }
@@ -140,9 +136,16 @@ public class PendingFile extends ABaseTable {
         return mHasProblem;
     }
 
-
     public void setHasProblem(boolean iHasProblem) {
         mHasProblem = iHasProblem;
+    }
+
+    public boolean isConnected() {
+        return mIsConnected;
+    }
+
+    public void setConnected(boolean iConnected) {
+        mIsConnected = iConnected;
     }
 
     public long getSpeedInKo() {

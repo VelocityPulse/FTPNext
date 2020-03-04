@@ -82,13 +82,15 @@ public class FTPTransfer extends AFTPConnection {
                 if (mCandidate != null) {
                     mCandidate.setRemainingTimeInMin(0);
                     mCandidate.setSpeedInKo(0);
+                    mCandidate.setConnected(false);
                     if (iOnTransferListener != null)
                         iOnTransferListener.onConnectionLost(mCandidate);
                 }
 
-                reconnect(new OnConnectionRecover() { // TODO : Notify the reconnection trying ? Probably do it in navigation...
+                reconnect(new OnConnectionRecover() {
                     @Override
                     public void onConnectionRecover() {
+                        mCandidate.setConnected(true);
                         if (iOnTransferListener != null)
                             iOnTransferListener.onConnected(mCandidate);
                     }
@@ -110,6 +112,7 @@ public class FTPTransfer extends AFTPConnection {
         long lElapsedTime = lCurrentTimeMillis - mTimer;
 
         if (lElapsedTime > UPDATE_TRANSFER_TIMER) {
+            mCandidate.setConnected(true);
 //            LogManager.debug(TAG, "Transfer...");
             long lImmediateSpeedInKoS = ((mBytesTransferred * 1000) / UPDATE_TRANSFER_TIMER) / 1000;
 
@@ -184,7 +187,7 @@ public class FTPTransfer extends AFTPConnection {
 
                     LogManager.info(TAG, "CANDIDATE : \n" + mCandidate.toString());
                     DataBase.getPendingFileDAO().update(mCandidate);
-                    mOnTransferListener.onStartNewFile(mCandidate);
+                    mOnTransferListener.onNewFileSelected(mCandidate);
 
                     LogManager.debug(TAG, "IS INTERRUPTED : " + mIsInterrupted);
                     if (mIsInterrupted) {
@@ -303,7 +306,6 @@ public class FTPTransfer extends AFTPConnection {
 
                             while ((lBytesRead = lRemoteStream.read(bytesArray)) != -1) {
                                 lTotalRead += lBytesRead;
-                                mCandidate.setProgress(lTotalRead);
                                 lLocalStream.write(bytesArray, 0, lBytesRead);
 
                                 notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize);
@@ -438,10 +440,7 @@ public class FTPTransfer extends AFTPConnection {
 
         public abstract void onConnectionLost(PendingFile iPendingFile);
 
-        /**
-         * @param iPendingFile File which has been selected for download
-         */
-        public abstract void onStartNewFile(PendingFile iPendingFile);
+        public abstract void onNewFileSelected(PendingFile iPendingFile);
 
         public abstract void onDownloadProgress(PendingFile iPendingFile, long iProgress, long iSize);
 
