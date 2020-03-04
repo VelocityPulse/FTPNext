@@ -11,7 +11,7 @@ public class AppCore {
     public static final String APP_ADDRESS = "com.vpulse.ftpnext";
 
     public static final float FLOATING_ACTION_BUTTON_INTERPOLATOR = 2.3F;
-    public static final int DEFAULT_MAX_TRANSFER_VALUE = 2;
+    public static final int DEFAULT_MAX_TRANSFER_VALUE = 1;
 
     private static final String PREFERENCE_FIRST_RUN = "PREFS_FIRST_RUN";
     private static final String PREFERENCE_MAX_TRANSFER = "PREFS_MAX_TRANSFER";

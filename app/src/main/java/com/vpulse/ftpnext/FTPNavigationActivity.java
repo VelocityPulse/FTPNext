@@ -1158,6 +1158,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                 RecyclerView lNarrowTransferRecyclerView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_recycler_view);
                 lNarrowTransferRecyclerView.setLayoutManager(new LinearLayoutManager(FTPNavigationActivity.this));
+
                 mNarrowTransferAdapter = new NarrowTransferAdapter(iPendingFiles);
 
                 if (iPendingFiles.length > 1) {
@@ -1172,8 +1173,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface iDialog, int iWhich) {
                         iDialog.dismiss();
-                        for (FTPTransfer lItem : lFTPTransferList)
+                        for (FTPTransfer lItem : lFTPTransferList) {
                             lItem.abortTransfer();
+//                            lItem.destroyConnection();
+                        }
                     }
                 });
 

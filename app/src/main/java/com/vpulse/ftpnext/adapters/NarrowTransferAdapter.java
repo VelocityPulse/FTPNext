@@ -1,10 +1,14 @@
 package com.vpulse.ftpnext.adapters;
 
 import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -27,6 +31,8 @@ public class NarrowTransferAdapter
     private final List<PendingFileItem> mPendingFileItemList;
     private List<CustomItemViewAdapter> mCustomItemViewAdapterList;
 
+    private RecyclerView mRecyclerView;
+
     private int mUpdateRequestedInSecond;
     private long mTimer;
 
@@ -43,6 +49,27 @@ public class NarrowTransferAdapter
         mPendingFileItemList = new ArrayList<>();
         mToRemovePendingFileItemList = new ArrayList<>();
         mCustomItemViewAdapterList = new ArrayList<>();
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView iRecyclerView) {
+        super.onAttachedToRecyclerView(iRecyclerView);
+        mRecyclerView = iRecyclerView;
+
+        mRecyclerView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LogManager.debug(TAG, "lol");
+            }
+        });
+
+        mRecyclerView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                LogManager.debug(TAG, "lol");
+                return false;
+            }
+        });
     }
 
     @NonNull
@@ -65,20 +92,37 @@ public class NarrowTransferAdapter
 
     @Override
     public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iPosition) {
-        iCustomItemViewAdapter.mPendingFileItem = mPendingFileItemList.get(iPosition);
-        final PendingFile lPendingFile = iCustomItemViewAdapter.mPendingFileItem.mPendingFile;
+        final PendingFileItem lPendingFileItem = mPendingFileItemList.get(iPosition);
+        final PendingFile lPendingFile = lPendingFileItem.mPendingFile;
 
-        if (lPendingFile.isAnError())
-            LogManager.debug(TAG, "NEW BINDING : " + lPendingFile.isAnError());
+        iCustomItemViewAdapter.mPendingFileItem = lPendingFileItem;
 
         // Set text name
         if (!iCustomItemViewAdapter.mTextFileView.getText().equals(lPendingFile.getPath()))
             iCustomItemViewAdapter.mTextFileView.setText(lPendingFile.getPath());
 
-        if (lPendingFile.isStarted()) {
-            // Useless
-//            if (!iCustomItemViewAdapter.mMainLayout.isEnabled())
-//                iCustomItemViewAdapter.mMainLayout.setEnabled(true);
+        if (lPendingFile.isAnError()) {
+            // Animation
+
+            int lOffsetStart = (int) (lPendingFileItem.mTimeOfErrorNotified - System.currentTimeMillis());
+
+            if (lOffsetStart < 4000) {
+                Animation lFadeIn = new AlphaAnimation(0, 1);
+                lFadeIn.setInterpolator(new DecelerateInterpolator());
+                lFadeIn.setDuration(4000); // TODO : res
+                lFadeIn.setStartOffset(lOffsetStart);
+                iCustomItemViewAdapter.mErrorImage.startAnimation(lFadeIn);
+            }
+            iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.INVISIBLE);
+            iCustomItemViewAdapter.mLoading.setVisibility(View.INVISIBLE);
+            iCustomItemViewAdapter.mErrorImage.setVisibility(View.VISIBLE);
+            lPendingFileItem.mShallStartAnimationError = false;
+
+        } else if (lPendingFile.isStarted()) {
+            // Normal download update
+
+            iCustomItemViewAdapter.mErrorImage.clearAnimation();
+            iCustomItemViewAdapter.mErrorImage.setVisibility(View.INVISIBLE);
 
             // Set progress bar
             if (iCustomItemViewAdapter.mProgressBar.getMax() != lPendingFile.getSize())
@@ -102,10 +146,15 @@ public class NarrowTransferAdapter
             } else {
                 iCustomItemViewAdapter.mTextSpeedView.setText("");
                 iCustomItemViewAdapter.mLoading.setVisibility(View.VISIBLE);
-                iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.GONE);
+                iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.INVISIBLE);
             }
         } else {
-            iCustomItemViewAdapter.mMainLayout.setEnabled(false);
+            // Not started
+
+            iCustomItemViewAdapter.mErrorImage.clearAnimation();
+            iCustomItemViewAdapter.mErrorImage.setVisibility(View.INVISIBLE);
+            iCustomItemViewAdapter.mLoading.setVisibility(View.INVISIBLE);
+            iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.INVISIBLE);
             iCustomItemViewAdapter.mTextSpeedView.setText("");
             iCustomItemViewAdapter.mProgressBar.setProgress(lPendingFile.getProgress());
         }
@@ -174,17 +223,25 @@ public class NarrowTransferAdapter
 
             notifyItemMoved(lLastPosition, 0);
         }
+        lPendingFileItem.mShallStartAnimationError = true;
+        lPendingFileItem.mTimeOfErrorNotified = (int) System.currentTimeMillis();
+        notifyItemChanged(0);
+
+        LinearLayoutManager layoutManager = ((LinearLayoutManager) mRecyclerView.getLayoutManager());
+        int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
+        if (firstVisiblePosition == 0)
+            mRecyclerView.scrollToPosition(0);
     }
 
     static class PendingFileItem {
         PendingFile mPendingFile;
         boolean mShallStartAnimationError;
+        int mTimeOfErrorNotified;
 
         PendingFileItem(PendingFile iPendingFile) {
             mPendingFile = iPendingFile;
         }
     }
-
 
     static class CustomItemViewAdapter extends RecyclerView.ViewHolder {
         PendingFileItem mPendingFileItem;
@@ -194,18 +251,18 @@ public class NarrowTransferAdapter
         TextView mTextSpeedView;
         ProgressBar mProgressBar;
         ProgressBar mLoading;
-        ImageView mImageView;
+        ImageView mErrorImage;
 
         public CustomItemViewAdapter(@NonNull View iMainLayout, TextView iTextFileView,
                                      TextView iTextSpeedView, ProgressBar iProgressBar,
-                                     ProgressBar iLoading, ImageView iImageView) {
+                                     ProgressBar iLoading, ImageView iErrorImage) {
             super(iMainLayout);
             mMainLayout = iMainLayout;
             mTextFileView = iTextFileView;
             mTextSpeedView = iTextSpeedView;
             mProgressBar = iProgressBar;
             mLoading = iLoading;
-            mImageView = iImageView;
+            mErrorImage = iErrorImage;
         }
     }
 }

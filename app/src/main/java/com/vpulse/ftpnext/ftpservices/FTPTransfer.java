@@ -297,6 +297,9 @@ public class FTPTransfer extends AFTPConnection {
                             mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
                         } catch (IOException iE) {
                             iE.printStackTrace();
+                            mCandidate.setIsAnError(true);
+                            mOnTransferListener.onFail(mCandidate);
+                            continue;
                         }
 
                         connectionLooper();

@@ -53,7 +53,7 @@
                 android:layout_gravity="center|end"
                 android:src="@drawable/ic_error_outline"
                 android:tint="@color/error"
-                android:visibility="gone"
+                android:visibility="invisible"
                 tools:ignore="ContentDescription" />
 
         </FrameLayout>

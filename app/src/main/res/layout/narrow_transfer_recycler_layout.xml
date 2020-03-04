@@ -4,6 +4,7 @@
     android:id="@+id/narrow_transfer_recycler_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:focusable="true"
     android:background="@android:color/transparent"
     android:orientation="vertical"
     tools:listitem="@layout/list_item_narrow_transfer" />
