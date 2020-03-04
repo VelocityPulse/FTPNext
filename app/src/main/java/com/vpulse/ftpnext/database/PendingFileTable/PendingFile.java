@@ -22,7 +22,7 @@ public class PendingFile extends ABaseTable {
     // Not in database :
     private int mSize;
     private boolean mIsConnected;
-    private boolean mHasProblem;
+    private boolean mIsAnError;
     private long mSpeedInKo;
     private int remainingTimeInMin;
 
@@ -132,12 +132,12 @@ public class PendingFile extends ABaseTable {
         mSize = iSize;
     }
 
-    public boolean hasProblem() {
-        return mHasProblem;
+    public boolean isAnError() {
+        return mIsAnError;
     }
 
-    public void setHasProblem(boolean iHasProblem) {
-        mHasProblem = iHasProblem;
+    public void setIsAnError(boolean iAnError) {
+        mIsAnError = iAnError;
     }
 
     public boolean isConnected() {

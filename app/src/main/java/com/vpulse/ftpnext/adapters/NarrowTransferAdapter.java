@@ -5,17 +5,18 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.vpulse.ftpnext.R;
+import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Timer;
 
 public class NarrowTransferAdapter
         extends RecyclerView.Adapter<NarrowTransferAdapter.CustomItemViewAdapter> {
@@ -24,11 +25,10 @@ public class NarrowTransferAdapter
     private static final int MAX_REMOVE_REQUEST_IN_SEC = 15;
     private static final int REMOVE_BREAK_TIMER = 1000;
     private final List<PendingFile> mToRemovePendingFileList;
-    private List<PendingFile> mPendingFileList;
+    private final List<PendingFile> mPendingFileList;
     private List<CustomItemViewAdapter> mCustomItemViewAdapterList;
 
     private int mUpdateRequestedInSecond;
-    private Timer mScheduleTimer;
     private long mTimer;
 
     public NarrowTransferAdapter(PendingFile[] iPendingFiles) {
@@ -54,7 +54,8 @@ public class NarrowTransferAdapter
                 (TextView) lLayout.findViewById(R.id.item_narrow_transfer_text),
                 (TextView) lLayout.findViewById(R.id.item_narrow_transfer_speed),
                 (ProgressBar) lLayout.findViewById(R.id.item_narrow_transfer_progress_bar),
-                (ProgressBar) lLayout.findViewById(R.id.item_narrow_transfer_loading));
+                (ProgressBar) lLayout.findViewById(R.id.item_narrow_transfer_loading),
+                (ImageView) lLayout.findViewById(R.id.item_narrow_transfer_error));
 
         mCustomItemViewAdapterList.add(lItem);
         return lItem;
@@ -63,6 +64,9 @@ public class NarrowTransferAdapter
     @Override
     public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iPosition) {
         final PendingFile lPendingFile = mPendingFileList.get(iPosition);
+
+        if (lPendingFile.isAnError())
+            LogManager.debug(TAG, "NEW BINDING : " + lPendingFile.isAnError());
 
         iCustomItemViewAdapter.mPendingFile = lPendingFile;
 
@@ -141,10 +145,27 @@ public class NarrowTransferAdapter
 
                 mToRemovePendingFileList.clear();
             }
-
-            mScheduleTimer = null;
             mTimer = lCurrentTimeMillis;
         }
+    }
+
+    public void showErrorAndRemove(PendingFile iPendingFile) {
+        LogManager.info(TAG, "Show error and remove");
+        if (!mPendingFileList.contains(iPendingFile)) {
+            LogManager.error(TAG, "Parameter not findable in adapter list");
+            return;
+        }
+
+        synchronized (mPendingFileList) {
+            int lLastPosition = mPendingFileList.indexOf(iPendingFile);
+            mPendingFileList.remove(iPendingFile);
+            mPendingFileList.add(0, iPendingFile);
+
+            notifyItemMoved(lLastPosition, 0);
+        }
+
+
+
     }
 
 
@@ -156,16 +177,18 @@ public class NarrowTransferAdapter
         TextView mTextSpeedView;
         ProgressBar mProgressBar;
         ProgressBar mLoading;
+        ImageView mImageView;
 
         public CustomItemViewAdapter(@NonNull View iMainLayout, TextView iTextFileView,
                                      TextView iTextSpeedView, ProgressBar iProgressBar,
-                                     ProgressBar iLoading) {
+                                     ProgressBar iLoading, ImageView iImageView) {
             super(iMainLayout);
             mMainLayout = iMainLayout;
             mTextFileView = iTextFileView;
             mTextSpeedView = iTextSpeedView;
             mProgressBar = iProgressBar;
             mLoading = iLoading;
+            mImageView = iImageView;
         }
     }
 }

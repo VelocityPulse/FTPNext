@@ -202,7 +202,6 @@ public class FTPTransfer extends AFTPConnection {
                     DataBase.getPendingFileDAO().update(mCandidate);
                     mOnTransferListener.onNewFileSelected(mCandidate);
 
-                    LogManager.debug(TAG, "IS INTERRUPTED : " + mIsInterrupted);
                     if (mIsInterrupted) {
                         mTransferThread = null;
                         break;
@@ -242,25 +241,26 @@ public class FTPTransfer extends AFTPConnection {
                             lLocalFile.delete(); // TODO : Debug, remove this
 
                         if (!lLocalFile.exists()) {
-                            LogManager.error(TAG, "File not existing");
                             if (lLocalFile.getParentFile().mkdirs())
                                 LogManager.info(TAG, "mkdir success");
                             if (!lLocalFile.createNewFile()) {
                                 LogManager.error(TAG, "Impossible to create new file");
-                                mCandidate.setHasProblem(true);
+                                mCandidate.setIsAnError(true);
                                 mOnTransferListener.onFail(mCandidate);
-
                                 if (mIsInterrupted)
                                     break;
+
                                 continue;
                             } else
-                                LogManager.info(TAG, "Creation success");
+                                LogManager.info(TAG, "Local creation success");
                         } else {
                             mCandidate.setProgress((int) lLocalFile.length()); // TODO : TO TEST
                         }
 
                     } catch (Exception iE) {
-
+                        iE.printStackTrace();
+                        mCandidate.setIsAnError(true);
+                        mOnTransferListener.onFail(mCandidate);
                     }
 
                     // ---------------- INIT FTP FILE
@@ -270,13 +270,18 @@ public class FTPTransfer extends AFTPConnection {
                         lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
                     } catch (Exception iE) {
                         iE.printStackTrace();
+                        mCandidate.setIsAnError(true);
+                        mOnTransferListener.onFail(mCandidate);
+                        continue;
                     }
 
-                    if (lFTPFile != null)
-                        mCandidate.setSize((int) lFTPFile.getSize());
-                    else {
-                        abortTransfer();// TODO : File not findable
+                    if (lFTPFile == null) {
+                        mCandidate.setIsAnError(true);
+                        mOnTransferListener.onFail(mCandidate);
+                        continue;
                     }
+
+                    mCandidate.setSize((int) lFTPFile.getSize());
 
                     // ---------------- DOWNLOAD
                     boolean lFinished = false;
@@ -312,8 +317,9 @@ public class FTPTransfer extends AFTPConnection {
 
                             lRemoteStream = mFTPClient.retrieveFileStream(mCandidate.getPath());
                             if (lRemoteStream == null) {
-                                mOnTransferListener.onFail(mCandidate);
                                 LogManager.error(TAG, "Remote stream null");
+                                mCandidate.setIsAnError(true);
+                                mOnTransferListener.onFail(mCandidate);
                                 continue;
                             }
 
@@ -389,7 +395,7 @@ public class FTPTransfer extends AFTPConnection {
             PendingFile oRet;
             LogManager.info(TAG, "Select not started candidate");
             for (PendingFile lItem : iSelection) {
-                if (!lItem.isStarted() && !lItem.isFinished() && !lItem.hasProblem()) {
+                if (!lItem.isStarted() && !lItem.isFinished() && !lItem.isAnError()) {
                     oRet = lItem;
                     oRet.setStarted(true);
                     LogManager.info(TAG, "Leaving selectAvailableCandidate()");
