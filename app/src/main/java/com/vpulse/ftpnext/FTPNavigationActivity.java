@@ -61,6 +61,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     public static final String ROOT_DIRECTORY = "/";
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
     public static final String KEY_DIRECTORY_PATH = "KEY_DIRECTORY_PATH";
+
     private static final String TAG = "FTP NAVIGATION ACTIVITY";
     private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
     private static final int LARGE_DIRECTORY_SIZE = 30000;
@@ -1266,7 +1267,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                 }
             });
-            mFTPServices.destroyConnection(); // TODO remove -------------------------------------------------------
+//            mFTPServices.destroyConnection(); // TODO remove !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         }
     }
 

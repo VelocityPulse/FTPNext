@@ -86,7 +86,7 @@ public class FTPTransfer extends AFTPConnection {
                         iOnTransferListener.onConnectionLost(mCandidate);
                 }
 
-                reconnect(new OnConnectionRecover() {
+                reconnect(new OnConnectionRecover() { // TODO : Notify the reconnection trying ? Probably do it in navigation...
                     @Override
                     public void onConnectionRecover() {
                         if (iOnTransferListener != null)
@@ -103,14 +103,14 @@ public class FTPTransfer extends AFTPConnection {
         });
     }
 
-    private void pushTransferProgress(long iTotalBytesTransferred, int iBytesTransferred, long iStreamSize) {
+    private void notifyTransferProgress(long iTotalBytesTransferred, int iBytesTransferred, long iStreamSize) {
         mBytesTransferred += iBytesTransferred;
 
         long lCurrentTimeMillis = System.currentTimeMillis();
         long lElapsedTime = lCurrentTimeMillis - mTimer;
 
         if (lElapsedTime > UPDATE_TRANSFER_TIMER) {
-            LogManager.debug(TAG, "Transfer...");
+//            LogManager.debug(TAG, "Transfer...");
             long lImmediateSpeedInKoS = ((mBytesTransferred * 1000) / UPDATE_TRANSFER_TIMER) / 1000;
 
             settingAverageSpeed(lImmediateSpeedInKoS);
@@ -262,70 +262,58 @@ public class FTPTransfer extends AFTPConnection {
                         abortTransfer();// TODO : File not findable
                     }
 
-                    if (mIsInterrupted) {
-                        mTransferThread = null;
-                        break;
-                    }
-
                     // ---------------- DOWNLOAD
                     boolean lFinished = false;
 
                     while (!lFinished) {
 
-//                        if (mFTPClient.getDataConnectionMode() !=
-//                                FTPClient.PASSIVE_LOCAL_DATA_CONNECTION_MODE)
+                        if (mIsInterrupted) {
+                            mTransferThread = null;
+                            break;
+                        }
+
                         try {
                             mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
                         } catch (IOException iE) {
                             iE.printStackTrace();
                         }
 
-                        mFTPClient.enterLocalPassiveMode();
-
-                        LogManager.debug(TAG, "While download");
                         connectionLooper();
 
-//                            OutputStream lOutputStream = new BufferedOutputStream(new FileOutputStream(lLocalFile));
-//                            lFinished = mFTPClient.retrieveFile(mCandidate.getPath(), lOutputStream);
+                        mFTPClient.enterLocalPassiveMode();
+
                         OutputStream lLocalStream = null;
                         InputStream lRemoteStream = null;
                         try {
 
                             lLocalStream = new BufferedOutputStream(new FileOutputStream(lLocalFile, true));
                             byte[] bytesArray = new byte[8192];
-                            int bytesRead;
-                            int totalRead = (int) lLocalFile.length();
-                            int finalSize = (int) lFTPFile.getSize();
+                            int lBytesRead;
+                            int lTotalRead = (int) lLocalFile.length();
+                            int lFinalSize = (int) lFTPFile.getSize();
                             mCandidate.setProgress((int) lLocalFile.length());
                             mFTPClient.setRestartOffset(mCandidate.getProgress());
-                            LogManager.debug(TAG, "download : " + lLocalFile.length() + " " + mCandidate.getProgress());
 
                             lRemoteStream = mFTPClient.retrieveFileStream(mCandidate.getPath());
                             if (lRemoteStream == null) {
-                                LogManager.error(TAG, "lRemoteStream == null");
+                                mOnTransferListener.onFail(mCandidate);
+                                LogManager.error(TAG, "Remote stream null");
                                 continue;
                             }
 
-                            while ((bytesRead = lRemoteStream.read(bytesArray)) != -1) {
-                                LogManager.debug(TAG, "download : " + lLocalFile.length() + " " + mCandidate.getProgress());
-                                totalRead += bytesRead;
-                                mCandidate.setProgress(totalRead);
-                                lLocalStream.write(bytesArray, 0, bytesRead);
+                            while ((lBytesRead = lRemoteStream.read(bytesArray)) != -1) {
+                                lTotalRead += lBytesRead;
+                                mCandidate.setProgress(lTotalRead);
+                                lLocalStream.write(bytesArray, 0, lBytesRead);
 
-                                pushTransferProgress(totalRead, bytesRead, finalSize);
+                                notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize);
                                 if (mIsInterrupted) {
                                     mTransferThread = null;
                                     break;
                                 }
                             }
+                            mFTPClient.enterLocalActiveMode();
 
-
-                            if (lFinished)
-                                LogManager.info(TAG, "Leaving retrieve file with result : true");
-                            else {
-                                LogManager.error(TAG, "Leaving retrieve file with result : false");
-                                // TODO : Stop procedure here
-                            }
 
                             mCandidate.setSpeedInKo(0);
                             mCandidate.setRemainingTimeInMin(0);
@@ -335,25 +323,15 @@ public class FTPTransfer extends AFTPConnection {
                                 break;
                             }
 
-                            if (lFinished) {
-                                mCandidate.setFinished(true);
-                                mCandidate.setProgress(mCandidate.getSize());
-                                mOnTransferListener.onDownloadProgress(mCandidate,
-                                        mCandidate.getProgress(), mCandidate.getSize());
-                                mOnTransferListener.onDownloadSuccess(mCandidate);
-                            }
+                            lFinished = true;
+                            mCandidate.setFinished(true);
+                            mCandidate.setProgress(mCandidate.getSize());
+                            mOnTransferListener.onDownloadProgress(mCandidate,
+                                    mCandidate.getProgress(), mCandidate.getSize());
+                            mOnTransferListener.onDownloadSuccess(mCandidate);
 
-                            mFTPClient.enterLocalActiveMode();
                         } catch (Exception iE) {
                             iE.printStackTrace();
-
-//                            mFTPClient.reinitialize()
-
-                            try {
-                                LogManager.debug(TAG, "abort : " + mFTPClient.abort());
-                            } catch (IOException iEx) {
-                                iEx.printStackTrace();
-                            }
 
                             try {
                                 if (lLocalStream != null) {
@@ -365,24 +343,17 @@ public class FTPTransfer extends AFTPConnection {
                                     lRemoteStream.close();
                                 }
                             } catch (IOException iEx) {
+                                LogManager.error(TAG, "Closing streams not working");
                                 iEx.printStackTrace();
                             }
 
                             Utils.sleep(500); // Wait the connexion update status
-                            if (isReconnecting())
-
-                                if (mIsInterrupted) {
-                                    mTransferThread = null;
-                                    break;
-                                }
                         }
                     }
 
                     Utils.sleep(TRANSFER_FINISH_BREAK);
                     // While end
                 }
-                mTransferThread = null;
-                disconnect();
             }
         });
 
