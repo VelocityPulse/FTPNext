@@ -276,6 +276,20 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
+    private void terminateNavigation() {
+        mFTPServices.destroyConnection();
+
+        if (mIsShowingDownload) {
+            FTPTransfer[] lFTPTransfers = FTPTransfer.getFTPTransferInstance(mFTPServer.getDataBaseId());
+
+            for (FTPTransfer lItem : lFTPTransfers) {
+                lItem.destroyConnection();
+            }
+        }
+
+        finish();
+    }
+
     private void initializeHandler() {
         mHandler = new Handler(Looper.getMainLooper()) {
             @Override
@@ -440,7 +454,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     case NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING");
                         lFiles = (FTPFile[]) msg.obj;
-                        mCurrentAdapter.setData(lFiles);
+                        mCurrentAdapter.setData(lFiles); // TODO CRASH : Android studio : click and apply change during a connection or a download
                         mCurrentAdapter.appearVertically();
                         mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);
                         break;
@@ -611,9 +625,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
             }
         });
         lSwipeRefreshLayout.setColorSchemeResources(
-                R.color.colorPrimaryLight,
-                R.color.colorSecondaryLight,
-                R.color.colorPrimaryDark);
+                R.color.primaryLight,
+                R.color.secondaryLight,
+                R.color.primaryDark);
 
         mRecyclerSection.addView(lSwipeRefreshLayout);
 
@@ -809,8 +823,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
-                mFTPServices.abortConnection();
-                finish();
+                terminateNavigation();
             }
         });
         mReconnectDialog.setCancelable(false);

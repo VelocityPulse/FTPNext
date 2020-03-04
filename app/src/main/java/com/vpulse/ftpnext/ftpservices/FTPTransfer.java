@@ -32,6 +32,7 @@ public class FTPTransfer extends AFTPConnection {
     private PendingFile mCandidate;
 
     private Thread mTransferThread;
+    private boolean mIsTransferring;
     private boolean mIsInterrupted;
 
     private long mTimer;
@@ -72,6 +73,16 @@ public class FTPTransfer extends AFTPConnection {
                 lFTPTransferList.add(lItem);
         }
         return lFTPTransferList.toArray(new FTPTransfer[0]);
+    }
+
+    @Override
+    public void destroyConnection() {
+        LogManager.info(TAG, "Destroy connection");
+        abortTransfer();
+
+        super.destroyConnection();
+        sFTPTransferInstances.remove(this);
+
     }
 
     private void initializeListeners(final OnTransferListener iOnTransferListener) {
@@ -138,16 +149,18 @@ public class FTPTransfer extends AFTPConnection {
         mIsInterrupted = true;
 //            LogManager.debug(TAG, "After interrupt : " + mTransferThread.isInterrupted());
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    mFTPClient.abort();
-                } catch (IOException iE) {
-                    iE.printStackTrace();
-                }
-            }
-        }).start();
+        // Not really useful with mIsInterrupted to true
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    if (mIsTransferring)
+//                        mFTPClient.abort();
+//                } catch (IOException iE) {
+//                    iE.printStackTrace();
+//                }
+//            }
+//        }).start();
 //        }
     }
 
@@ -305,6 +318,7 @@ public class FTPTransfer extends AFTPConnection {
                             }
 
                             while ((lBytesRead = lRemoteStream.read(bytesArray)) != -1) {
+                                mIsTransferring = true;
                                 lTotalRead += lBytesRead;
                                 lLocalStream.write(bytesArray, 0, lBytesRead);
 
@@ -315,6 +329,7 @@ public class FTPTransfer extends AFTPConnection {
                                 }
                             }
                             mFTPClient.enterLocalActiveMode();
+                            mIsInterrupted = false;
 
 
                             mCandidate.setSpeedInKo(0);
@@ -335,6 +350,7 @@ public class FTPTransfer extends AFTPConnection {
                         } catch (Exception iE) {
                             iE.printStackTrace();
 
+                            mIsTransferring = false;
                             try {
                                 if (lLocalStream != null) {
                                     LogManager.info(TAG, "Closing local stream");

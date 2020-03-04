@@ -4,16 +4,16 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light">
         <!-- Customize your theme here. -->
 
-        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimary">@color/primary</item>
         <item name="colorAccent">#5eb8ff</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorPrimaryDark">@color/primaryDark</item>
+        <item name="colorSecondary">@color/secondary</item>
         <item name="colorError">#F44336</item>
-        <item name="android:colorBackground">@color/colorBackground</item>
+        <item name="android:colorBackground">@color/background</item>
         <!--<item name="android:buttonStyle"></item>-->
 
         <item name="android:itemTextAppearance">@style/MyActionBar.MenuTextStyle</item>
-        <item name="android:itemBackground">@color/colorPrimary</item>
+        <item name="android:itemBackground">@color/primary</item>
 
     </style>
 

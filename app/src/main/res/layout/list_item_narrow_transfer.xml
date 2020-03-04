@@ -46,6 +46,15 @@
                 android:indeterminate="false"
                 android:visibility="invisible" />
 
+            <ImageView
+                android:layout_width="25dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center|end"
+                android:src="@drawable/ic_error_outline"
+                android:tint="@color/error"
+                android:visibility="gone"
+                tools:ignore="ContentDescription" />
+
         </FrameLayout>
 
 

@@ -40,8 +40,6 @@ public abstract class AFTPConnection {
     private NetworkManager.OnNetworkLost mOnNetworkLostCallback;
     private OnConnectionLost mOnConnectionLost;
 
-    private boolean mAbortReconnect;
-
     public AFTPConnection(FTPServer iFTPServer) {
         LogManager.info(TAG, "Constructor");
         mFTPServerDAO = DataBase.getFTPServerDAO();
@@ -63,6 +61,12 @@ public abstract class AFTPConnection {
 
         AppCore.getNetworkManager().unsubscribeOnNetworkAvailable(mOnNetworkAvailableCallback);
         AppCore.getNetworkManager().unsubscribeOnNetworkLost(mOnNetworkLostCallback);
+
+        if (isConnecting())
+            abortConnection();
+        if (isReconnecting())
+            abortReconnection();
+
         if (isConnected())
             disconnect();
 
@@ -107,7 +111,7 @@ public abstract class AFTPConnection {
         LogManager.info(TAG, "Abort reconnect");
 
         if (isReconnecting())
-            mAbortReconnect = true; // To test
+            mReconnectThread.interrupt();
     }
 
     public void abortConnection() {
@@ -124,7 +128,6 @@ public abstract class AFTPConnection {
 
     public void reconnect(final OnConnectionRecover onConnectionRecover) {
         LogManager.info(TAG, "Reconnect");
-        mAbortReconnect = false;
 
         mReconnectThread = new Thread(new Runnable() {
             @Override
@@ -136,7 +139,7 @@ public abstract class AFTPConnection {
                     Utils.sleep(RECONNECTION_WAITING_TIME);
                 }
 
-                while (!isConnected() && !mAbortReconnect) {
+                while (!isConnected() && !mReconnectThread.isInterrupted()) {
                     if (!isConnecting()) {
 
                         connect(new OnConnectionResult() {
@@ -154,7 +157,7 @@ public abstract class AFTPConnection {
                                 if (iErrorEnum == ErrorCodeDescription.ERROR_FAILED_LOGIN) {
                                     onConnectionRecover.onConnectionDenied(iErrorEnum,
                                             iErrorCode);
-                                    mAbortReconnect = true;
+                                    mConnectionThread.interrupt();
                                 }
                             }
                         });
