@@ -97,7 +97,7 @@ public class NarrowTransferAdapter
             } else {
                 iCustomItemViewAdapter.mTextSpeedView.setText("");
                 iCustomItemViewAdapter.mLoading.setVisibility(View.VISIBLE);
-                iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.INVISIBLE);
+                iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.GONE);
             }
         } else {
             iCustomItemViewAdapter.mMainLayout.setEnabled(false);
