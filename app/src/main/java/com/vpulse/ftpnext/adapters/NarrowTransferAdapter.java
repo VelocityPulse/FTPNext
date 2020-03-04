@@ -15,7 +15,6 @@ import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class NarrowTransferAdapter
@@ -24,22 +23,25 @@ public class NarrowTransferAdapter
     private static final String TAG = "NARROW TRANSFER ADAPTER";
     private static final int MAX_REMOVE_REQUEST_IN_SEC = 15;
     private static final int REMOVE_BREAK_TIMER = 1000;
-    private final List<PendingFile> mToRemovePendingFileList;
-    private final List<PendingFile> mPendingFileList;
+    private final List<PendingFileItem> mToRemovePendingFileItemList;
+    private final List<PendingFileItem> mPendingFileItemList;
     private List<CustomItemViewAdapter> mCustomItemViewAdapterList;
 
     private int mUpdateRequestedInSecond;
     private long mTimer;
 
     public NarrowTransferAdapter(PendingFile[] iPendingFiles) {
-        mPendingFileList = new ArrayList<>(Arrays.asList(iPendingFiles));
-        mToRemovePendingFileList = new ArrayList<>();
+        mPendingFileItemList = new ArrayList<>();
+        mToRemovePendingFileItemList = new ArrayList<>();
         mCustomItemViewAdapterList = new ArrayList<>();
+
+        for (PendingFile lItem : iPendingFiles)
+            mPendingFileItemList.add(new PendingFileItem(lItem));
     }
 
     public NarrowTransferAdapter() {
-        mPendingFileList = new ArrayList<>();
-        mToRemovePendingFileList = new ArrayList<>();
+        mPendingFileItemList = new ArrayList<>();
+        mToRemovePendingFileItemList = new ArrayList<>();
         mCustomItemViewAdapterList = new ArrayList<>();
     }
 
@@ -63,12 +65,11 @@ public class NarrowTransferAdapter
 
     @Override
     public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iPosition) {
-        final PendingFile lPendingFile = mPendingFileList.get(iPosition);
+        iCustomItemViewAdapter.mPendingFileItem = mPendingFileItemList.get(iPosition);
+        final PendingFile lPendingFile = iCustomItemViewAdapter.mPendingFileItem.mPendingFile;
 
         if (lPendingFile.isAnError())
             LogManager.debug(TAG, "NEW BINDING : " + lPendingFile.isAnError());
-
-        iCustomItemViewAdapter.mPendingFile = lPendingFile;
 
         // Set text name
         if (!iCustomItemViewAdapter.mTextFileView.getText().equals(lPendingFile.getPath()))
@@ -112,21 +113,24 @@ public class NarrowTransferAdapter
 
     @Override
     public int getItemCount() {
-        return mPendingFileList.size();
+        return mPendingFileItemList.size();
     }
 
     public void updatePendingFileData(PendingFile iPendingFile) {
         for (CustomItemViewAdapter lItem : mCustomItemViewAdapterList) {
-            if (lItem.mPendingFile == iPendingFile) {
-                onBindViewHolder(lItem, mPendingFileList.indexOf(iPendingFile));
+            if (lItem.mPendingFileItem.mPendingFile == iPendingFile) {
+                onBindViewHolder(lItem, mPendingFileItemList.indexOf(lItem.mPendingFileItem));
                 return;
             }
         }
     }
 
     public void removePendingFile(PendingFile iPendingFile) {
-        synchronized (mToRemovePendingFileList) {
-            mToRemovePendingFileList.add(iPendingFile);
+        synchronized (mToRemovePendingFileItemList) {
+            for (PendingFileItem lItem : mPendingFileItemList) {
+                if (lItem.mPendingFile == iPendingFile)
+                    mToRemovePendingFileItemList.add(lItem);
+            }
         }
 
         long lCurrentTimeMillis = System.currentTimeMillis();
@@ -134,16 +138,16 @@ public class NarrowTransferAdapter
 
         if (lElapsedTime > REMOVE_BREAK_TIMER) {
 
-            synchronized (mToRemovePendingFileList) {
+            synchronized (mToRemovePendingFileItemList) {
 
                 int lIndex;
-                for (PendingFile lItem : mToRemovePendingFileList) {
-                    lIndex = mPendingFileList.indexOf(lItem);
-                    mPendingFileList.remove(lItem);
+                for (PendingFileItem lItem : mToRemovePendingFileItemList) {
+                    lIndex = mPendingFileItemList.indexOf(lItem);
+                    mPendingFileItemList.remove(lItem);
                     notifyItemRemoved(lIndex);
                 }
 
-                mToRemovePendingFileList.clear();
+                mToRemovePendingFileItemList.clear();
             }
             mTimer = lCurrentTimeMillis;
         }
@@ -151,26 +155,39 @@ public class NarrowTransferAdapter
 
     public void showErrorAndRemove(PendingFile iPendingFile) {
         LogManager.info(TAG, "Show error and remove");
-        if (!mPendingFileList.contains(iPendingFile)) {
+
+        // Guard
+        PendingFileItem lPendingFileItem = null;
+        for (PendingFileItem lItem : mPendingFileItemList) {
+            if (lItem.mPendingFile == iPendingFile)
+                lPendingFileItem = lItem;
+        }
+        if (lPendingFileItem == null) {
             LogManager.error(TAG, "Parameter not findable in adapter list");
             return;
         }
 
-        synchronized (mPendingFileList) {
-            int lLastPosition = mPendingFileList.indexOf(iPendingFile);
-            mPendingFileList.remove(iPendingFile);
-            mPendingFileList.add(0, iPendingFile);
+        synchronized (mPendingFileItemList) {
+            int lLastPosition = mPendingFileItemList.indexOf(lPendingFileItem);
+            mPendingFileItemList.remove(lPendingFileItem);
+            mPendingFileItemList.add(0, lPendingFileItem);
 
             notifyItemMoved(lLastPosition, 0);
         }
+    }
 
+    static class PendingFileItem {
+        PendingFile mPendingFile;
+        boolean mShallStartAnimationError;
 
-
+        PendingFileItem(PendingFile iPendingFile) {
+            mPendingFile = iPendingFile;
+        }
     }
 
 
     static class CustomItemViewAdapter extends RecyclerView.ViewHolder {
-        PendingFile mPendingFile;
+        PendingFileItem mPendingFileItem;
 
         View mMainLayout;
         TextView mTextFileView;

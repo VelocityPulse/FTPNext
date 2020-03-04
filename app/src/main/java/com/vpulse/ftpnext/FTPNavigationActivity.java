@@ -1247,6 +1247,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                         @Override
                         public void onDownloadSuccess(final PendingFile iPendingFile) {
+                            LogManager.info(TAG, "Success downloading " + iPendingFile.getName());
                             mHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -1263,6 +1264,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                         @Override
                         public void onFail(final PendingFile iPendingFile) {
+                            LogManager.info(TAG, "On fail " + iPendingFile.getName());
                             mHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
