@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/action_download"
-        android:icon="@drawable/ic_get_app_filled_24px"
+        android:icon="@drawable/ic_get_app_filled"
         android:orderInCategory="100"
         android:title="Delete"
         app:showAsAction="ifRoom" />

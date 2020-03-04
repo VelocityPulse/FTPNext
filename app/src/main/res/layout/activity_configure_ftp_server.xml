@@ -48,7 +48,7 @@
                     android:id="@+id/name_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawableEnd="@drawable/baseline_bookmark_24"
+                    android:drawableEnd="@drawable/baseline_bookmark"
                     android:hint="Name"
                     android:inputType="text" />
 
@@ -66,7 +66,7 @@
                     android:id="@+id/server_host_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawableEnd="@drawable/baseline_device_hub_24"
+                    android:drawableEnd="@drawable/baseline_device_hub"
                     android:hint="Server Host"
                     android:inputType="text" />
 
@@ -86,7 +86,7 @@
                     android:id="@+id/username_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawableEnd="@drawable/baseline_account_circle_24"
+                    android:drawableEnd="@drawable/baseline_account_circle"
                     android:hint="Username"
                     android:inputType="text" />
 
@@ -158,7 +158,7 @@
                     android:id="@+id/port_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawableEnd="@drawable/baseline_lock_24"
+                    android:drawableEnd="@drawable/baseline_lock"
                     android:hint="Port (Default: 21)"
                     android:inputType="number" />
 
