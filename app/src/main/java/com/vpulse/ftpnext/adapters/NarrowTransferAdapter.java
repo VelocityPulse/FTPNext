@@ -1,8 +1,6 @@
 package com.vpulse.ftpnext.adapters;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
@@ -218,12 +216,20 @@ public class NarrowTransferAdapter
             return;
         }
 
+        if (lPendingFileItem.isErrorAlreadyProceed)
+            return;
+
+        lPendingFileItem.isErrorAlreadyProceed = true;
+
         synchronized (mPendingFileItemList) {
             int lLastPosition = mPendingFileItemList.indexOf(lPendingFileItem);
-            mPendingFileItemList.remove(lPendingFileItem);
-            mPendingFileItemList.add(0, lPendingFileItem);
+            if (lLastPosition != 0) {
 
-            notifyItemMoved(lLastPosition, 0);
+                mPendingFileItemList.remove(lPendingFileItem);
+                mPendingFileItemList.add(0, lPendingFileItem);
+
+                notifyItemMoved(lLastPosition, 0);
+            }
         }
         lPendingFileItem.mTimeOfErrorNotified = (int) System.currentTimeMillis();
         notifyItemChanged(0);
@@ -237,6 +243,7 @@ public class NarrowTransferAdapter
 
     static class PendingFileItem {
         PendingFile mPendingFile;
+        boolean isErrorAlreadyProceed;
         int mTimeOfErrorNotified;
 
         PendingFileItem(PendingFile iPendingFile) {

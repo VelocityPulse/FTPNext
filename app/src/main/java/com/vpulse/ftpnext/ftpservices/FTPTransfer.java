@@ -24,7 +24,7 @@ public class FTPTransfer extends AFTPConnection {
     private static final String TAG = "FTP TRANSFER";
 
     private static final long UPDATE_TRANSFER_TIMER = 200;
-    private static final int TRANSFER_FINISH_BREAK = 500;
+    private static final int TRANSFER_FINISH_BREAK = 100;
 
     private static List<FTPTransfer> sFTPTransferInstances;
 
@@ -176,7 +176,6 @@ public class FTPTransfer extends AFTPConnection {
                     if (mCandidate == null) {
                         mOnTransferListener.onStop();
                         return;
-                        // TODO : y a plus rien a DL blablabla
                     }
 
                     LogManager.info(TAG, "CANDIDATE : \n" + mCandidate.toString());
@@ -235,8 +234,8 @@ public class FTPTransfer extends AFTPConnection {
                             } else
                                 LogManager.info(TAG, "Local creation success");
                         } else {
-                            mCandidate.setProgress(0);
-//                            mCandidate.setProgress((int) lLocalFile.length()); // TODO : TO TEST
+//                            mCandidate.setProgress(0);
+                            mCandidate.setProgress((int) lLocalFile.length()); // TODO : TO TEST
                         }
 
                     } catch (Exception iE) {
@@ -249,7 +248,6 @@ public class FTPTransfer extends AFTPConnection {
                     mFTPClient.enterLocalPassiveMode();
                     FTPFile lFTPFile;
                     try {
-//                        LogManager.debug("complete pending command1 : " + mFTPClient.completePendingCommand());
                         lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
                     } catch (Exception iE) {
                         iE.printStackTrace();
@@ -276,6 +274,8 @@ public class FTPTransfer extends AFTPConnection {
                             break;
                         }
 
+                        connectionLooper();
+
                         try {
                             mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
                         } catch (IOException iE) {
@@ -285,7 +285,6 @@ public class FTPTransfer extends AFTPConnection {
                             continue;
                         }
 
-                        connectionLooper();
 
                         mFTPClient.enterLocalPassiveMode();
 
@@ -316,6 +315,7 @@ public class FTPTransfer extends AFTPConnection {
 
                                 notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize);
                                 if (mIsInterrupted) {
+
                                     mTransferThread = null;
                                     break;
                                 }
@@ -399,7 +399,7 @@ public class FTPTransfer extends AFTPConnection {
         }
 
         while (!isConnected() || isConnecting() || isReconnecting()) {
-            LogManager.info(TAG, "Download files : Waiting connection");
+//            LogManager.info(TAG, "Download files : Waiting connection");
             Utils.sleep(200);
 
             if (mIsInterrupted) {
