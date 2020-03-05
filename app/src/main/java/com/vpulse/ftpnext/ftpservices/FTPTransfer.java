@@ -304,7 +304,7 @@ public class FTPTransfer extends AFTPConnection {
                                 LogManager.error(TAG, "Remote stream null");
                                 mCandidate.setIsAnError(true);
                                 mOnTransferListener.onFail(mCandidate);
-                                continue;
+                                break;
                             }
 
                             while ((lBytesRead = lRemoteStream.read(bytesArray)) != -1) {
@@ -318,6 +318,13 @@ public class FTPTransfer extends AFTPConnection {
                                     break;
                                 }
                             }
+                            // Maybe make a throw to avoid the double interrupt check ?
+                            if (mIsInterrupted) {
+                                mTransferThread = null;
+                                break;
+                            }
+                            closeStreams(lLocalStream, lRemoteStream);
+
                             mFTPClient.enterLocalActiveMode();
                             mIsInterrupted = false;
 
@@ -341,19 +348,8 @@ public class FTPTransfer extends AFTPConnection {
                             iE.printStackTrace();
 
                             mIsTransferring = false;
-                            try {
-                                if (lLocalStream != null) {
-                                    LogManager.info(TAG, "Closing local stream");
-                                    lLocalStream.close();
-                                }
-                                if (lRemoteStream != null) {
-                                    LogManager.info(TAG, "Closing remote stream");
-                                    lRemoteStream.close();
-                                }
-                            } catch (IOException iEx) {
-                                LogManager.error(TAG, "Closing streams not working");
-                                iEx.printStackTrace();
-                            }
+
+                            closeStreams(lLocalStream, lRemoteStream);
 
                             Utils.sleep(500); // Wait the connexion update status
                         }
@@ -377,16 +373,13 @@ public class FTPTransfer extends AFTPConnection {
         synchronized (FTPTransfer.class) {
 
             PendingFile oRet;
-            LogManager.info(TAG, "Select not started candidate");
             for (PendingFile lItem : iSelection) {
                 if (!lItem.isStarted() && !lItem.isFinished() && !lItem.isAnError()) {
                     oRet = lItem;
                     oRet.setStarted(true);
-                    LogManager.info(TAG, "Leaving selectAvailableCandidate()");
                     return oRet;
                 }
             }
-            LogManager.info(TAG, "Leaving select not started candidate");
         }
 
         return null;
@@ -413,6 +406,22 @@ public class FTPTransfer extends AFTPConnection {
             }
         }
         LogManager.info(TAG, "Download files : Connected : " + isConnected());
+    }
+
+    private void closeStreams(OutputStream iLocalStream, InputStream iRemoteStream) {
+        try {
+            if (iLocalStream != null) {
+                LogManager.info(TAG, "Closing local stream");
+                iLocalStream.close();
+            }
+            if (iRemoteStream != null) {
+                LogManager.info(TAG, "Closing remote stream");
+                iRemoteStream.close();
+            }
+        } catch (IOException iEx) {
+            LogManager.error(TAG, "Closing streams not working");
+            iEx.printStackTrace();
+        }
     }
 
     private void settingAverageSpeed(long iValue) {
