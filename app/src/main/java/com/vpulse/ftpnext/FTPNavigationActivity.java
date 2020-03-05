@@ -1159,7 +1159,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 RecyclerView lNarrowTransferRecyclerView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_recycler_view);
                 lNarrowTransferRecyclerView.setLayoutManager(new LinearLayoutManager(FTPNavigationActivity.this));
 
-                mNarrowTransferAdapter = new NarrowTransferAdapter(iPendingFiles);
+                mNarrowTransferAdapter = new NarrowTransferAdapter(iPendingFiles, FTPNavigationActivity.this);
 
                 if (iPendingFiles.length > 1) {
                     DividerItemDecoration lDividerItemDecoration = new DividerItemDecoration(

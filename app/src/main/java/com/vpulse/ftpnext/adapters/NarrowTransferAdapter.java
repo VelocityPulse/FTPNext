@@ -1,5 +1,9 @@
 package com.vpulse.ftpnext.adapters;
 
+import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -31,45 +35,35 @@ public class NarrowTransferAdapter
     private final List<PendingFileItem> mPendingFileItemList;
     private List<CustomItemViewAdapter> mCustomItemViewAdapterList;
 
+    private Context mContext;
+
     private RecyclerView mRecyclerView;
 
     private int mUpdateRequestedInSecond;
     private long mTimer;
 
-    public NarrowTransferAdapter(PendingFile[] iPendingFiles) {
+    public NarrowTransferAdapter(PendingFile[] iPendingFiles, Context iContext) {
         mPendingFileItemList = new ArrayList<>();
         mToRemovePendingFileItemList = new ArrayList<>();
         mCustomItemViewAdapterList = new ArrayList<>();
+        mContext = iContext;
 
         for (PendingFile lItem : iPendingFiles)
             mPendingFileItemList.add(new PendingFileItem(lItem));
     }
 
-    public NarrowTransferAdapter() {
+    public NarrowTransferAdapter(Context iContext) {
         mPendingFileItemList = new ArrayList<>();
         mToRemovePendingFileItemList = new ArrayList<>();
         mCustomItemViewAdapterList = new ArrayList<>();
+
+        mContext = iContext;
     }
 
     @Override
     public void onAttachedToRecyclerView(@NonNull RecyclerView iRecyclerView) {
         super.onAttachedToRecyclerView(iRecyclerView);
         mRecyclerView = iRecyclerView;
-
-        mRecyclerView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                LogManager.debug(TAG, "lol");
-            }
-        });
-
-        mRecyclerView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                LogManager.debug(TAG, "lol");
-                return false;
-            }
-        });
     }
 
     @NonNull
@@ -116,10 +110,15 @@ public class NarrowTransferAdapter
             iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.INVISIBLE);
             iCustomItemViewAdapter.mLoading.setVisibility(View.INVISIBLE);
             iCustomItemViewAdapter.mErrorImage.setVisibility(View.VISIBLE);
-            lPendingFileItem.mShallStartAnimationError = false;
-
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                iCustomItemViewAdapter.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.error));
+            }
         } else if (lPendingFile.isStarted()) {
             // Normal download update
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                iCustomItemViewAdapter.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.primaryLight));
+            }
 
             iCustomItemViewAdapter.mErrorImage.clearAnimation();
             iCustomItemViewAdapter.mErrorImage.setVisibility(View.INVISIBLE);
@@ -150,6 +149,10 @@ public class NarrowTransferAdapter
             }
         } else {
             // Not started
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                iCustomItemViewAdapter.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.primaryLight));
+            }
 
             iCustomItemViewAdapter.mErrorImage.clearAnimation();
             iCustomItemViewAdapter.mErrorImage.setVisibility(View.INVISIBLE);
@@ -203,8 +206,6 @@ public class NarrowTransferAdapter
     }
 
     public void showErrorAndRemove(PendingFile iPendingFile) {
-        LogManager.info(TAG, "Show error and remove");
-
         // Guard
         PendingFileItem lPendingFileItem = null;
         for (PendingFileItem lItem : mPendingFileItemList) {
@@ -223,10 +224,10 @@ public class NarrowTransferAdapter
 
             notifyItemMoved(lLastPosition, 0);
         }
-        lPendingFileItem.mShallStartAnimationError = true;
         lPendingFileItem.mTimeOfErrorNotified = (int) System.currentTimeMillis();
         notifyItemChanged(0);
 
+        // Scroll to 0 if it's necessary
         LinearLayoutManager layoutManager = ((LinearLayoutManager) mRecyclerView.getLayoutManager());
         int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
         if (firstVisiblePosition == 0)
@@ -235,7 +236,6 @@ public class NarrowTransferAdapter
 
     static class PendingFileItem {
         PendingFile mPendingFile;
-        boolean mShallStartAnimationError;
         int mTimeOfErrorNotified;
 
         PendingFileItem(PendingFile iPendingFile) {

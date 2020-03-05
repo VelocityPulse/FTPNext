@@ -142,26 +142,7 @@ public class FTPTransfer extends AFTPConnection {
     }
 
     public void abortTransfer() {
-//        LogManager.info(TAG, "Abort transfer");
-//        if (mTransferThread != null) {
-//            LogManager.info(TAG, "Interrupting");
-//            mTransferThread.interrupt();
         mIsInterrupted = true;
-//            LogManager.debug(TAG, "After interrupt : " + mTransferThread.isInterrupted());
-
-        // Not really useful with mIsInterrupted to true
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                try {
-//                    if (mIsTransferring)
-//                        mFTPClient.abort();
-//                } catch (IOException iE) {
-//                    iE.printStackTrace();
-//                }
-//            }
-//        }).start();
-//        }
     }
 
     @Override
