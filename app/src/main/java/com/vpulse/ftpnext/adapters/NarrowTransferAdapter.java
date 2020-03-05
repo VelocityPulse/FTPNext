@@ -95,6 +95,11 @@ public class NarrowTransferAdapter
         if (!iCustomItemViewAdapter.mTextFileView.getText().equals(lPendingFile.getPath()))
             iCustomItemViewAdapter.mTextFileView.setText(lPendingFile.getPath());
 
+        // Set progress bar
+        if (iCustomItemViewAdapter.mProgressBar.getMax() != lPendingFile.getSize())
+            iCustomItemViewAdapter.mProgressBar.setMax(lPendingFile.getSize());
+        iCustomItemViewAdapter.mProgressBar.setProgress(lPendingFile.getProgress());
+
         if (lPendingFile.isAnError()) {
             // Animation
 
@@ -111,6 +116,7 @@ public class NarrowTransferAdapter
             iCustomItemViewAdapter.mLoading.setVisibility(View.INVISIBLE);
             iCustomItemViewAdapter.mErrorImage.setVisibility(View.VISIBLE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                LogManager.debug(TAG, "SET RED FOR " + lPendingFile.getName());
                 iCustomItemViewAdapter.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.error));
             }
         } else if (lPendingFile.isStarted()) {
@@ -122,11 +128,6 @@ public class NarrowTransferAdapter
 
             iCustomItemViewAdapter.mErrorImage.clearAnimation();
             iCustomItemViewAdapter.mErrorImage.setVisibility(View.INVISIBLE);
-
-            // Set progress bar
-            if (iCustomItemViewAdapter.mProgressBar.getMax() != lPendingFile.getSize())
-                iCustomItemViewAdapter.mProgressBar.setMax(lPendingFile.getSize());
-            iCustomItemViewAdapter.mProgressBar.setProgress(lPendingFile.getProgress());
 
             // Set speed text
             if (!lPendingFile.isFinished() && lPendingFile.isConnected()) {

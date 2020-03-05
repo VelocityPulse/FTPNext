@@ -24,7 +24,7 @@ public class FTPTransfer extends AFTPConnection {
     private static final String TAG = "FTP TRANSFER";
 
     private static final long UPDATE_TRANSFER_TIMER = 200;
-    private static final int TRANSFER_FINISH_BREAK = 50;
+    private static final int TRANSFER_FINISH_BREAK = 500;
 
     private static List<FTPTransfer> sFTPTransferInstances;
 
@@ -235,7 +235,8 @@ public class FTPTransfer extends AFTPConnection {
                             } else
                                 LogManager.info(TAG, "Local creation success");
                         } else {
-                            mCandidate.setProgress((int) lLocalFile.length()); // TODO : TO TEST
+                            mCandidate.setProgress(0);
+//                            mCandidate.setProgress((int) lLocalFile.length()); // TODO : TO TEST
                         }
 
                     } catch (Exception iE) {
@@ -246,8 +247,9 @@ public class FTPTransfer extends AFTPConnection {
 
                     // ---------------- INIT FTP FILE
                     mFTPClient.enterLocalPassiveMode();
-                    FTPFile lFTPFile = null;
+                    FTPFile lFTPFile;
                     try {
+//                        LogManager.debug("complete pending command1 : " + mFTPClient.completePendingCommand());
                         lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
                     } catch (Exception iE) {
                         iE.printStackTrace();
@@ -323,7 +325,11 @@ public class FTPTransfer extends AFTPConnection {
                                 mTransferThread = null;
                                 break;
                             }
+
+
                             closeStreams(lLocalStream, lRemoteStream);
+
+                            mFTPClient.completePendingCommand();
 
                             mFTPClient.enterLocalActiveMode();
                             mIsInterrupted = false;
