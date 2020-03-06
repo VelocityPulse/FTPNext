@@ -1254,8 +1254,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             mHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    mNarrowTransferAdapter.removePendingFile(iPendingFile);
                                     DataBase.getPendingFileDAO().delete(iPendingFile);
+                                    mNarrowTransferAdapter.removePendingFile(iPendingFile);
+                                    if (mNarrowTransferAdapter.getItemCount() == 0)
+                                        mDownloadingDialog.dismiss();
+
                                 }
                             });
                         }

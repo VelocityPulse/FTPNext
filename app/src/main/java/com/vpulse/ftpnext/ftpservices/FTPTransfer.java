@@ -2,6 +2,7 @@ package com.vpulse.ftpnext.ftpservices;
 
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.LogManager;
+import com.vpulse.ftpnext.core.NetworkManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
@@ -117,12 +118,17 @@ public class FTPTransfer extends AFTPConnection {
     }
 
     private void notifyTransferProgress(long iTotalBytesTransferred, int iBytesTransferred, long iStreamSize) {
+        notifyTransferProgress(iTotalBytesTransferred, iBytesTransferred, iStreamSize, false);
+    }
+
+    private void notifyTransferProgress(long iTotalBytesTransferred, int iBytesTransferred,
+                                        long iStreamSize, boolean iForceNotify) {
         mBytesTransferred += iBytesTransferred;
 
         long lCurrentTimeMillis = System.currentTimeMillis();
         long lElapsedTime = lCurrentTimeMillis - mTimer;
 
-        if (lElapsedTime > UPDATE_TRANSFER_TIMER) {
+        if (lElapsedTime > UPDATE_TRANSFER_TIMER || iForceNotify) {
             mCandidate.setConnected(true);
 //            LogManager.debug(TAG, "Transfer...");
             long lImmediateSpeedInKoS = ((mBytesTransferred * 1000) / UPDATE_TRANSFER_TIMER) / 1000;
@@ -175,30 +181,25 @@ public class FTPTransfer extends AFTPConnection {
                     // Stopping all transfer activities
                     if (mCandidate == null) {
                         mOnTransferListener.onStop();
-                        return;
+                        break;
                     }
 
                     LogManager.info(TAG, "CANDIDATE : \n" + mCandidate.toString());
                     DataBase.getPendingFileDAO().update(mCandidate);
                     mOnTransferListener.onNewFileSelected(mCandidate);
 
-                    if (mIsInterrupted) {
-                        mTransferThread = null;
+                    if (mIsInterrupted)
                         break;
-                    }
 
                     // ---------------- INIT CONNECTION
                     connectionLooper();
 
-                    if (mIsInterrupted) {
-                        mTransferThread = null;
+                    if (mIsInterrupted)
                         break;
-                    }
 
                     mOnTransferListener.onConnected(mCandidate);
 
                     // ---------------- INIT NAMES
-
                     final String lLocalPath = mFTPServer.getAbsolutePath() + "/" +
                             mCandidate.getEnclosingName() + mCandidate.getName();
                     final String lRemotePath = mCandidate.getPath();
@@ -208,10 +209,10 @@ public class FTPTransfer extends AFTPConnection {
                             "\nGoing to fetch from the server path :\n\t" +
                             lRemotePath);
 
-                    if (mIsInterrupted) {
-                        mTransferThread = null;
-                        break;
-                    }
+//                    if (mIsInterrupted) {
+//                        mTransferThread = null;
+//                        break;
+//                    }
 
                     // ---------------- INIT LOCAL FILE
                     File lLocalFile = new File(mFTPServer.getAbsolutePath() + "/" +
@@ -229,7 +230,6 @@ public class FTPTransfer extends AFTPConnection {
                                 mOnTransferListener.onFail(mCandidate);
                                 if (mIsInterrupted)
                                     break;
-
                                 continue;
                             } else
                                 LogManager.info(TAG, "Local creation success");
@@ -242,6 +242,7 @@ public class FTPTransfer extends AFTPConnection {
                         iE.printStackTrace();
                         mCandidate.setIsAnError(true);
                         mOnTransferListener.onFail(mCandidate);
+                        continue;
                     }
 
                     // ---------------- INIT FTP FILE
@@ -269,10 +270,8 @@ public class FTPTransfer extends AFTPConnection {
 
                     while (!lFinished) {
 
-                        if (mIsInterrupted) {
-                            mTransferThread = null;
+                        if (mIsInterrupted)
                             break;
-                        }
 
                         connectionLooper();
 
@@ -305,45 +304,45 @@ public class FTPTransfer extends AFTPConnection {
                                 LogManager.error(TAG, "Remote stream null");
                                 mCandidate.setIsAnError(true);
                                 mOnTransferListener.onFail(mCandidate);
+                                mFTPClient.disconnect();
                                 break;
                             }
 
+                            // ---------------- DOWNLAND LOOP
                             while ((lBytesRead = lRemoteStream.read(bytesArray)) != -1) {
                                 mIsTransferring = true;
                                 lTotalRead += lBytesRead;
                                 lLocalStream.write(bytesArray, 0, lBytesRead);
 
                                 notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize);
-                                if (mIsInterrupted) {
 
-                                    mTransferThread = null;
+                                if (mIsInterrupted)
                                     break;
-                                }
                             }
-                            // Maybe make a throw to avoid the double interrupt check ?
-                            if (mIsInterrupted) {
-                                mTransferThread = null;
+                            notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize, true);
+                            mIsTransferring = false;
+                            lFinished = true;
+
+                            if (mIsInterrupted)
                                 break;
-                            }
 
-
+                            // Closing streams necessary before complete pending command
                             closeStreams(lLocalStream, lRemoteStream);
 
-                            mFTPClient.completePendingCommand();
-
+                            try {
+                                mFTPClient.completePendingCommand();
+                            } catch (IOException iE) {
+                                iE.printStackTrace();
+                                mCandidate.setIsAnError(true);
+                                mOnTransferListener.onFail(mCandidate);
+                                mFTPClient.disconnect();
+                                break;
+                            }
                             mFTPClient.enterLocalActiveMode();
-                            mIsInterrupted = false;
-
 
                             mCandidate.setSpeedInKo(0);
                             mCandidate.setRemainingTimeInMin(0);
 
-                            if (mIsInterrupted) {
-                                mTransferThread = null;
-                                break;
-                            }
-
-                            lFinished = true;
                             mCandidate.setFinished(true);
                             mCandidate.setProgress(mCandidate.getSize());
                             mOnTransferListener.onDownloadProgress(mCandidate,
@@ -352,11 +351,9 @@ public class FTPTransfer extends AFTPConnection {
 
                         } catch (Exception iE) {
                             iE.printStackTrace();
-
                             mIsTransferring = false;
-
+                        } finally {
                             closeStreams(lLocalStream, lRemoteStream);
-
                             Utils.sleep(500); // Wait the connexion update status
                         }
                     }
@@ -364,6 +361,7 @@ public class FTPTransfer extends AFTPConnection {
                     Utils.sleep(TRANSFER_FINISH_BREAK);
                     // While end
                 }
+                mTransferThread = null;
             }
         });
 
