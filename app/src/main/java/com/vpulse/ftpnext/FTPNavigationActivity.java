@@ -132,8 +132,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
         initializeGUI();
         initializeHandler();
         initialize();
-        if (mFTPServices == null)
+        LogManager.debug(TAG, "Ftp service value : " + mFTPServices);
+        if (mFTPServices == null) {
+            LogManager.debug(TAG, "FTP service value : " + mFTPServices + " null? But starting build ftp connection");
             buildFTPConnection(true, true);
+        }
         else
             runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
     }
@@ -142,12 +145,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
     protected void onResume() {
         LogManager.info(TAG, "On resume");
         super.onResume();
+        // TODO : What the fuck is this if statement
         if (mFTPServices == null) {
             initialize();
             if (mFTPServices == null)
                 buildFTPConnection(true, true);
             else
                 runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
+
         } else {
             if (!AppCore.getNetworkManager().isNetworkAvailable()) {
                 mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
@@ -248,6 +253,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
+
+
     private void requestPermission(Activity iActivity, final String[] iPermissions,
                                    int iRequestCode, OnPermissionAnswer iOnPermissionAnswer) {
 
@@ -288,6 +295,50 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
 
         finish();
+    }
+
+    private void initialize() {
+        mFTPServerDAO = DataBase.getFTPServerDAO();
+
+        Bundle lBundle = this.getIntent().getExtras();
+
+        // Server ID
+        int lServerId = lBundle.getInt(KEY_DATABASE_ID);
+        if (lServerId != NO_DATABASE_ID) {
+            mFTPServer = mFTPServerDAO.fetchById(lServerId);
+        } else {
+            LogManager.error(TAG, "Server id is not initialized");
+        }
+
+        // FTPServer fetch
+        mFTPServer = mFTPServerDAO.fetchById(lServerId);
+        if (mFTPServer == null) {
+            Utils.createErrorAlertDialog(this, "Navigation page has failed...").show();
+            return;
+        }
+
+        // Directory path
+        if (mDirectoryPath == null)
+            mDirectoryPath = lBundle.getString(KEY_DIRECTORY_PATH, ROOT_DIRECTORY);
+
+        // FTP Connection
+        mFTPServices = FTPServices.getFTPServicesInstance(lServerId);
+
+        if (mFTPServices == null)
+            LogManager.debug(TAG, "FTP CONNECTION NULL");
+
+        // Reconnect dialog
+        if (mFTPServices != null) {
+            mFTPServices.setOnConnectionLost(new AFTPConnection.OnConnectionLost() {
+                @Override
+                public void onConnectionLost() {
+                    mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
+                }
+            });
+        }
+
+        // Bad connection, Large dir, Reconnect dialog
+        initializeDialogs();
     }
 
     private void initializeHandler() {
@@ -713,50 +764,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         if (iFTPFiles.length == 0)
             mCurrentAdapter.getOnFirstViewHolderCreation().onCreation();
-    }
-
-    private void initialize() {
-        mFTPServerDAO = DataBase.getFTPServerDAO();
-
-        Bundle lBundle = this.getIntent().getExtras();
-
-        // Server ID
-        int lServerId = lBundle.getInt(KEY_DATABASE_ID);
-        if (lServerId != NO_DATABASE_ID) {
-            mFTPServer = mFTPServerDAO.fetchById(lServerId);
-        } else {
-            LogManager.error(TAG, "Server id is not initialized");
-        }
-
-        // FTPServer fetch
-        mFTPServer = mFTPServerDAO.fetchById(lServerId);
-        if (mFTPServer == null) {
-            Utils.createErrorAlertDialog(this, "Navigation page has failed...").show();
-            return;
-        }
-
-        // Directory path
-        if (mDirectoryPath == null)
-            mDirectoryPath = lBundle.getString(KEY_DIRECTORY_PATH, ROOT_DIRECTORY);
-
-        // FTP Connection
-        mFTPServices = FTPServices.getFTPServicesInstance(lServerId);
-
-        if (mFTPServices == null)
-            LogManager.debug(TAG, "FTP CONNECTION NULL");
-
-        // Reconnect dialog
-        if (mFTPServices != null) {
-            mFTPServices.setOnConnectionLost(new AFTPConnection.OnConnectionLost() {
-                @Override
-                public void onConnectionLost() {
-                    mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
-                }
-            });
-        }
-
-        // Bad connection, Large dir, Reconnect dialog
-        initializeDialogs();
     }
 
     private void runFetchProcedures(final String iDirectoryPath, boolean iIsLargeDirectory, final boolean iRecovering) {

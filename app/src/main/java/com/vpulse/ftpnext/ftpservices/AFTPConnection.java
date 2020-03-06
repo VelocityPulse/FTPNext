@@ -252,7 +252,6 @@ public abstract class AFTPConnection {
                         return;
                     } else {
                         LogManager.info(TAG, "FTPClient status : " + mFTPClient.getStatus());
-                        LogManager.info(TAG, "FTPClient code : " + mFTPClient.getReplyCode());
                     }
 
                     if (isConnected()) {

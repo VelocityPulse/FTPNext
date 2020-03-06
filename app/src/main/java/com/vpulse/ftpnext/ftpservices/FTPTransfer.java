@@ -284,7 +284,6 @@ public class FTPTransfer extends AFTPConnection {
                             continue;
                         }
 
-
                         mFTPClient.enterLocalPassiveMode();
 
                         OutputStream lLocalStream = null;
