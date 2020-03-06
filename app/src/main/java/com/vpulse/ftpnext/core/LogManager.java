@@ -4,7 +4,7 @@ import android.util.Log;
 
 public class LogManager {
     public static final String UNKNOWN_TAG = "UNKNOWN_TAG";
-    private static final boolean ENABLED_LOG = true;
+    private static final boolean ENABLED_LOG = false;
     private static final String TAG = "CORE - Log Manager";
     private static final String TAG_PREFIX = "FTPNEXT LOG : ";
 
