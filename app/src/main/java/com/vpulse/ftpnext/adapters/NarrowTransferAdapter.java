@@ -219,25 +219,35 @@ public class NarrowTransferAdapter
         if (lPendingFileItem.isErrorAlreadyProceed)
             return;
 
-        lPendingFileItem.isErrorAlreadyProceed = true;
-
+        int lLastPosition;
+        int lNewPosition;
         synchronized (mPendingFileItemList) {
-            int lLastPosition = mPendingFileItemList.indexOf(lPendingFileItem);
-            if (lLastPosition != 0) {
+            lLastPosition = mPendingFileItemList.indexOf(lPendingFileItem);
+            lNewPosition = 0;
+
+            for (PendingFileItem lItem : mPendingFileItemList) {
+                if (lItem.isErrorAlreadyProceed)
+                    lNewPosition++;
+                else
+                    break;
+            }
+            lPendingFileItem.isErrorAlreadyProceed = true;
+
+            if (lLastPosition != lNewPosition) {
 
                 mPendingFileItemList.remove(lPendingFileItem);
-                mPendingFileItemList.add(0, lPendingFileItem);
+                mPendingFileItemList.add(lNewPosition, lPendingFileItem);
 
                 notifyItemMoved(lLastPosition, 0);
             }
         }
         lPendingFileItem.mTimeOfErrorNotified = (int) System.currentTimeMillis();
-        notifyItemChanged(0);
+        notifyItemChanged(lNewPosition);
 
         // Scroll to 0 if it's necessary
         LinearLayoutManager layoutManager = ((LinearLayoutManager) mRecyclerView.getLayoutManager());
         int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
-        if (firstVisiblePosition == 0)
+        if (firstVisiblePosition == 0 && lNewPosition == 0)
             mRecyclerView.scrollToPosition(0);
     }
 
