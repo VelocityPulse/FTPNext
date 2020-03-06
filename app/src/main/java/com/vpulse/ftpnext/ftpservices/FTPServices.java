@@ -151,6 +151,12 @@ public class FTPServices extends AFTPConnection {
                     FTPFile lLeavingDirectory = mCurrentDirectory;
 
                     FTPFile lTargetDirectory = mFTPClient.mlistFile(iPath);
+                    if (lTargetDirectory == null) {
+                        // Experimenting a fix for the following todo
+                        mFTPClient.completePendingCommand();
+                    }
+                    lTargetDirectory = mFTPClient.mlistFile(iPath);
+
                     if (!lTargetDirectory.isDirectory()) { // TODO : put null security for release
                         iOnFetchDirectoryResult.onFail(ErrorCodeDescription.ERROR_NOT_A_DIRECTORY,
                                 FTPReply.FILE_UNAVAILABLE);

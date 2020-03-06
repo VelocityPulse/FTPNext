@@ -75,8 +75,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private static final int NAVIGATION_MESSAGE_RECONNECT_FAIL = 14;
     private static final int NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS = 15;
     private static final int NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL = 16;
-    private static final int NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH = 17;
-    private static final int NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING = 18;
+    private static final int NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH = 17;
+    private static final int NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE = 18;
     private static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH = 19;
     private static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_UPDATE = 20;
 
@@ -93,7 +93,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private FTPServer mFTPServer;
     private FTPServices mFTPServices;
-    private FTPServerDAO mFTPServerDAO;
     private int mErrorCode;
 
     private NavigationRecyclerViewAdapter mCurrentAdapter;
@@ -116,6 +115,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private AlertDialog mDeletingErrorDialog;
 
     private Handler mHandler;
+    private boolean mWasOnPause;
 
     private boolean mIsFABOpen;
     private FloatingActionButton mMainFAB;
@@ -132,34 +132,24 @@ public class FTPNavigationActivity extends AppCompatActivity {
         initializeGUI();
         initializeHandler();
         initialize();
-        LogManager.debug(TAG, "Ftp service value : " + mFTPServices);
-        if (mFTPServices == null) {
-            LogManager.debug(TAG, "FTP service value : " + mFTPServices + " null? But starting build ftp connection");
-            buildFTPConnection(true, true);
-        }
-        else
-            runFetchProcedures(mDirectoryPath, mIsLargeDirectory, false);
+        retrieveFTPServices(false);
     }
 
     @Override
     protected void onResume() {
         LogManager.info(TAG, "On resume");
         super.onResume();
-        // TODO : What the fuck is this if statement
-        if (mFTPServices == null) {
-            initialize();
-            if (mFTPServices == null)
-                buildFTPConnection(true, true);
-            else
-                runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
 
-        } else {
-            if (!AppCore.getNetworkManager().isNetworkAvailable()) {
-                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
-            } else {
-                LogManager.info(TAG, "Network apparently still available");
-            }
-        }
+        LogManager.info(TAG, "Was on pause :" + mWasOnPause);
+        if (mWasOnPause)
+            retrieveFTPServices(true);
+    }
+
+    @Override
+    protected void onPause() {
+        LogManager.info(TAG, "On pause");
+        mWasOnPause = true;
+        super.onPause();
     }
 
     // Orientation is manager in android manifest with android:configChanges
@@ -177,6 +167,19 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mFTPServices.destroyConnection();
 
         super.onDestroy();
+    }
+
+    private void terminateNavigation() {
+        mFTPServices.destroyConnection();
+
+        if (mIsShowingDownload) {
+            FTPTransfer[] lFTPTransfers = FTPTransfer.getFTPTransferInstance(mFTPServer.getDataBaseId());
+
+            for (FTPTransfer lItem : lFTPTransfers) {
+                lItem.destroyConnection();
+            }
+        }
+        finish();
     }
 
     @Override
@@ -254,7 +257,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
 
-
     private void requestPermission(Activity iActivity, final String[] iPermissions,
                                    int iRequestCode, OnPermissionAnswer iOnPermissionAnswer) {
 
@@ -283,62 +285,139 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
-    private void terminateNavigation() {
-        mFTPServices.destroyConnection();
-
-        if (mIsShowingDownload) {
-            FTPTransfer[] lFTPTransfers = FTPTransfer.getFTPTransferInstance(mFTPServer.getDataBaseId());
-
-            for (FTPTransfer lItem : lFTPTransfers) {
-                lItem.destroyConnection();
-            }
-        }
-
-        finish();
-    }
-
     private void initialize() {
-        mFTPServerDAO = DataBase.getFTPServerDAO();
+        FTPServerDAO lFTPServerDAO = DataBase.getFTPServerDAO();
 
         Bundle lBundle = this.getIntent().getExtras();
 
         // Server ID
         int lServerId = lBundle.getInt(KEY_DATABASE_ID);
         if (lServerId != NO_DATABASE_ID) {
-            mFTPServer = mFTPServerDAO.fetchById(lServerId);
+            mFTPServer = lFTPServerDAO.fetchById(lServerId);
         } else {
             LogManager.error(TAG, "Server id is not initialized");
         }
 
         // FTPServer fetch
-        mFTPServer = mFTPServerDAO.fetchById(lServerId);
+        mFTPServer = lFTPServerDAO.fetchById(lServerId);
         if (mFTPServer == null) {
             Utils.createErrorAlertDialog(this, "Navigation page has failed...").show();
-            return;
+            finish();
         }
 
         // Directory path
         if (mDirectoryPath == null)
             mDirectoryPath = lBundle.getString(KEY_DIRECTORY_PATH, ROOT_DIRECTORY);
 
-        // FTP Connection
-        mFTPServices = FTPServices.getFTPServicesInstance(lServerId);
-
-        if (mFTPServices == null)
-            LogManager.debug(TAG, "FTP CONNECTION NULL");
-
-        // Reconnect dialog
-        if (mFTPServices != null) {
-            mFTPServices.setOnConnectionLost(new AFTPConnection.OnConnectionLost() {
-                @Override
-                public void onConnectionLost() {
-                    mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
-                }
-            });
-        }
-
         // Bad connection, Large dir, Reconnect dialog
         initializeDialogs();
+    }
+
+    private void retrieveFTPServices(boolean iIsUpdating) {
+        LogManager.info(TAG, "Retrieve FTP Services");
+
+        mFTPServices = FTPServices.getFTPServicesInstance(mFTPServer.getDataBaseId());
+
+        if (mFTPServices == null) {
+            // Can happens on android studio apply changes
+            LogManager.debug(TAG, "FTP CONNECTION NULL");
+            buildFTPConnection(true, true);
+        } else {
+            LogManager.info(TAG, "FTP Services fully recovered by get instance");
+            LogManager.info(TAG, "FTP Services instance busy : " + mFTPServices.isBusy());
+            if (mFTPServices.isBusy())
+                return;
+
+            if (!AppCore.getNetworkManager().isNetworkAvailable()) {
+                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
+            } else if (!mIsShowingDownload)
+                runFetchProcedures(mDirectoryPath, mIsLargeDirectory, iIsUpdating);
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private void buildFTPConnection(final boolean iIsRecovering, final boolean iRunFetchOnSuccess) {
+        LogManager.info(TAG, "Build FTP Connection");
+        if (mFTPServer == null) {
+            LogManager.error(TAG, "mFTPServer is null");
+            LogManager.error(TAG, Arrays.toString(new Exception("mFTPServer instance is null").getStackTrace()));
+            return;
+        }
+
+        mFTPServices = new FTPServices(mFTPServer);
+
+        if (iIsRecovering)
+            mLoadingDialog.setTitle("Reconnection..."); // TODO : strings
+        else
+            mLoadingDialog.setTitle("Connection..."); // TODO : strings
+        mLoadingDialog.show();
+
+        mFTPServices.connect(new AFTPConnection.OnConnectionResult() {
+            @Override
+            public void onSuccess() {
+                mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
+                if (iRunFetchOnSuccess)
+                    mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_SUCCESS);
+            }
+
+            @Override
+            public void onFail(final AFTPConnection.ErrorCodeDescription iErrorEnum, int iErrorCode) {
+                if (iErrorEnum == AFTPConnection.ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED)
+                    return;
+                mErrorCode = iErrorCode;
+                mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
+                mHandler.sendMessage(Message.obtain(
+                        mHandler,
+                        NAVIGATION_MESSAGE_CONNECTION_FAIL,
+                        iIsRecovering ? 1 : 0,
+                        0,
+                        iErrorEnum));
+            }
+        });
+
+        mFTPServices.setOnConnectionLost(new AFTPConnection.OnConnectionLost() {
+            @Override
+            public void onConnectionLost() {
+                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
+            }
+        });
+    }
+
+    private void initializeGUI() {
+        Toolbar lToolBar = findViewById(R.id.toolbar);
+        setSupportActionBar(lToolBar);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        mMainFAB = findViewById(R.id.navigation_floating_action_button);
+        mCreateFolderFAB = findViewById(R.id.navigation_fab_create_folder);
+        mUploadFileFAB = findViewById(R.id.navigation_fab_upload_file);
+        mMainFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!mIsFABOpen) {
+                    openFABMenu();
+                } else {
+                    closeFABMenu();
+                }
+            }
+        });
+
+        mCreateFolderFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                createDialogFolderClicked();
+            }
+        });
+        mUploadFileFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onUploadFileClicked();
+            }
+        });
+
+        mRecyclerSection = findViewById(R.id.navigation_recycler_section);
     }
 
     private void initializeHandler() {
@@ -502,16 +581,20 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                 .show();
                         break;
 
-                    case NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING:
-                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING");
+                    case NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE");
                         lFiles = (FTPFile[]) msg.obj;
-                        mCurrentAdapter.setData(lFiles); // TODO CRASH : Android studio : click and apply change during a connection or a download
-                        mCurrentAdapter.appearVertically();
-                        mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);
+                        if (mCurrentAdapter == null)
+                            inflateNewAdapter(lFiles, mDirectoryPath, true);
+                        else {
+                            mCurrentAdapter.setData(lFiles);
+                            mCurrentAdapter.appearVertically();
+                            mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);
+                        }
                         break;
 
-                    case NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH:
-                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH");
+                    case NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH");
                         lFiles = (FTPFile[]) msg.obj;
                         inflateNewAdapter(lFiles, mDirectoryPath, false);
                         break;
@@ -610,43 +693,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mMainFAB.show();
         mCreateFolderFAB.show();
         mUploadFileFAB.show();
-    }
-
-    private void initializeGUI() {
-        Toolbar lToolBar = findViewById(R.id.toolbar);
-        setSupportActionBar(lToolBar);
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        mMainFAB = findViewById(R.id.navigation_floating_action_button);
-        mCreateFolderFAB = findViewById(R.id.navigation_fab_create_folder);
-        mUploadFileFAB = findViewById(R.id.navigation_fab_upload_file);
-        mMainFAB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!mIsFABOpen) {
-                    openFABMenu();
-                } else {
-                    closeFABMenu();
-                }
-            }
-        });
-
-        mCreateFolderFAB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                createDialogFolderClicked();
-            }
-        });
-        mUploadFileFAB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onUploadFileClicked();
-            }
-        });
-
-        mRecyclerSection = findViewById(R.id.navigation_recycler_section);
     }
 
     private void destroyCurrentAdapter() {
@@ -766,7 +812,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mCurrentAdapter.getOnFirstViewHolderCreation().onCreation();
     }
 
-    private void runFetchProcedures(final String iDirectoryPath, boolean iIsLargeDirectory, final boolean iRecovering) {
+    private void runFetchProcedures(final String iDirectoryPath, boolean iIsLargeDirectory,
+                                    final boolean isForAnUpdate) {
         dismissAllDialogs();
         mErrorAlertDialog = null;
         mIsDirectoryFetchFinished = false;
@@ -806,14 +853,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             iE.printStackTrace();
                         }
                     }
-                    initializeFetchDirectory(iDirectoryPath, iRecovering);
+                    initFetchDirectoryContent(iDirectoryPath, isForAnUpdate);
                 }
             }).start();
         } else
-            initializeFetchDirectory(iDirectoryPath, iRecovering);
+            initFetchDirectoryContent(iDirectoryPath, isForAnUpdate);
     }
 
-    private void initializeDialogs() {
+    private void initializeDialogs() { // TODO : Move it at a better place
         // Loading dialog
         mLoadingDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
             @Override
@@ -858,13 +905,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mCancelingDialog.create();
     }
 
-    private void initializeFetchDirectory(final String iDirectoryPath, final boolean iRecovering) {
+    private void initFetchDirectoryContent(final String iDirectoryPath, final boolean iIsForAnUpdate) {
 
         //Bad Connection
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (!mIsDirectoryFetchFinished && (mLargeDirDialog == null || !mLargeDirDialog.isShowing())) { // in case if dialog has been canceled
+                // in case if dialog has been canceled
+                if (!mIsDirectoryFetchFinished && (mLargeDirDialog == null || !mLargeDirDialog.isShowing())) {
                     if (mCurrentAdapter != null && mCurrentAdapter.getSwipeRefreshLayout().isRefreshing())
                         return;
 
@@ -882,16 +930,16 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 mDirectoryPath = iDirectoryPath;
                 mIsDirectoryFetchFinished = true;
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS);
-                if (iRecovering) {
+                if (iIsForAnUpdate) {
                     mHandler.sendMessage(Message.obtain(
                             mHandler,
-                            NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_RECOVERING,
+                            NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE,
                             iFTPFiles
                     ));
                 } else
                     mHandler.sendMessage(Message.obtain(
                             mHandler,
-                            NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH,
+                            NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH,
                             iFTPFiles));
             }
 
@@ -1549,47 +1597,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mDeletingInfoDialog.cancel();
         if (mDeletingErrorDialog != null && !lDialogList.contains(mDeletingErrorDialog))
             mDeletingErrorDialog.cancel();
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private void buildFTPConnection(final boolean iIsRecovering, final boolean iRunFetchOnSuccess) {
-        LogManager.info(TAG, "Rebuild FTP Connection");
-        if (mFTPServer == null) {
-            LogManager.error(TAG, "mFTPServer is null");
-            LogManager.error(TAG, Arrays.toString(new Exception("mFTPServer instance is null").getStackTrace()));
-            return;
-        }
-
-        mFTPServices = new FTPServices(mFTPServer);
-
-        if (iIsRecovering)
-            mLoadingDialog.setTitle("Reconnection..."); // TODO : strings
-        else
-            mLoadingDialog.setTitle("Connection..."); // TODO : strings
-        mLoadingDialog.show();
-
-        mFTPServices.connect(new AFTPConnection.OnConnectionResult() {
-            @Override
-            public void onSuccess() {
-                mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
-                if (iRunFetchOnSuccess)
-                    mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_SUCCESS);
-            }
-
-            @Override
-            public void onFail(final AFTPConnection.ErrorCodeDescription iErrorEnum, int iErrorCode) {
-                if (iErrorEnum == AFTPConnection.ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED)
-                    return;
-                mErrorCode = iErrorCode;
-                mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
-                mHandler.sendMessage(Message.obtain(
-                        mHandler,
-                        NAVIGATION_MESSAGE_CONNECTION_FAIL,
-                        iIsRecovering ? 1 : 0,
-                        0,
-                        iErrorEnum));
-            }
-        });
     }
 
     private abstract class OnPermissionAnswer {
