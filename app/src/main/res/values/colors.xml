@@ -12,6 +12,11 @@
 
     <color name="error">#FF0000</color>
 
+    <color name="log_success">#008300</color>
+    <color name="log_error">#FFFF0000</color>
+    <color name="log_code_reply">#FF0000FF</color>
+    <color name="log_status">#FF000000</color>
+
     <!--<color name="mtrl_textinput_default_box_stroke_color" tools:override="true">#fff</color>-->
 
 </resources>

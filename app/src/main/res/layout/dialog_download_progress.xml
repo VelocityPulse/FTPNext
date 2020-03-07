@@ -19,15 +19,16 @@
         android:layout_marginTop="20dp">
 
         <ScrollView
+            android:id="@+id/narrow_transfer_scroll_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentBottom="true"
             tools:ignore="UselessParent">
 
             <TextView
+                android:id="@+id/narrow_transfer_log_view"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon...LogSoon..." />
+                android:layout_height="wrap_content" />
 
         </ScrollView>
 

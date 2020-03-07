@@ -320,6 +320,7 @@ public abstract class AFTPConnection {
                             if (lLastCode != mFTPClient.getReplyCode()) {
                                 lLastCode = mFTPClient.getReplyCode();
                                 LogManager.debug(TAG, "code reply : " + lLastCode);
+                                FTPLogManager.getInstance().pushCodeReplyLog(lLastCode);
                             }
                             Thread.sleep(100);
                         }

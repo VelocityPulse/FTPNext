@@ -15,6 +15,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.text.HtmlCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -34,6 +35,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.vpulse.ftpnext.adapters.NarrowTransferAdapter;
@@ -47,6 +49,7 @@ import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection;
+import com.vpulse.ftpnext.ftpservices.FTPLogManager;
 import com.vpulse.ftpnext.ftpservices.FTPServices;
 import com.vpulse.ftpnext.ftpservices.FTPTransfer;
 
@@ -59,13 +62,11 @@ import java.util.List;
 
 public class FTPNavigationActivity extends AppCompatActivity {
 
-    private static final String TAG = "FTP NAVIGATION ACTIVITY";
-
     public static final int NO_DATABASE_ID = -1;
     public static final String ROOT_DIRECTORY = "/";
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
     public static final String KEY_DIRECTORY_PATH = "KEY_DIRECTORY_PATH";
-
+    private static final String TAG = "FTP NAVIGATION ACTIVITY";
     private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
     private static final int LARGE_DIRECTORY_SIZE = 30000;
     private static final int BAD_CONNECTION_TIME = 50;
@@ -1216,7 +1217,23 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 RecyclerView lNarrowTransferRecyclerView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_recycler_view);
                 lNarrowTransferRecyclerView.setLayoutManager(new LinearLayoutManager(FTPNavigationActivity.this));
 
-                mNarrowTransferAdapter = new NarrowTransferAdapter(iPendingFiles, FTPNavigationActivity.this);
+                final TextView lLogView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_log_view);
+                final ScrollView lScrollView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_scroll_view);
+                final FTPLogManager.OnNewFTPLogColored lOnNewFTPLogColored = new FTPLogManager.OnNewFTPLogColored() {
+                    @Override
+                    public void onNewFTPLogColored(final String iLog) {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                String lCompleteLog = lLogView.getText() + iLog;
+                                lLogView.append(HtmlCompat.fromHtml(iLog + "<br/>", HtmlCompat.FROM_HTML_MODE_LEGACY));
+                                lScrollView.fullScroll(ScrollView.FOCUS_DOWN);
+                                // Scroll to the end ?
+                            }
+                        });
+                    }
+                };
+                FTPLogManager.getInstance().subscribeOnNewFTPLogColored(lOnNewFTPLogColored);
 
                 if (iPendingFiles.length > 1) {
                     DividerItemDecoration lDividerItemDecoration = new DividerItemDecoration(
@@ -1224,6 +1241,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     lNarrowTransferRecyclerView.addItemDecoration(lDividerItemDecoration);
                 }
 
+                mNarrowTransferAdapter = new NarrowTransferAdapter(iPendingFiles, FTPNavigationActivity.this);
                 lNarrowTransferRecyclerView.setAdapter(mNarrowTransferAdapter);
 
                 lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -1248,6 +1266,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         mIsShowingDownload = false;
+                        FTPLogManager.getInstance().unsubscribeOnNewFTPLogColored(lOnNewFTPLogColored);
                     }
                 });
 

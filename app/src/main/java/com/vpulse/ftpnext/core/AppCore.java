@@ -19,8 +19,6 @@ public class AppCore {
     @SuppressLint("StaticFieldLeak")
     private static AppCore sSingleton;
 
-    private Context mMainActivityContext;
-
     private AppCore() {
     }
 
@@ -55,7 +53,7 @@ public class AppCore {
         mNetworkManager.startMonitoring(iMainActivityContext);
 
         // FTP log manager
-        FTPLogManager.init();
+        FTPLogManager.init(iMainActivityContext);
 
         mApplicationStarted = true;
     }

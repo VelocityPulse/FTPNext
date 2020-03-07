@@ -2,7 +2,6 @@ package com.vpulse.ftpnext.ftpservices;
 
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.LogManager;
-import com.vpulse.ftpnext.core.NetworkManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
@@ -307,6 +306,8 @@ public class FTPTransfer extends AFTPConnection {
                                 break;
                             }
 
+                            FTPLogManager.getInstance().pushStatusLog(
+                                    "Start download of " + mCandidate.getName());
                             // ---------------- DOWNLAND LOOP
                             while ((lBytesRead = lRemoteStream.read(bytesArray)) != -1) {
                                 mIsTransferring = true;
@@ -347,6 +348,7 @@ public class FTPTransfer extends AFTPConnection {
                             mOnTransferListener.onDownloadProgress(mCandidate,
                                     mCandidate.getProgress(), mCandidate.getSize());
                             mOnTransferListener.onDownloadSuccess(mCandidate);
+                            FTPLogManager.getInstance().pushSuccessLog("Complete download of " + mCandidate.getName());
 
                         } catch (Exception iE) {
                             iE.printStackTrace();
