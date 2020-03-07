@@ -7,7 +7,7 @@ import static com.vpulse.ftpnext.core.AppCore.APP_ADDRESS;
 
 public class PreferenceManager {
 
-    public static final int DEFAULT_MAX_TRANSFER_VALUE = 2;
+    public static final int DEFAULT_MAX_TRANSFER_VALUE = 5;
     public static final String DEFAULT_LOGS_VALUE = "";
 
     private static final String TAG = "PREFERENCE MANAGER";

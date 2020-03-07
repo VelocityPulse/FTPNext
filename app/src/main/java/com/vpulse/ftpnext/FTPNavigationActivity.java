@@ -1,12 +1,14 @@
 package com.vpulse.ftpnext;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -27,6 +29,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.BounceInterpolator;
@@ -121,6 +124,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private boolean mWasOnPause;
 
     private boolean mIsFABOpen;
+    private boolean mCanAutoScrollInLogView;
     private FloatingActionButton mMainFAB;
     private FloatingActionButton mCreateFolderFAB;
     private FloatingActionButton mUploadFileFAB;
@@ -1207,6 +1211,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         final List<FTPTransfer> lFTPTransferList = new ArrayList<>();
 
         mHandler.post(new Runnable() {
+            @SuppressLint("ClickableViewAccessibility")
             @Override
             public void run() {
                 final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
@@ -1219,6 +1224,28 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                 final TextView lLogView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_log_view);
                 final ScrollView lScrollView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_scroll_view);
+                lScrollView.setSmoothScrollingEnabled(true);
+                mCanAutoScrollInLogView = true;
+
+                lLogView.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        if (event.getAction() == MotionEvent.ACTION_DOWN)
+                            mCanAutoScrollInLogView = false;
+                        return false;
+                    }
+
+                });
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    lScrollView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+                        @Override
+                        public void onScrollChange(View iV, int iScrollX, int iScrollY, int iOldScrollX, int iOldScrollY) {
+                            if (!lScrollView.canScrollVertically(1)) {
+                                mCanAutoScrollInLogView = true;
+                            }
+                        }
+                    });
+                }
                 final FTPLogManager.OnNewFTPLogColored lOnNewFTPLogColored = new FTPLogManager.OnNewFTPLogColored() {
                     @Override
                     public void onNewFTPLogColored(final String iLog) {
@@ -1227,7 +1254,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             public void run() {
                                 String lCompleteLog = lLogView.getText() + iLog;
                                 lLogView.append(HtmlCompat.fromHtml(iLog + "<br/>", HtmlCompat.FROM_HTML_MODE_LEGACY));
-                                lScrollView.fullScroll(ScrollView.FOCUS_DOWN);
+                                if (mCanAutoScrollInLogView)
+                                    lScrollView.fullScroll(ScrollView.FOCUS_DOWN);
                                 // Scroll to the end ?
                             }
                         });
