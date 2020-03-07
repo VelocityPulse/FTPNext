@@ -26,15 +26,15 @@ public class NetworkManager {
     private NetworkCapabilities mNetworkCapabilities;
     private boolean mAvailableNetworkFired;
 
+    private NetworkManager() {
+        mOnNetworkAvailableList = new ArrayList<>();
+        mOnNetworkLostList = new ArrayList<>();
+    }
+
     public static NetworkManager getInstance() {
         if (sSingleton != null)
             return sSingleton;
         return (sSingleton = new NetworkManager());
-    }
-
-    private NetworkManager() {
-        mOnNetworkAvailableList = new ArrayList<>();
-        mOnNetworkLostList = new ArrayList<>();
     }
 
     public void startMonitoring(Context iContext) {
@@ -42,10 +42,18 @@ public class NetworkManager {
     }
 
     public void subscribeNetworkAvailable(OnNetworkAvailable iOnNetworkAvailable) {
+        if (iOnNetworkAvailable == null) {
+            LogManager.error(TAG, "Subscribe network available parameter null");
+            return;
+        }
         mOnNetworkAvailableList.add(iOnNetworkAvailable);
     }
 
     public void subscribeOnNetworkLost(OnNetworkLost iOnNetworkLost) {
+        if (iOnNetworkLost == null) {
+            LogManager.error(TAG, "Subscribe on network lost parameter null");
+            return;
+        }
         mOnNetworkLostList.add(iOnNetworkLost);
     }
 
@@ -124,7 +132,7 @@ public class NetworkManager {
                 @Override
                 public void onCapabilitiesChanged(Network iNetwork, NetworkCapabilities iNetworkCapabilities) {
                     super.onCapabilitiesChanged(iNetwork, iNetworkCapabilities);
-                    LogManager.info(TAG, "On capabilities changed");
+//                    LogManager.info(TAG, "On capabilities changed");
 
                     if (mAvailableNetwork == null)
                         return;

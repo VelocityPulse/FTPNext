@@ -41,6 +41,7 @@ import com.vpulse.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.LogManager;
+import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
@@ -58,12 +59,13 @@ import java.util.List;
 
 public class FTPNavigationActivity extends AppCompatActivity {
 
+    private static final String TAG = "FTP NAVIGATION ACTIVITY";
+
     public static final int NO_DATABASE_ID = -1;
     public static final String ROOT_DIRECTORY = "/";
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
     public static final String KEY_DIRECTORY_PATH = "KEY_DIRECTORY_PATH";
 
-    private static final String TAG = "FTP NAVIGATION ACTIVITY";
     private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
     private static final int LARGE_DIRECTORY_SIZE = 30000;
     private static final int BAD_CONNECTION_TIME = 50;
@@ -1259,7 +1261,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
 
         int lI = -1;
-        int lMaxSimultaneousDownload = AppCore.getMaxTransfer();
+        int lMaxSimultaneousDownload = PreferenceManager.getMaxTransfer();
         while (++lI < lMaxSimultaneousDownload && lI < iPendingFiles.length) {
             mHandler.post(new Runnable() {
                 @Override
@@ -1343,7 +1345,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                 }
             });
-//            mFTPServices.destroyConnection(); // TODO remove !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         }
     }
 

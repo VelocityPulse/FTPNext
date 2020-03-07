@@ -21,6 +21,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection.ErrorCodeDescription;
 import com.vpulse.ftpnext.adapters.MainRecyclerViewAdapter;
@@ -104,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.loading_icon, null);
 
-//        runTests();
+        runTests();
     }
 
     @Override
@@ -361,10 +362,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void runTests() {
+
+
         // Note : RunTests will automatically increment the database ID
 //        DataBaseTests.runTests(new TableTest1(), DataBase.getTableTest1DAO());
 //        DataBaseTests.runTests(new FTPServer(), DataBase.getFTPServerDAO());
-        DataBaseTests.runTests(new PendingFile(), DataBase.getPendingFileDAO());
+//        DataBaseTests.runTests(new PendingFile(), DataBase.getPendingFileDAO());
 
 //        for (int i = 0; i < 20; i++) {
 //            mAdapter.mItemList.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + i);
