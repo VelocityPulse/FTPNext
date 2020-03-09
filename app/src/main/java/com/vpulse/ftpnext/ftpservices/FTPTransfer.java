@@ -129,7 +129,6 @@ public class FTPTransfer extends AFTPConnection {
 
         if (lElapsedTime > UPDATE_TRANSFER_TIMER || iForceNotify) {
             mCandidate.setConnected(true);
-//            LogManager.debug(TAG, "Transfer...");
             long lImmediateSpeedInKoS = ((mBytesTransferred * 1000) / UPDATE_TRANSFER_TIMER) / 1000;
 
             settingAverageSpeed(lImmediateSpeedInKoS);
@@ -146,6 +145,10 @@ public class FTPTransfer extends AFTPConnection {
         }
     }
 
+    public boolean isTransferring() {
+        return mTransferThread != null && mTransferThread.isAlive();
+    }
+
     public void abortTransfer() {
         mIsInterrupted = true;
     }
@@ -156,11 +159,9 @@ public class FTPTransfer extends AFTPConnection {
     }
 
     public void downloadFiles(final PendingFile[] iSelection, @NotNull final OnTransferListener iOnTransferListener) {
-        mOnTransferListener = iOnTransferListener;
-
         LogManager.info(TAG, "Download files");
-        // TODO : Guard of if it's not already uploading
-        if (mTransferThread != null) {
+
+        if (isTransferring()) {
             LogManager.error(TAG, "Transfer not finished");
             return;
         }
@@ -170,6 +171,7 @@ public class FTPTransfer extends AFTPConnection {
             @Override
             public void run() {
 
+                mOnTransferListener = iOnTransferListener;
                 initializeListeners(mOnTransferListener);
 
                 while (!mIsInterrupted) {
@@ -207,11 +209,6 @@ public class FTPTransfer extends AFTPConnection {
                             lLocalPath +
                             "\nGoing to fetch from the server path :\n\t" +
                             lRemotePath);
-
-//                    if (mIsInterrupted) {
-//                        mTransferThread = null;
-//                        break;
-//                    }
 
                     // ---------------- INIT LOCAL FILE
                     File lLocalFile = new File(mFTPServer.getAbsolutePath() + "/" +
