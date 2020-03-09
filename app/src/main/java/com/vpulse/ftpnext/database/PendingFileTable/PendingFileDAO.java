@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LoadDirection;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.ADataAccessObject;
@@ -15,6 +16,8 @@ import java.util.List;
 public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IPendingFileSchema {
 
     private static final String TAG = "DATABASE : Pending file DAO";
+
+    private static final int VERSION_ADD_EXISTING_FILE_ACTION = 2;
 
     public PendingFileDAO(SQLiteDatabase iDataBase) {
         super(iDataBase);
@@ -104,7 +107,14 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
 
     @Override
     public void onUpgradeTable(int iOldVersion, int iNewVersion) {
+        LogManager.info(TAG, "On update table");
+        if (iOldVersion < VERSION_ADD_EXISTING_FILE_ACTION) {
 
+            LogManager.info(TAG, "On upgrade existing file action ");
+
+            mDataBase.execSQL("ALTER TABLE " + TABLE +
+                    " ADD " + COLUMN_EXISTING_FILE_ACTION + " INTEGER DEFAULT 0");
+        }
     }
 
     @Override
@@ -127,6 +137,7 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
         mContentValues.put(COLUMN_ENCLOSING_NAME, iObject.getEnclosingName());
         mContentValues.put(COLUMN_FINISHED, iObject.isFinished());
         mContentValues.put(COLUMN_PROGRESS, iObject.getProgress());
+        mContentValues.put(COLUMN_EXISTING_FILE_ACTION, iObject.getExistingFileAction().getValue());
     }
 
     @Override
@@ -156,6 +167,9 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
             oObject.setFinished(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_FINISHED)) != 0);
         if (iCursor.getColumnIndexOrThrow(COLUMN_PROGRESS) != -1)
             oObject.setProgress(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_PROGRESS)));
+        if (iCursor.getColumnIndexOrThrow(COLUMN_EXISTING_FILE_ACTION) != -1)
+            oObject.setExistingFileAction(ExistingFileAction.getValue(
+                    iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_EXISTING_FILE_ACTION))));
 
         return oObject;
     }

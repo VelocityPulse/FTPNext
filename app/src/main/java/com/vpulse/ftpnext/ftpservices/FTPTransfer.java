@@ -405,7 +405,6 @@ public class FTPTransfer extends AFTPConnection {
     }
 
     private void connectionLooper() {
-        LogManager.debug(TAG, "Connection looper. Is reconnecting : " + isReconnecting());
         if (!isConnected() && !isReconnecting()) {
             LogManager.info(TAG, "Not connected");
             connect(null);
@@ -434,14 +433,10 @@ public class FTPTransfer extends AFTPConnection {
 
     private void closeStreams(OutputStream iLocalStream, InputStream iRemoteStream) {
         try {
-            if (iLocalStream != null) {
-                LogManager.info(TAG, "Closing local stream");
+            if (iLocalStream != null)
                 iLocalStream.close();
-            }
-            if (iRemoteStream != null) {
-                LogManager.info(TAG, "Closing remote stream");
+            if (iRemoteStream != null)
                 iRemoteStream.close();
-            }
         } catch (IOException iEx) {
             LogManager.error(TAG, "Closing streams not working");
             iEx.printStackTrace();

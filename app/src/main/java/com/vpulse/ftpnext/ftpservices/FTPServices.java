@@ -3,8 +3,10 @@ package com.vpulse.ftpnext.ftpservices;
 import com.vpulse.ftpnext.commons.FTPFileUtils;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
+import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LoadDirection;
 import com.vpulse.ftpnext.core.LogManager;
+import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 
@@ -490,7 +492,8 @@ public class FTPServices extends AFTPConnection {
                                 false,
                                 lItem.getName(),
                                 mCurrentLocation + "/" + lItem.getName(),
-                                null
+                                null,
+                                PreferenceManager.getExistingFileAction()
                         );
                         FTPLogManager.pushSuccessLog("Indexing \"" + lItem.getName() + "\"");
                         oPendingFiles.add(lPendingFile);
@@ -556,7 +559,8 @@ public class FTPServices extends AFTPConnection {
                                 false,
                                 lItem.getName(),
                                 mCurrentLocation + "/" + iRelativePathToDirectory + "/" + lItem.getName(),
-                                iRelativePathToDirectory
+                                iRelativePathToDirectory,
+                                PreferenceManager.getExistingFileAction()
                         );
                         FTPLogManager.pushSuccessLog("Indexing \"" + lItem.getName() + "\"");
                         oPendingFiles.add(lPendingFile);

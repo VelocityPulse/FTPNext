@@ -23,7 +23,7 @@ public class DataBaseOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase iDataBase) {
-
+        LogManager.info(TAG, "On create DataBase");
     }
 
     @Override
@@ -40,7 +40,7 @@ public class DataBaseOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase iDataBase, int iOldVersion, int iNewVersion) {
-        LogManager.info(TAG, "Upgrading DataBase from version " + iOldVersion + " to " + iNewVersion + " which destroys all old data");
+        LogManager.info(TAG, "Upgrading DataBase from version " + iOldVersion + " to " + iNewVersion);
         UpgradeTask upgradeTask = new UpgradeTask(iDataBase, iOldVersion, iNewVersion);
         upgradeTask.execute();
     }
@@ -73,16 +73,16 @@ public class DataBaseOpenHelper extends SQLiteOpenHelper {
             }
 
             DataBase.getTableTest1DAO().onUpgradeTable(mOldVersion, mNewVersion);
+            DataBase.getFTPServerDAO().onUpgradeTable(mOldVersion, mNewVersion);
+            DataBase.getPendingFileDAO().onUpgradeTable(mOldVersion, mNewVersion);
             //instruction : call all onUpgrade
 
             //this code explain how to update a table
-/*
-            List<TableTest1> lTableTest1s = DataBase.getTableTest1DAO().fetchAll();
-            mDataBase.execSQL("DROP TABLE IF EXISTS " + ITableTest1Schema.TABLE);
-            onCreate(mDataBase);
-            if (!DataBase.getTableTest1DAO().add(lTableTest1s))
-                return LogManager.error(UpgradeTask.TAG, "Adding TableTest has failed");
-*/
+//            List<TableTest1> lTableTest1s = DataBase.getTableTest1DAO().fetchAll();
+//            mDataBase.execSQL("DROP TABLE IF EXISTS " + ITableTest1Schema.TABLE);
+//            onCreate(mDataBase);
+//            if (!DataBase.getTableTest1DAO().add(lTableTest1s))
+//                return LogManager.error(UpgradeTask.TAG, "Adding TableTest has failed");
             return true;
         }
 

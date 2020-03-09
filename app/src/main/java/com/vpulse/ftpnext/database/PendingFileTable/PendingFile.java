@@ -19,7 +19,7 @@ public class PendingFile extends ABaseTable {
     private String mEnclosingName;
     private boolean mFinished;
     private int mProgress;
-//    private ExistingFileAction mExistingFileAction;
+    private ExistingFileAction mExistingFileAction;
 
     // Not in database :
     private int mSize;
@@ -32,14 +32,14 @@ public class PendingFile extends ABaseTable {
     }
 
     public PendingFile(int iServerId, LoadDirection iLoadDirection, boolean iStarted,
-                       String iName, String iPath, String iEnclosureName
-                       /*ExistingFileAction iExistingFileAction*/) {
+                       String iName, String iPath, String iEnclosureName,
+                       ExistingFileAction iExistingFileAction) {
         mServerId = iServerId;
         mLoadDirection = iLoadDirection;
         mStarted = iStarted;
         mName = iName;
         mPath = iPath;
-//        mExistingFileAction = iExistingFileAction;
+        mExistingFileAction = iExistingFileAction;
         if (iEnclosureName == null)
             mEnclosingName = "";
         else {
@@ -121,13 +121,13 @@ public class PendingFile extends ABaseTable {
         return this;
     }
 
-//    public ExistingFileAction getExistingFileAction() {
-//        return mExistingFileAction;
-//    }
-//
-//    public void setExistingFileAction(ExistingFileAction iExistingFileAction) {
-//        mExistingFileAction = iExistingFileAction;
-//    }
+    public ExistingFileAction getExistingFileAction() {
+        return mExistingFileAction;
+    }
+
+    public void setExistingFileAction(ExistingFileAction iExistingFileAction) {
+        mExistingFileAction = iExistingFileAction;
+    }
 
     @Override
     protected void setDataBaseId(int iDataBaseId) {
