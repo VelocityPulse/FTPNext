@@ -94,6 +94,8 @@ public abstract class AFTPConnection {
             @Override
             public void onNetworkLost() {
                 LogManager.info(TAG, "On network lost");
+                FTPLogManager.getInstance().pushErrorLog("Losing network connection");
+
                 if (isReconnecting()) {
                     LogManager.info(TAG, "Already reconnecting");
                     return;
@@ -109,6 +111,7 @@ public abstract class AFTPConnection {
 
     public void abortReconnection() {
         LogManager.info(TAG, "Abort reconnect");
+        FTPLogManager.getInstance().pushStatusLog("Aborting reconnection");
 
         if (isReconnecting())
             mReconnectThread.interrupt();
@@ -116,6 +119,7 @@ public abstract class AFTPConnection {
 
     public void abortConnection() {
         LogManager.info(TAG, "Abort connection");
+        FTPLogManager.getInstance().pushStatusLog("Aborting connection");
 
         if (mFTPClient.isConnected()) {
             disconnect();
@@ -153,7 +157,7 @@ public abstract class AFTPConnection {
 
                             @Override
                             public void onFail(ErrorCodeDescription iErrorEnum, int iErrorCode) {
-                                LogManager.info(TAG, "Reconnect fail");
+                                LogManager.error(TAG, "Reconnect fail");
                                 if (iErrorEnum == ErrorCodeDescription.ERROR_FAILED_LOGIN) {
                                     onConnectionRecover.onConnectionDenied(iErrorEnum,
                                             iErrorCode);
@@ -176,6 +180,7 @@ public abstract class AFTPConnection {
         if (isConnected()) {
             try {
                 mFTPClient.disconnect();
+                FTPLogManager.getInstance().pushStatusLog("Disconnection");
             } catch (IOException iE) {
                 iE.printStackTrace();
             }
@@ -215,6 +220,7 @@ public abstract class AFTPConnection {
             public void run() {
                 try {
                     LogManager.info(TAG, "Will connect with : \n" + mFTPServer.toString());
+                    FTPLogManager.getInstance().pushStatusLog("Connection with " + mFTPServer.getServer());
 
                     mFTPClient.setControlEncoding("UTF-8");
                     mFTPClient.setDefaultPort(mFTPServer.getPort());
@@ -237,10 +243,11 @@ public abstract class AFTPConnection {
                         return;
                     }
 
-                    if (!FTPReply.isPositiveCompletion(mFTPClient.getReplyCode())) {
-                        LogManager.info(TAG, "FTPClient code : " + mFTPClient.getReplyCode());
-                        mFTPClient.disconnect();
+                    if (!FTPReply.isPositiveCompletion(mFTPClient.getReplyCode()) || !isConnected()) {
+                        FTPLogManager.getInstance().pushErrorLog("Server \"" + mFTPServer.getName() + "\" refused connection");
                         LogManager.error(TAG, "FTP server refused connection.");
+
+                        mFTPClient.disconnect();
                         if (onConnectionResult != null) {
                             if (mFTPClient.getReplyCode() == FTPReply.NOT_LOGGED_IN)
                                 onConnectionResult.onFail(ErrorCodeDescription.ERROR_FAILED_LOGIN,
@@ -250,17 +257,15 @@ public abstract class AFTPConnection {
                                         mFTPClient.getReplyCode());
                         }
                         return;
-                    } else {
-                        LogManager.info(TAG, "FTPClient status : " + mFTPClient.getStatus());
                     }
 
-                    if (isConnected()) {
-                        startReplyStatusThread();
-                        LogManager.info(TAG, "FTPClient connected");
-                        if (onConnectionResult != null)
-                            onConnectionResult.onSuccess();
-                    } else
-                        LogManager.error(TAG, "FTPClient not connected");
+                    startReplyStatusThread();
+                    FTPLogManager.getInstance().pushSuccessLog("Connection \"" + mFTPServer.getName() + "\"");
+                    LogManager.info(TAG, "FTPClient connected");
+
+                    if (onConnectionResult != null)
+                        onConnectionResult.onSuccess();
+
                 } catch (UnknownHostException iE) {
                     iE.printStackTrace();
                     if (onConnectionResult != null)

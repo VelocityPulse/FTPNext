@@ -345,7 +345,7 @@ public class FTPTransfer extends AFTPConnection {
                             mOnTransferListener.onDownloadProgress(mCandidate,
                                     mCandidate.getProgress(), mCandidate.getSize());
                             mOnTransferListener.onDownloadSuccess(mCandidate);
-                            FTPLogManager.getInstance().pushSuccessLog("Complete download of " + mCandidate.getName());
+                            FTPLogManager.getInstance().pushSuccessLog("Download of " + mCandidate.getName());
 
                         } catch (Exception iE) {
                             iE.printStackTrace();
@@ -408,6 +408,11 @@ public class FTPTransfer extends AFTPConnection {
             }
         }
         LogManager.info(TAG, "Download files : Connected : " + isConnected());
+    }
+
+    private void existingFileLooper() {
+        LogManager.info(TAG, "Existing file looper");
+        // TODO
     }
 
     private void closeStreams(OutputStream iLocalStream, InputStream iRemoteStream) {
