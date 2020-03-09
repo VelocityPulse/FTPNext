@@ -120,13 +120,13 @@ public class FTPLogManager {
     }
 
     private void fireNewFTPLog(String iLog) {
-        LogManager.info(TAG, "Fire new log");
+//        LogManager.info(TAG, "Fire new log");
         for (OnNewFTPLog lCallback : mOnNewFTPLogList)
             lCallback.onNewFTPLog(iLog);
     }
 
     private void fireNewFTPLogColored(String iLog) {
-        LogManager.info(TAG, "Fire new colored log");
+//        LogManager.info(TAG, "Fire new colored log");
 
         if (iLog.startsWith(TYPE_SUCCESS))
             iLog = "<font color='" + mSuccessColorString + "'>" + iLog + "</font>";

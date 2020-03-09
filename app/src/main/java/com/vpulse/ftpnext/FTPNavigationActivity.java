@@ -328,7 +328,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         if (mFTPServices == null) {
             // Can happens on android studio apply changes
             LogManager.debug(TAG, "FTP CONNECTION NULL");
-            buildFTPConnection(true, true);
+            buildFTPConnection();
         } else {
             LogManager.info(TAG, "FTP Services fully recovered by get instance");
             LogManager.info(TAG, "FTP Services instance busy : " + mFTPServices.isBusy());
@@ -340,10 +340,17 @@ public class FTPNavigationActivity extends AppCompatActivity {
             } else if (!mIsShowingDownload)
                 runFetchProcedures(mDirectoryPath, mIsLargeDirectory, iIsUpdating);
         }
+
+        mFTPServices.setOnConnectionLost(new AFTPConnection.OnConnectionLost() {
+            @Override
+            public void onConnectionLost() {
+                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
+            }
+        });
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void buildFTPConnection(final boolean iIsRecovering, final boolean iRunFetchOnSuccess) {
+    private void buildFTPConnection() {
         LogManager.info(TAG, "Build FTP Connection");
         if (mFTPServer == null) {
             LogManager.error(TAG, "mFTPServer is null");
@@ -353,18 +360,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         mFTPServices = new FTPServices(mFTPServer);
 
-        if (iIsRecovering)
-            mLoadingDialog.setTitle("Reconnection..."); // TODO : strings
-        else
-            mLoadingDialog.setTitle("Connection..."); // TODO : strings
+        mLoadingDialog.setTitle("Connection..."); // TODO : strings
         mLoadingDialog.show();
 
         mFTPServices.connect(new AFTPConnection.OnConnectionResult() {
             @Override
             public void onSuccess() {
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
-                if (iRunFetchOnSuccess)
-                    mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_SUCCESS);
+                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_SUCCESS);
             }
 
             @Override
@@ -376,16 +379,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 mHandler.sendMessage(Message.obtain(
                         mHandler,
                         NAVIGATION_MESSAGE_CONNECTION_FAIL,
-                        iIsRecovering ? 1 : 0,
+                        1,
                         0,
                         iErrorEnum));
-            }
-        });
-
-        mFTPServices.setOnConnectionLost(new AFTPConnection.OnConnectionLost() {
-            @Override
-            public void onConnectionLost() {
-                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
             }
         });
     }
@@ -515,7 +511,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CONNECTION_LOST");
                         mFTPServices.abortFetchDirectoryContent();
                         mFTPServices.abortDeleting();
-                        dismissAllDialogsExcepted(mDownloadingDialog);
+                        dismissAllDialogsExcepted(mDownloadingDialog, mReconnectDialog);
 
                         mReconnectDialog.show();
 
@@ -1466,7 +1462,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
             @Override
             public void onProgressSubDirectory(final int iSubDirectoryProgress, final int iTotalSubDirectories, final String iSubDirectoryName) {
-//                super.onProgressSubDirectory(iSubDirectoryProgress, iTotalSubDirectories, iSubDirectoryName);
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {

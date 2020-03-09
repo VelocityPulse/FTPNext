@@ -380,14 +380,9 @@ public class FTPServices extends AFTPConnection {
 
                     int lProgress = 0;
                     for (FTPFile lFTPFile : iSelection) {
-//                        LogManager.debug(TAG, "Selected file : " + lFTPFile.getName());
-//                        LogManager.debug(TAG, "Absolute path : " + mCurrentDirectory.getName() + "/" + lFTPFile.getName());
                         FTPFile lAbsoluteFile = mFTPClient.mlistFile(mCurrentDirectory.getName() + "/" + lFTPFile.getName());
-//                        LogManager.debug(TAG, "File name : " + lAbsoluteFile.getName());
 
                         if (lAbsoluteFile != null) {
-//                            LogManager.debug(TAG, "Absolute name : " + lAbsoluteFile.getName());
-
                             iOnDeleteListener.onProgressDirectory(
                                     lProgress,
                                     iSelection.length,
@@ -412,14 +407,10 @@ public class FTPServices extends AFTPConnection {
                         return;
 
                     mFTPClient.enterLocalActiveMode(); // ACTIVE MODE
-                } catch (IOException | InterruptedException iE) {
+                    iOnDeleteListener.onFinish();
+                } catch (Exception iE) {
                     iE.printStackTrace();
                 }
-
-                if (mDeleteFileThread.isInterrupted())
-                    return;
-
-                iOnDeleteListener.onFinish();
             }
         });
         mDeleteFileThread.start();

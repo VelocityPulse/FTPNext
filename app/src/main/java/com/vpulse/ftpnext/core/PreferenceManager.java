@@ -7,7 +7,8 @@ import static com.vpulse.ftpnext.core.AppCore.APP_ADDRESS;
 
 public class PreferenceManager {
 
-    public static final int DEFAULT_MAX_TRANSFER_VALUE = 5;
+    public static final int DEFAULT_MAX_TRANSFER_VALUE = 2;
+    public static final boolean SILENT_LOG_CAT = true;
     public static final String DEFAULT_LOGS_VALUE = "";
 
     private static final String TAG = "PREFERENCE MANAGER";
@@ -48,7 +49,8 @@ public class PreferenceManager {
     }
 
     public static String getFTPLogs() {
-        LogManager.info(TAG, "Get FTP logs");
+        if (!SILENT_LOG_CAT)
+            LogManager.info(TAG, "Get FTP logs");
         if (mSharedPreferences == null) {
             LogManager.error(TAG, "Shared preferences null");
             return null;
@@ -58,7 +60,8 @@ public class PreferenceManager {
     }
 
     public static void addFTPLog(String iLogToAdd) {
-        LogManager.info(TAG, "Add FTP log logs");
+        if (!SILENT_LOG_CAT)
+            LogManager.info(TAG, "Add FTP log logs");
         if (mSharedPreferences == null) {
             LogManager.error(TAG, "Shared preferences null");
             return;
