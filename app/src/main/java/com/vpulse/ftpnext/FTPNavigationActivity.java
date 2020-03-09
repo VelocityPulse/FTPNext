@@ -1257,7 +1257,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         });
                     }
                 };
-                FTPLogManager.getInstance().subscribeOnNewFTPLogColored(lOnNewFTPLogColored);
+                FTPLogManager.subscribeOnNewFTPLogColored(lOnNewFTPLogColored);
 
                 if (iPendingFiles.length > 1) {
                     DividerItemDecoration lDividerItemDecoration = new DividerItemDecoration(
@@ -1290,7 +1290,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         mIsShowingDownload = false;
-                        FTPLogManager.getInstance().unsubscribeOnNewFTPLogColored(lOnNewFTPLogColored);
+                        FTPLogManager.unsubscribeOnNewFTPLogColored(lOnNewFTPLogColored);
                     }
                 });
 

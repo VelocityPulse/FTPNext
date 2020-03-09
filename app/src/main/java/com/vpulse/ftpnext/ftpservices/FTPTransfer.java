@@ -303,7 +303,7 @@ public class FTPTransfer extends AFTPConnection {
                                 break;
                             }
 
-                            FTPLogManager.getInstance().pushStatusLog(
+                            FTPLogManager.pushStatusLog(
                                     "Start download of " + mCandidate.getName());
                             // ---------------- DOWNLAND LOOP
                             while ((lBytesRead = lRemoteStream.read(bytesArray)) != -1) {
@@ -345,7 +345,7 @@ public class FTPTransfer extends AFTPConnection {
                             mOnTransferListener.onDownloadProgress(mCandidate,
                                     mCandidate.getProgress(), mCandidate.getSize());
                             mOnTransferListener.onDownloadSuccess(mCandidate);
-                            FTPLogManager.getInstance().pushSuccessLog("Download of " + mCandidate.getName());
+                            FTPLogManager.pushSuccessLog("Download of " + mCandidate.getName());
 
                         } catch (Exception iE) {
                             iE.printStackTrace();

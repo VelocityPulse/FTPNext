@@ -95,7 +95,7 @@ public class FTPServices extends AFTPConnection {
             public void run() {
                 try {
                     FTPFile lWorkingDir = mFTPClient.mlistFile(iNewWorkingDirectory);
-                    FTPLogManager.getInstance().pushStatusLog(
+                    FTPLogManager.pushStatusLog(
                             "Updating current working dir to \"" + iNewWorkingDirectory + "\"");
                     if (lWorkingDir != null && lWorkingDir.isDirectory()) {
                         mCurrentDirectory = lWorkingDir;
@@ -109,7 +109,7 @@ public class FTPServices extends AFTPConnection {
 
     public void abortFetchDirectoryContent() {
         LogManager.info(TAG, "Abort fetch directory contents");
-        FTPLogManager.getInstance().pushStatusLog("Aborting fetch directory");
+        FTPLogManager.pushStatusLog("Aborting fetch directory");
 
         if (isFetchingFolders())
             mDirectoryFetchThread.interrupt();
@@ -117,7 +117,7 @@ public class FTPServices extends AFTPConnection {
 
     public void abortIndexingPendingFiles() {
         LogManager.info(TAG, "Abort indexing pending files");
-        FTPLogManager.getInstance().pushStatusLog("Aborting indexing");
+        FTPLogManager.pushStatusLog("Aborting indexing");
 
         if (isCreatingPendingFiles())
             mIndexingFilesThread.interrupt();
@@ -125,7 +125,7 @@ public class FTPServices extends AFTPConnection {
 
     public void abortDeleting() {
         LogManager.info(TAG, "Abort deleting");
-        FTPLogManager.getInstance().pushStatusLog("Aborting deleting");
+        FTPLogManager.pushStatusLog("Aborting deleting");
 
         if (isDeletingFiles())
             mDeleteFileThread.interrupt();
@@ -147,7 +147,7 @@ public class FTPServices extends AFTPConnection {
             @Override
             public void run() {
                 mStartingFetchDirectory = true;
-                FTPLogManager.getInstance().pushStatusLog("Fetching \"" + iPath + "\"");
+                FTPLogManager.pushStatusLog("Fetching \"" + iPath + "\"");
 
                 mStartingFetchDirectory = false;
                 FTPFile lLeavingDirectory = mCurrentDirectory;
@@ -203,7 +203,7 @@ public class FTPServices extends AFTPConnection {
                     if (mDirectoryFetchThread.isInterrupted())
                         throw new InterruptedException();
 
-                    FTPLogManager.getInstance().pushSuccessLog("Fetching \"" + iPath + "\"");
+                    FTPLogManager.pushSuccessLog("Fetching \"" + iPath + "\"");
                     iOnFetchDirectoryResult.onSuccess(lFiles);
                 } catch (InterruptedException iE) {
                     updateWorkingDirectory(lLeavingDirectory.getName());
@@ -252,9 +252,9 @@ public class FTPServices extends AFTPConnection {
                         return;
                     }
 
-                    FTPLogManager.getInstance().pushStatusLog("Creating directory \"" + iPath + "\"");
+                    FTPLogManager.pushStatusLog("Creating directory \"" + iPath + "\"");
                     if (!mFTPClient.makeDirectory(iPath + "/" + iName)) {
-                        FTPLogManager.getInstance().pushErrorLog("Creation failed");
+                        FTPLogManager.pushErrorLog("Creation failed");
                         throw new IOException("Creation failed.");
                     }
 
@@ -368,15 +368,15 @@ public class FTPServices extends AFTPConnection {
                         boolean lReply = mFTPClient.deleteFile(iFTPFile.getName());
 
                         if (!lReply) {
-                            FTPLogManager.getInstance().pushErrorLog("Delete \"" + iFTPFile.getName() + "\"");
+                            FTPLogManager.pushErrorLog("Delete \"" + iFTPFile.getName() + "\"");
                             iOnDeleteListener.onFail(iFTPFile);
                         }
                         else
-                            FTPLogManager.getInstance().pushSuccessLog("Delete \"" + iFTPFile.getName() + "\"");
+                            FTPLogManager.pushSuccessLog("Delete \"" + iFTPFile.getName() + "\"");
 
                     } else if (!mByPassDeletingRightErrors) {
                         mPauseDeleting = true;
-                        FTPLogManager.getInstance().pushErrorLog("Right access fail \"" + iFTPFile.getName() + "\"");
+                        FTPLogManager.pushErrorLog("Right access fail \"" + iFTPFile.getName() + "\"");
                         iOnDeleteListener.onRightAccessFail(iFTPFile);
                     }
                 }
@@ -492,7 +492,7 @@ public class FTPServices extends AFTPConnection {
                                 mCurrentLocation + "/" + lItem.getName(),
                                 null
                         );
-                        FTPLogManager.getInstance().pushSuccessLog("Indexing \"" + lItem.getName() + "\"");
+                        FTPLogManager.pushSuccessLog("Indexing \"" + lItem.getName() + "\"");
                         oPendingFiles.add(lPendingFile);
                         iIndexingListener.onNewIndexedFile(lPendingFile);
                     }
@@ -502,7 +502,7 @@ public class FTPServices extends AFTPConnection {
                     iIndexingListener.onResult(false, null);
                     return;
                 }
-                FTPLogManager.getInstance().pushSuccessLog("Finishing indexing");
+                FTPLogManager.pushSuccessLog("Finishing indexing");
                 iIndexingListener.onResult(true, oPendingFiles.toArray(new PendingFile[0]));
             }
 
@@ -558,7 +558,7 @@ public class FTPServices extends AFTPConnection {
                                 mCurrentLocation + "/" + iRelativePathToDirectory + "/" + lItem.getName(),
                                 iRelativePathToDirectory
                         );
-                        FTPLogManager.getInstance().pushSuccessLog("Indexing \"" + lItem.getName() + "\"");
+                        FTPLogManager.pushSuccessLog("Indexing \"" + lItem.getName() + "\"");
                         oPendingFiles.add(lPendingFile);
 
                         // Sleep for nicer view in the dialog

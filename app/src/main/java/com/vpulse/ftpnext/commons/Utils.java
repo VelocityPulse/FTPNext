@@ -12,7 +12,7 @@ import com.vpulse.ftpnext.R;
 
 import java.util.Locale;
 
-public final class Utils {
+public class Utils {
 
     public static void sleep(long iMillis) {
         try {

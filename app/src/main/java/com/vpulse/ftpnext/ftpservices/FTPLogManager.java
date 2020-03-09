@@ -18,30 +18,20 @@ public class FTPLogManager {
 
     private static final String TAG = "FTP LOG MANAGER";
 
-    private static FTPLogManager sSingleton;
-
     private static String mSuccessColorString;
     private static String mErrorColorString;
     private static String mCodeReplyColorString;
     private static String mStatusColorString;
 
-    private List<OnNewFTPLog> mOnNewFTPLogList;
-    private List<OnNewFTPLogColored> mOnNewFTPLogColoredList;
+    private static List<OnNewFTPLog> mOnNewFTPLogList;
+    private static List<OnNewFTPLogColored> mOnNewFTPLogColoredList;
 
-    private FTPLogManager() {
-        mOnNewFTPLogList = new ArrayList<>();
-        mOnNewFTPLogColoredList = new ArrayList<>();
-    }
-
-    public static FTPLogManager getInstance() {
-        if (sSingleton != null)
-            return sSingleton;
-        return (sSingleton = new FTPLogManager());
-    }
+    private FTPLogManager() {}
 
     @SuppressLint("ResourceType")
     public static void init(Context iContext) {
-        getInstance();
+        mOnNewFTPLogList = new ArrayList<>();
+        mOnNewFTPLogColoredList = new ArrayList<>();
 
         mSuccessColorString = iContext.getResources().getString(R.color.log_success).substring(3, 9);
         mErrorColorString = iContext.getResources().getString(R.color.log_error).substring(3, 9);
@@ -54,7 +44,7 @@ public class FTPLogManager {
         mStatusColorString = "#" + mStatusColorString;
     }
 
-    public void subscribeOnNewFTPLog(OnNewFTPLog iOnNewFTPLog) {
+    public static void subscribeOnNewFTPLog(OnNewFTPLog iOnNewFTPLog) {
         if (iOnNewFTPLog == null) {
             LogManager.error(TAG, "Subscribe on new FTP log parameter null");
             return;
@@ -62,11 +52,11 @@ public class FTPLogManager {
         mOnNewFTPLogList.add(iOnNewFTPLog);
     }
 
-    public void unsubscribeOnNewFTPLog(OnNewFTPLog iOnNewFTPLog) {
+    public static void unsubscribeOnNewFTPLog(OnNewFTPLog iOnNewFTPLog) {
         mOnNewFTPLogList.remove(iOnNewFTPLog);
     }
 
-    public void subscribeOnNewFTPLogColored(OnNewFTPLogColored iOnNewFTPLogColored) {
+    public static void subscribeOnNewFTPLogColored(OnNewFTPLogColored iOnNewFTPLogColored) {
         if (iOnNewFTPLogColored == null) {
             LogManager.error(TAG, "Subscribe on new FTP log colored null");
             return;
@@ -74,11 +64,11 @@ public class FTPLogManager {
         mOnNewFTPLogColoredList.add(iOnNewFTPLogColored);
     }
 
-    public void unsubscribeOnNewFTPLogColored(OnNewFTPLogColored iOnNewFTPLogColored) {
+    public static void unsubscribeOnNewFTPLogColored(OnNewFTPLogColored iOnNewFTPLogColored) {
         mOnNewFTPLogColoredList.remove(iOnNewFTPLogColored);
     }
 
-    public void pushSuccessLog(String iLog) {
+    public static void pushSuccessLog(String iLog) {
         if (mOnNewFTPLogList == null) {
             LogManager.error(TAG, "mOnNewFTPLogList null");
             return;
@@ -88,7 +78,7 @@ public class FTPLogManager {
         fireNewFTPLogColored(iLog);
     }
 
-    public void pushErrorLog(String iLog) {
+    public static void pushErrorLog(String iLog) {
         if (mOnNewFTPLogList == null) {
             LogManager.error(TAG, "mOnNewFTPLogList null");
             return;
@@ -98,7 +88,7 @@ public class FTPLogManager {
         fireNewFTPLogColored(iLog);
     }
 
-    public void pushCodeReplyLog(int iCodeReply) {
+    public static void pushCodeReplyLog(int iCodeReply) {
         if (mOnNewFTPLogList == null) {
             LogManager.error(TAG, "mOnNewFTPLogList null");
             return;
@@ -109,7 +99,7 @@ public class FTPLogManager {
         fireNewFTPLogColored(lLog);
     }
 
-    public void pushStatusLog(String iLog) {
+    public static void pushStatusLog(String iLog) {
         if (mOnNewFTPLogList == null) {
             LogManager.error(TAG, "mOnNewFTPLogList null");
             return;
@@ -119,13 +109,13 @@ public class FTPLogManager {
         fireNewFTPLogColored(iLog);
     }
 
-    private void fireNewFTPLog(String iLog) {
+    private static void fireNewFTPLog(String iLog) {
 //        LogManager.info(TAG, "Fire new log");
         for (OnNewFTPLog lCallback : mOnNewFTPLogList)
             lCallback.onNewFTPLog(iLog);
     }
 
-    private void fireNewFTPLogColored(String iLog) {
+    private static void fireNewFTPLogColored(String iLog) {
 //        LogManager.info(TAG, "Fire new colored log");
 
         if (iLog.startsWith(TYPE_SUCCESS))
