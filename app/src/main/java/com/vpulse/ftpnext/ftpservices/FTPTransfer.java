@@ -1,6 +1,7 @@
 package com.vpulse.ftpnext.ftpservices;
 
 import com.vpulse.ftpnext.commons.Utils;
+import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
@@ -27,6 +28,10 @@ public class FTPTransfer extends AFTPConnection {
     private static final int TRANSFER_FINISH_BREAK = 100;
 
     private static List<FTPTransfer> sFTPTransferInstances;
+
+    private static boolean mIsAskingActionForExistingFile;
+
+    private ExistingFileAction mExistingFileAction;
 
     private OnTransferListener mOnTransferListener;
     private PendingFile mCandidate;
@@ -214,11 +219,11 @@ public class FTPTransfer extends AFTPConnection {
                     File lLocalFile = new File(mFTPServer.getAbsolutePath() + "/" +
                             mCandidate.getEnclosingName() + mCandidate.getName());
                     try {
-                        if (lLocalFile.exists())
-                            lLocalFile.delete(); // TODO : Debug, remove this
+//                        if (lLocalFile.exists())
+//                            lLocalFile.delete(); // TODO : Debug, remove this
 
                         if (!lLocalFile.exists()) {
-                            if (lLocalFile.getParentFile().mkdirs())
+                            if (lLocalFile.getParentFile().mkdirs()) // TODO : Test with lLocalFile = "/"
                                 LogManager.info(TAG, "mkdir success");
                             if (!lLocalFile.createNewFile()) {
                                 LogManager.error(TAG, "Impossible to create new file");
@@ -230,8 +235,20 @@ public class FTPTransfer extends AFTPConnection {
                             } else
                                 LogManager.info(TAG, "Local creation success");
                         } else {
-//                            mCandidate.setProgress(0);
-                            mCandidate.setProgress((int) lLocalFile.length()); // TODO : TO TEST
+                            // ----------------------------- IN PROGRESS
+
+
+                            if (mExistingFileAction == ExistingFileAction.NOT_DEFINED) {
+                                mIsAskingActionForExistingFile = true;
+                            } else if (mExistingFileAction == ExistingFileAction.IGNORE) {
+                                mOnTransferListener.onDownloadSuccess(mCandidate);
+                                continue;
+                            }
+
+
+                            // ----------------------------- IN PROGRESS
+
+                            mCandidate.setProgress((int) lLocalFile.length());
                         }
 
                     } catch (Exception iE) {
@@ -412,7 +429,7 @@ public class FTPTransfer extends AFTPConnection {
 
     private void existingFileLooper() {
         LogManager.info(TAG, "Existing file looper");
-        // TODO
+//        while (!mIsInterrupted &&)
     }
 
     private void closeStreams(OutputStream iLocalStream, InputStream iRemoteStream) {
