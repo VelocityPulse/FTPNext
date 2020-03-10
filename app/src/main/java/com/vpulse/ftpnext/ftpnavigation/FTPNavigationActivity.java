@@ -31,10 +31,7 @@ import android.view.WindowManager;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AutoCompleteTextView;
-import android.widget.CheckBox;
 import android.widget.FrameLayout;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.adapters.NavigationRecyclerViewAdapter;
@@ -260,7 +257,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
-
     private void requestPermission(Activity iActivity, final String[] iPermissions,
                                    int iRequestCode, OnPermissionAnswer iOnPermissionAnswer) {
 
@@ -342,6 +338,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 return;
 
             if (!AppCore.getNetworkManager().isNetworkAvailable()) {
+                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
+            } else if (mFTPServices.isConnected()) {
                 mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
             } else if (!mIsShowingDownload)
                 mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, iIsUpdating);
