@@ -144,6 +144,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
         LogManager.info(TAG, "Was on pause :" + mWasOnPause);
         if (mWasOnPause)
             retrieveFTPServices(true);
+        mFTPNavigationDelete.onResume();
+        mFTPNavigationFetchDir.onResume();
+        mFTPNavigationDownload.onResume();
     }
 
     @Override

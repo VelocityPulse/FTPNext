@@ -34,6 +34,10 @@ public class FTPNavigationFetchDir {
         mHandler = iHandler;
     }
 
+    protected void onResume() {
+
+    }
+
     protected void runFetchProcedures(final String iDirectoryPath, boolean iIsLargeDirectory,
                                     final boolean isForAnUpdate) {
         mContextActivity.dismissAllDialogs();

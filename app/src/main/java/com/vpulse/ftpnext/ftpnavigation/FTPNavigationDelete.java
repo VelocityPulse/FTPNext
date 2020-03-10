@@ -29,6 +29,10 @@ public class FTPNavigationDelete {
         mHandler = iHandler;
     }
 
+    protected void onResume() {
+
+    }
+
     protected void createDialogDeleteSelection() {
         final FTPFile[] lSelectedFiles = mContextActivity.mCurrentAdapter.getSelection();
 
