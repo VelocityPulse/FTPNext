@@ -40,10 +40,10 @@ public class FTPNavigationDownload {
 
     private final static String TAG = "FTP NAVIGATION DOWNLOAD";
 
-    private Handler mHandler;
+    private final FTPNavigationActivity mContextActivity;
+    private final Handler mHandler;
 
     private NarrowTransferAdapter mNarrowTransferAdapter;
-    private FTPNavigationActivity mContextActivity;
 
     private boolean mCanAutoScrollInLogView;
 

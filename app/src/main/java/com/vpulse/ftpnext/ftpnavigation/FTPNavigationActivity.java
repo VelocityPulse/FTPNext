@@ -116,6 +116,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private FTPNavigationDownload mFTPNavigationDownload;
     private FTPNavigationFetchDir mFTPNavigationFetchDir;
+    private FTPNavigationDelete mFTPNavigationDelete;
 
     private OnPermissionAnswer mOnPermissionAnswer;
     private FrameLayout mRecyclerSection;
@@ -228,7 +229,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 return true;
             case R.id.action_delete:
                 if (mCurrentAdapter.isInSelectionMode())
-                    createDialogDeleteSelection();
+                    mFTPNavigationDelete.createDialogDeleteSelection();
                 else
                     mCurrentAdapter.setSelectionMode(true);
                 return true;
@@ -317,6 +318,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
         // Fetch directory procedures
         mFTPNavigationFetchDir = new FTPNavigationFetchDir(this, mHandler);
+
+        // Delete procedures
+        mFTPNavigationDelete = new FTPNavigationDelete(this, mHandler);
 
         // Bad connection, Large dir, Reconnect dialog
         initializeDialogs();
@@ -989,202 +993,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mFTPNavigationDownload.createDialogDownloadSelection();
         else
             createDialogError("Select something.").show();
-    }
-
-    private void createDialogDeleteSelection() {
-        final FTPFile[] lSelectedFiles = mCurrentAdapter.getSelection();
-
-        if (lSelectedFiles.length == 0)
-            createDialogError("Select something.").show();
-        else {
-            mDeletingInfoDialog = new AlertDialog.Builder(this)
-                    .setTitle("Deleting :") // TODO : Strings
-                    .setMessage("Are you sure to delete the selection ? (" + lSelectedFiles.length + " files)")
-                    .setPositiveButton("yes", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface iDialog, int iWhich) {
-                            iDialog.dismiss();
-                            deleteFile(lSelectedFiles);
-                        }
-                    })
-                    .setNegativeButton("cancel", null)
-                    .show();
-        }
-    }
-
-    private void deleteFile(FTPFile[] iSelectedFiles) {
-        mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
-        mFTPServices.deleteFiles(iSelectedFiles, mFTPServices.new OnDeleteListener() {
-
-            ProgressBar mProgressDirectory;
-            ProgressBar mProgressSubDirectory;
-            TextView mTextViewDirectory;
-            TextView mTextViewSubDirectory;
-
-            @Override
-            public void onStartDelete() {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
-                        lBuilder.setTitle("Deleting"); // TODO : strings
-
-                        View lDialogDoubleProgress = View.inflate(FTPNavigationActivity.this, R.layout.dialog_double_progress, null);
-                        mProgressDirectory = lDialogDoubleProgress.findViewById(R.id.dialog_double_progress_progress_1);
-                        mTextViewDirectory = lDialogDoubleProgress.findViewById(R.id.dialog_double_progress_text_1);
-                        mProgressSubDirectory = lDialogDoubleProgress.findViewById(R.id.dialog_double_progress_progress_2);
-                        mTextViewSubDirectory = lDialogDoubleProgress.findViewById(R.id.dialog_double_progress_text_2);
-
-                        lBuilder.setView(lDialogDoubleProgress);
-                        lBuilder.setCancelable(false);
-                        lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() { // TODO : Strings
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                mHandler.sendEmptyMessage(NAVIGATION_ORDER_STOP_DELETING);
-                            }
-                        });
-                        mDeletingInfoDialog = lBuilder.create();
-                        mDeletingInfoDialog.show();
-                    }
-                });
-            }
-
-            @Override
-            public void onProgressDirectory(final int iDirectoryProgress, final int iTotalDirectories, final String iDirectoryName) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mTextViewDirectory.setText(iDirectoryName);
-                        mProgressDirectory.setMax(iTotalDirectories);
-                        mProgressDirectory.setProgress(iDirectoryProgress);
-                    }
-                });
-            }
-
-            @Override
-            public void onProgressSubDirectory(final int iSubDirectoryProgress, final int iTotalSubDirectories, final String iSubDirectoryName) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mTextViewSubDirectory.setText(iSubDirectoryName);
-                        mProgressSubDirectory.setMax(iTotalSubDirectories);
-                        mProgressSubDirectory.setProgress(iSubDirectoryProgress);
-                    }
-                });
-            }
-
-            @Override
-            public void onRightAccessFail(final FTPFile iFTPFile) {
-                super.onRightAccessFail(iFTPFile);
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
-                        lBuilder.setTitle("Permission error"); // TODO : strings
-                        final View lDialogDeleteError = View.inflate(FTPNavigationActivity.this, R.layout.dialog_delete_error, null);
-                        final CheckBox lCheckBox = lDialogDeleteError.findViewById(R.id.dialog_delete_error_checkbox);
-                        final TextView lTextView = lDialogDeleteError.findViewById(R.id.dialog_delete_error_text);
-
-                        lTextView.setText("Remember this choice : "); // TODO : strings
-                        lBuilder.setView(lDialogDeleteError);
-                        String lMessage =
-                                "\nNot enough permissions to delete this " +
-                                        (iFTPFile.isDirectory() ? "directory \n" : "file \n") +
-                                        iFTPFile.getName();
-                        lBuilder.setMessage(lMessage);
-                        lBuilder.setCancelable(false);
-                        lBuilder.setPositiveButton("Ignore", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface iDialog, int iWhich) {
-                                iDialog.dismiss();
-                                mDeletingErrorDialog = null;
-                                if (mDeletingInfoDialog != null)
-                                    mDeletingInfoDialog.show();
-                                mFTPServices.setDeletingByPassRightErrors(lCheckBox.isChecked());
-                                mFTPServices.resumeDeleting();
-                            }
-                        });
-
-                        lBuilder.setNegativeButton("Stop", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface iDialog, int iWhich) {
-                                iDialog.dismiss();
-                                mDeletingErrorDialog = null; // check at null used in NAVIGATION_MESSAGE_RECONNECT_SUCCESS
-                                mCurrentAdapter.setSelectionMode(false);
-                                mFTPServices.abortDeleting();
-                            }
-                        });
-                        mDeletingErrorDialog = lBuilder.create();
-                        mDeletingInfoDialog.hide();
-                        mDeletingErrorDialog.show();
-                    }
-                });
-            }
-
-            @Override
-            public void onFinish() {
-                if (mDeletingInfoDialog != null) {
-                    mDeletingInfoDialog.cancel();
-                    mDeletingInfoDialog = null; // check at null used in NAVIGATION_MESSAGE_RECONNECT_SUCCESS
-                }
-                if (mDeletingErrorDialog != null) {
-                    mDeletingErrorDialog.cancel();
-                    mDeletingErrorDialog = null;
-                }
-
-                mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
-                mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
-            }
-
-            @Override
-            public void onFail(final FTPFile iFTPFile) {
-                super.onFail(iFTPFile);
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
-                        lBuilder.setTitle("Delete error"); // TODO : strings
-                        final View lDialogDeleteError = View.inflate(FTPNavigationActivity.this, R.layout.dialog_delete_error, null);
-                        final CheckBox lCheckBox = lDialogDeleteError.findViewById(R.id.dialog_delete_error_checkbox);
-                        final TextView lTextView = lDialogDeleteError.findViewById(R.id.dialog_delete_error_text);
-
-                        lTextView.setText("Remember this choice : "); // TODO : strings
-                        lBuilder.setView(lDialogDeleteError);
-                        String lMessage =
-                                "\nImpossible to delete the " +
-                                        (iFTPFile.isDirectory() ? "directory \n" : "file \n") +
-                                        iFTPFile.getName();
-                        lBuilder.setMessage(lMessage);
-                        lBuilder.setCancelable(false);
-                        lBuilder.setPositiveButton("Ignore", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface iDialog, int iWhich) {
-                                iDialog.dismiss();
-                                mDeletingErrorDialog = null;
-                                if (mDeletingInfoDialog != null)
-                                    mDeletingInfoDialog.show();
-                                mFTPServices.setDeletingByPassFailErrors(lCheckBox.isChecked());
-                                mFTPServices.resumeDeleting();
-                            }
-                        });
-
-                        lBuilder.setNegativeButton("Stop", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface iDialog, int iWhich) {
-                                iDialog.dismiss();
-                                mDeletingErrorDialog = null;
-                                mCurrentAdapter.setSelectionMode(false);
-                                mFTPServices.abortDeleting();
-                            }
-                        });
-                        if (mDeletingInfoDialog != null)
-                            mDeletingInfoDialog.hide();
-
-                        mDeletingErrorDialog = lBuilder.create();
-                        mDeletingErrorDialog.show();
-                    }
-                });
-            }
-        });
     }
 
     public AlertDialog createDialogError(String iMessage) { // TODO : Replace by resources

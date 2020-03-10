@@ -26,8 +26,8 @@ public class FTPNavigationFetchDir {
 
     private static final int BAD_CONNECTION_TIME = 50;
 
-    private FTPNavigationActivity mContextActivity;
-    private Handler mHandler;
+    private final FTPNavigationActivity mContextActivity;
+    private final Handler mHandler;
 
     protected FTPNavigationFetchDir(FTPNavigationActivity iContextActivity, Handler iHandler) {
         mContextActivity = iContextActivity;
