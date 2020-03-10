@@ -2,6 +2,7 @@ package com.vpulse.ftpnext.adapters;
 
 import android.content.Context;
 import android.os.Build;
+import android.renderscript.RenderScript;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -62,6 +63,8 @@ public class NarrowTransferAdapter
     public void onAttachedToRecyclerView(@NonNull RecyclerView iRecyclerView) {
         super.onAttachedToRecyclerView(iRecyclerView);
         mRecyclerView = iRecyclerView;
+
+//        mRecyclerView.getItemAnimator().animateDisappearance()
     }
 
     @Override

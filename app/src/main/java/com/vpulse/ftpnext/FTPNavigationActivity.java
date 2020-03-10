@@ -26,6 +26,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
+import android.text.Spanned;
 import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -1246,13 +1247,23 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     });
                 }
                 final FTPLogManager.OnNewFTPLogColored lOnNewFTPLogColored = new FTPLogManager.OnNewFTPLogColored() {
+
+                    int mCount = 0;
+                    String mCompleteLog = "";
+
                     @Override
                     public void onNewFTPLogColored(final String iLog) {
+                        mCount++;
+
+                        if (mCount > 150)
+                            mCompleteLog = mCompleteLog.substring(mCompleteLog.indexOf("<br/>") + 5);
+                        mCompleteLog += iLog + "<br/>";
+                        final Spanned s = HtmlCompat.fromHtml(mCompleteLog, HtmlCompat.FROM_HTML_MODE_LEGACY);
+
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                String lCompleteLog = lLogView.getText() + iLog;
-                                lLogView.append(HtmlCompat.fromHtml(iLog + "<br/>", HtmlCompat.FROM_HTML_MODE_LEGACY));
+                                lLogView.setText(s);
                                 if (mCanAutoScrollInLogView)
                                     lScrollView.fullScroll(ScrollView.FOCUS_DOWN);
                             }
@@ -1351,7 +1362,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                         @Override
                         public void onDownloadSuccess(final PendingFile iPendingFile) {
-                            LogManager.info(TAG, "Success downloading " + iPendingFile.getName());
                             mHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
