@@ -478,7 +478,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_MESSAGE_RECONNECT_SUCCESS:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_SUCCESS");
-                        dismissAllDialogsExcepted(mDownloadingDialog);
+                        dismissAllDialogsExcepted(mDownloadingDialog, mChooseExistingFileAction);
                         if (!mIsShowingDownload)
                             runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
                         break;
@@ -515,7 +515,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CONNECTION_LOST");
                         mFTPServices.abortFetchDirectoryContent();
                         mFTPServices.abortDeleting();
-                        dismissAllDialogsExcepted(mDownloadingDialog, mReconnectDialog);
+                        dismissAllDialogsExcepted(
+                                mDownloadingDialog,
+                                mChooseExistingFileAction,
+                                mReconnectDialog);
 
                         mReconnectDialog.show();
 
@@ -1366,7 +1369,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                 @Override
                                 public void run() {
                                     DataBase.getPendingFileDAO().delete(iPendingFile);
-                                    mNarrowTransferAdapter.removePendingFile(iPendingFile);
+                                    mNarrowTransferAdapter.addPendingFileToRemove(iPendingFile);
                                     if (mNarrowTransferAdapter.getItemCount() == 0)
                                         mDownloadingDialog.dismiss();
 

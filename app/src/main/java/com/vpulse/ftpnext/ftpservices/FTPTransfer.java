@@ -225,8 +225,9 @@ public class FTPTransfer extends AFTPConnection {
                         lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
                     } catch (Exception iE) {
                         iE.printStackTrace();
-                        mCandidate.setIsAnError(true);
-                        mOnTransferListener.onFail(mCandidate);
+//                        mCandidate.setIsAnError(true);
+//                        mOnTransferListener.onFail(mCandidate);
+                        Utils.sleep(USER_WAIT_BREAK); // Break the while true speed
                         continue;
                     }
 

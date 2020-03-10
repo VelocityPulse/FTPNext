@@ -1,8 +1,10 @@
 package com.vpulse.ftpnext.adapters;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Build;
-import android.renderscript.RenderScript;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,6 +20,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.vpulse.ftpnext.R;
+import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 
@@ -59,23 +62,40 @@ public class NarrowTransferAdapter
         mContext = iContext;
     }
 
+    @SuppressLint("StaticFieldLeak")
     @Override
     public void onAttachedToRecyclerView(@NonNull RecyclerView iRecyclerView) {
         super.onAttachedToRecyclerView(iRecyclerView);
         mRecyclerView = iRecyclerView;
 
-//        mRecyclerView.getItemAnimator().animateDisappearance()
+        final Handler lHandler = new Handler();
+        lHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mRecyclerView != null) {
+                    removePendingFiles();
+                    lHandler.postDelayed(this, REMOVE_BREAK_TIMER);
+                }
+            }
+        });
+
+        mRecyclerView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {}
+
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+                freeAdapter();
+            }
+        });
     }
 
-    @Override
-    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
-        LogManager.info(TAG, "On detached from recycler view");
+    private void freeAdapter() {
         mToRemovePendingFileItemList.clear();
         mPendingFileItemList.clear();
         mCustomItemViewHolderList.clear();
         mRecyclerView = null;
         mContext = null;
-        super.onDetachedFromRecyclerView(recyclerView);
     }
 
     @NonNull
@@ -199,32 +219,26 @@ public class NarrowTransferAdapter
         }
     }
 
-    public void removePendingFile(PendingFile iPendingFile) {
+    public void addPendingFileToRemove(PendingFile iPendingFile) {
         synchronized (mToRemovePendingFileItemList) {
             for (PendingFileItem lItem : mPendingFileItemList) {
                 if (lItem.mPendingFile == iPendingFile)
                     mToRemovePendingFileItemList.add(lItem);
             }
         }
+    }
 
-        long lCurrentTimeMillis = System.currentTimeMillis();
-        long lElapsedTime = lCurrentTimeMillis - mTimer;
-
-        if (lElapsedTime > REMOVE_BREAK_TIMER) {
-
-            synchronized (mToRemovePendingFileItemList) {
-
-                int lIndex;
-                for (PendingFileItem lItem : mToRemovePendingFileItemList) {
-                    lIndex = mPendingFileItemList.indexOf(lItem);
-                    mPendingFileItemList.remove(lItem);
-                    notifyItemRemoved(lIndex);
-                    lItem.mHasBeenRemoved = true;
-                }
-
-                mToRemovePendingFileItemList.clear();
+    private void removePendingFiles() {
+        synchronized (mToRemovePendingFileItemList) {
+            int lIndex;
+            for (PendingFileItem lItem : mToRemovePendingFileItemList) {
+                lIndex = mPendingFileItemList.indexOf(lItem);
+                mPendingFileItemList.remove(lItem);
+                notifyItemRemoved(lIndex);
+                lItem.mHasBeenRemoved = true;
             }
-            mTimer = lCurrentTimeMillis;
+
+            mToRemovePendingFileItemList.clear();
         }
     }
 
