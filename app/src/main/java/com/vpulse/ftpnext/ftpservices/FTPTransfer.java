@@ -313,8 +313,7 @@ public class FTPTransfer extends AFTPConnection {
                             mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
                         } catch (IOException iE) {
                             iE.printStackTrace();
-                            mCandidate.setIsAnError(true);
-                            mOnTransferListener.onFail(mCandidate);
+                            Utils.sleep(USER_WAIT_BREAK); // Break the while true speed
                             continue;
                         }
 
@@ -341,6 +340,7 @@ public class FTPTransfer extends AFTPConnection {
                                 mFTPClient.disconnect();
                                 break;
                             }
+                            mCandidate.setIsAnError(false);
 
                             FTPLogManager.pushStatusLog(
                                     "Start download of " + mCandidate.getName());
@@ -394,7 +394,7 @@ public class FTPTransfer extends AFTPConnection {
                             mIsTransferring = false;
                         } finally {
                             closeStreams(lLocalStream, lRemoteStream);
-                            Utils.sleep(500); // Wait the connexion update status
+                            Utils.sleep(USER_WAIT_BREAK); // Wait the connexion update status
                         }
                     }
 

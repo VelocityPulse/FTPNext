@@ -24,14 +24,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NarrowTransferAdapter
-        extends RecyclerView.Adapter<NarrowTransferAdapter.CustomItemViewAdapter> {
+        extends RecyclerView.Adapter<NarrowTransferAdapter.CustomItemViewHolder> {
 
     private static final String TAG = "NARROW TRANSFER ADAPTER";
     private static final int MAX_REMOVE_REQUEST_IN_SEC = 15;
     private static final int REMOVE_BREAK_TIMER = 1000;
     private final List<PendingFileItem> mToRemovePendingFileItemList;
     private final List<PendingFileItem> mPendingFileItemList;
-    private final List<CustomItemViewAdapter> mCustomItemViewAdapterList;
+    private final List<CustomItemViewHolder> mCustomItemViewHolderList;
 
     private Context mContext;
 
@@ -43,7 +43,7 @@ public class NarrowTransferAdapter
     public NarrowTransferAdapter(PendingFile[] iPendingFiles, Context iContext) {
         mPendingFileItemList = new ArrayList<>();
         mToRemovePendingFileItemList = new ArrayList<>();
-        mCustomItemViewAdapterList = new ArrayList<>();
+        mCustomItemViewHolderList = new ArrayList<>();
         mContext = iContext;
 
         for (PendingFile lItem : iPendingFiles)
@@ -53,7 +53,7 @@ public class NarrowTransferAdapter
     public NarrowTransferAdapter(Context iContext) {
         mPendingFileItemList = new ArrayList<>();
         mToRemovePendingFileItemList = new ArrayList<>();
-        mCustomItemViewAdapterList = new ArrayList<>();
+        mCustomItemViewHolderList = new ArrayList<>();
 
         mContext = iContext;
     }
@@ -69,7 +69,7 @@ public class NarrowTransferAdapter
         LogManager.info(TAG, "On detached from recycler view");
         mToRemovePendingFileItemList.clear();
         mPendingFileItemList.clear();
-        mCustomItemViewAdapterList.clear();
+        mCustomItemViewHolderList.clear();
         mRecyclerView = null;
         mContext = null;
         super.onDetachedFromRecyclerView(recyclerView);
@@ -77,37 +77,39 @@ public class NarrowTransferAdapter
 
     @NonNull
     @Override
-    public CustomItemViewAdapter onCreateViewHolder(@NonNull ViewGroup iViewGroup, int iI) {
+    public CustomItemViewHolder onCreateViewHolder(@NonNull ViewGroup iViewGroup, int iI) {
 
         LinearLayout lLayout = (LinearLayout) LayoutInflater.from(iViewGroup.getContext()).inflate(
                 R.layout.list_item_narrow_transfer, iViewGroup, false);
 
-        CustomItemViewAdapter lItem = new CustomItemViewAdapter(lLayout,
+        CustomItemViewHolder lItem = new CustomItemViewHolder(
+                lLayout,
                 (TextView) lLayout.findViewById(R.id.item_narrow_transfer_text),
                 (TextView) lLayout.findViewById(R.id.item_narrow_transfer_speed),
                 (ProgressBar) lLayout.findViewById(R.id.item_narrow_transfer_progress_bar),
                 (ProgressBar) lLayout.findViewById(R.id.item_narrow_transfer_loading),
                 (ImageView) lLayout.findViewById(R.id.item_narrow_transfer_error));
 
-        mCustomItemViewAdapterList.add(lItem);
+        mCustomItemViewHolderList.add(lItem);
         return lItem;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CustomItemViewAdapter iCustomItemViewAdapter, int iPosition) {
+    public void onBindViewHolder(@NonNull CustomItemViewHolder iCustomItemViewHolder, int iPosition) {
         final PendingFileItem lPendingFileItem = mPendingFileItemList.get(iPosition);
         final PendingFile lPendingFile = lPendingFileItem.mPendingFile;
 
-        iCustomItemViewAdapter.mPendingFileItem = lPendingFileItem;
+        iCustomItemViewHolder.mPendingFileItem = lPendingFileItem;
+        lPendingFileItem.mCustomItemViewHolderLink = iCustomItemViewHolder;
 
         // Set text name
-        if (!iCustomItemViewAdapter.mTextFileView.getText().equals(lPendingFile.getPath()))
-            iCustomItemViewAdapter.mTextFileView.setText(lPendingFile.getPath());
+        if (!iCustomItemViewHolder.mTextFileView.getText().equals(lPendingFile.getPath()))
+            iCustomItemViewHolder.mTextFileView.setText(lPendingFile.getPath());
 
         // Set progress bar
-        if (iCustomItemViewAdapter.mProgressBar.getMax() != lPendingFile.getSize())
-            iCustomItemViewAdapter.mProgressBar.setMax(lPendingFile.getSize());
-        iCustomItemViewAdapter.mProgressBar.setProgress(lPendingFile.getProgress());
+        if (iCustomItemViewHolder.mProgressBar.getMax() != lPendingFile.getSize())
+            iCustomItemViewHolder.mProgressBar.setMax(lPendingFile.getSize());
+        iCustomItemViewHolder.mProgressBar.setProgress(lPendingFile.getProgress());
 
         if (lPendingFile.isAnError()) {
             // Animation
@@ -119,58 +121,64 @@ public class NarrowTransferAdapter
                 lFadeIn.setInterpolator(new DecelerateInterpolator());
                 lFadeIn.setDuration(4000); // TODO : res
                 lFadeIn.setStartOffset(lOffsetStart);
-                iCustomItemViewAdapter.mErrorImage.startAnimation(lFadeIn);
+                iCustomItemViewHolder.mErrorImage.startAnimation(lFadeIn);
             }
-            iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.INVISIBLE);
-            iCustomItemViewAdapter.mLoading.setVisibility(View.INVISIBLE);
-            iCustomItemViewAdapter.mErrorImage.setVisibility(View.VISIBLE);
+            iCustomItemViewHolder.mTextSpeedView.setVisibility(View.INVISIBLE);
+            iCustomItemViewHolder.mLoading.setVisibility(View.INVISIBLE);
+            iCustomItemViewHolder.mErrorImage.setVisibility(View.VISIBLE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 LogManager.debug(TAG, "SET RED FOR " + lPendingFile.getName());
-                iCustomItemViewAdapter.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.error));
+                iCustomItemViewHolder.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.error));
             }
         } else if (lPendingFile.isStarted()) {
             // Normal download update
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                iCustomItemViewAdapter.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.primaryLight));
+                iCustomItemViewHolder.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.primaryLight));
             }
 
-            iCustomItemViewAdapter.mErrorImage.clearAnimation();
-            iCustomItemViewAdapter.mErrorImage.setVisibility(View.INVISIBLE);
+            iCustomItemViewHolder.mErrorImage.clearAnimation();
+            iCustomItemViewHolder.mErrorImage.setVisibility(View.INVISIBLE);
 
             // Set speed text
             if (!lPendingFile.isFinished() && lPendingFile.isConnected()) {
-                iCustomItemViewAdapter.mLoading.setVisibility(View.INVISIBLE);
-                iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.VISIBLE);
+                iCustomItemViewHolder.mLoading.setVisibility(View.INVISIBLE);
+                iCustomItemViewHolder.mTextSpeedView.setVisibility(View.VISIBLE);
 
                 if (lPendingFile.getSpeedInKo() < 1000) {
                     String lSpeed = lPendingFile.getSpeedInKo() + " Ko/s";
-                    iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
+                    iCustomItemViewHolder.mTextSpeedView.setText(lSpeed);
                 } else {
                     double lMoSpeed;
                     lMoSpeed = ((double) lPendingFile.getSpeedInKo()) / 1000d;
                     String lSpeed = lMoSpeed + " Mo/s";
-                    iCustomItemViewAdapter.mTextSpeedView.setText(lSpeed);
+                    iCustomItemViewHolder.mTextSpeedView.setText(lSpeed);
                 }
             } else {
-                iCustomItemViewAdapter.mTextSpeedView.setText("");
-                iCustomItemViewAdapter.mLoading.setVisibility(View.VISIBLE);
-                iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.INVISIBLE);
+                iCustomItemViewHolder.mTextSpeedView.setText("");
+                iCustomItemViewHolder.mLoading.setVisibility(View.VISIBLE);
+                iCustomItemViewHolder.mTextSpeedView.setVisibility(View.INVISIBLE);
             }
         } else {
             // Not started
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                iCustomItemViewAdapter.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.primaryLight));
+                iCustomItemViewHolder.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.primaryLight));
             }
 
-            iCustomItemViewAdapter.mErrorImage.clearAnimation();
-            iCustomItemViewAdapter.mErrorImage.setVisibility(View.INVISIBLE);
-            iCustomItemViewAdapter.mLoading.setVisibility(View.INVISIBLE);
-            iCustomItemViewAdapter.mTextSpeedView.setVisibility(View.INVISIBLE);
-            iCustomItemViewAdapter.mTextSpeedView.setText("");
-            iCustomItemViewAdapter.mProgressBar.setProgress(lPendingFile.getProgress());
+            iCustomItemViewHolder.mErrorImage.clearAnimation();
+            iCustomItemViewHolder.mErrorImage.setVisibility(View.INVISIBLE);
+            iCustomItemViewHolder.mLoading.setVisibility(View.INVISIBLE);
+            iCustomItemViewHolder.mTextSpeedView.setVisibility(View.INVISIBLE);
+            iCustomItemViewHolder.mTextSpeedView.setText("");
+            iCustomItemViewHolder.mProgressBar.setProgress(lPendingFile.getProgress());
         }
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull CustomItemViewHolder holder) {
+
+        super.onViewRecycled(holder);
     }
 
     @Override
@@ -179,9 +187,12 @@ public class NarrowTransferAdapter
     }
 
     public void updatePendingFileData(PendingFile iPendingFile) {
-        for (CustomItemViewAdapter lItem : mCustomItemViewAdapterList) {
+        for (CustomItemViewHolder lItem : mCustomItemViewHolderList) {
             if (!lItem.mPendingFileItem.mHasBeenRemoved &&
-                    lItem.mPendingFileItem.mPendingFile == iPendingFile) {
+                    lItem.mPendingFileItem.mPendingFile == iPendingFile &&
+                    lItem.mMainLayout.getParent() != null) {
+                if (!iPendingFile.isAnError())
+                    lItem.mPendingFileItem.isErrorAlreadyProceed = false;
                 onBindViewHolder(lItem, mPendingFileItemList.indexOf(lItem.mPendingFileItem));
                 return;
             }
@@ -217,7 +228,7 @@ public class NarrowTransferAdapter
         }
     }
 
-    public void showErrorAndRemove(PendingFile iPendingFile) {
+    public void showError(PendingFile iPendingFile) {
         // Guard
         PendingFileItem lPendingFileItem = null;
         for (PendingFileItem lItem : mPendingFileItemList) {
@@ -266,6 +277,7 @@ public class NarrowTransferAdapter
 
     static class PendingFileItem {
         PendingFile mPendingFile;
+        CustomItemViewHolder mCustomItemViewHolderLink;
         boolean isErrorAlreadyProceed;
         int mTimeOfErrorNotified;
         boolean mHasBeenRemoved;
@@ -275,7 +287,7 @@ public class NarrowTransferAdapter
         }
     }
 
-    static class CustomItemViewAdapter extends RecyclerView.ViewHolder {
+    static class CustomItemViewHolder extends RecyclerView.ViewHolder {
         PendingFileItem mPendingFileItem;
 
         View mMainLayout;
@@ -285,9 +297,9 @@ public class NarrowTransferAdapter
         ProgressBar mLoading;
         ImageView mErrorImage;
 
-        public CustomItemViewAdapter(@NonNull View iMainLayout, TextView iTextFileView,
-                                     TextView iTextSpeedView, ProgressBar iProgressBar,
-                                     ProgressBar iLoading, ImageView iErrorImage) {
+        public CustomItemViewHolder(@NonNull View iMainLayout, TextView iTextFileView,
+                                    TextView iTextSpeedView, ProgressBar iProgressBar,
+                                    ProgressBar iLoading, ImageView iErrorImage) {
             super(iMainLayout);
             mMainLayout = iMainLayout;
             mTextFileView = iTextFileView;

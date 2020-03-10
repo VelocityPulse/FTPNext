@@ -26,7 +26,7 @@ public class PendingFile extends ABaseTable {
     private boolean mIsConnected;
     private boolean mIsAnError;
     private long mSpeedInKo;
-    private int remainingTimeInMin;
+    private int mRemainingTimeInMin;
 
     public PendingFile() {
     }
@@ -169,11 +169,11 @@ public class PendingFile extends ABaseTable {
     }
 
     public int getRemainingTimeInMin() {
-        return remainingTimeInMin;
+        return mRemainingTimeInMin;
     }
 
     public void setRemainingTimeInMin(int iRemainingTimeInMin) {
-        remainingTimeInMin = iRemainingTimeInMin;
+        mRemainingTimeInMin = iRemainingTimeInMin;
     }
 
     @NonNull
