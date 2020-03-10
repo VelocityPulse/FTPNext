@@ -100,7 +100,6 @@ public class NarrowTransferAdapter
         final PendingFile lPendingFile = lPendingFileItem.mPendingFile;
 
         iCustomItemViewHolder.mPendingFileItem = lPendingFileItem;
-        lPendingFileItem.mCustomItemViewHolderLink = iCustomItemViewHolder;
 
         // Set text name
         if (!iCustomItemViewHolder.mTextFileView.getText().equals(lPendingFile.getPath()))
@@ -191,8 +190,6 @@ public class NarrowTransferAdapter
             if (!lItem.mPendingFileItem.mHasBeenRemoved &&
                     lItem.mPendingFileItem.mPendingFile == iPendingFile &&
                     lItem.mMainLayout.getParent() != null) {
-                if (!iPendingFile.isAnError())
-                    lItem.mPendingFileItem.isErrorAlreadyProceed = false;
                 onBindViewHolder(lItem, mPendingFileItemList.indexOf(lItem.mPendingFileItem));
                 return;
             }
@@ -277,7 +274,6 @@ public class NarrowTransferAdapter
 
     static class PendingFileItem {
         PendingFile mPendingFile;
-        CustomItemViewHolder mCustomItemViewHolderLink;
         boolean isErrorAlreadyProceed;
         int mTimeOfErrorNotified;
         boolean mHasBeenRemoved;
