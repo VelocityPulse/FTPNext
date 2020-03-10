@@ -1,14 +1,12 @@
-package com.vpulse.ftpnext;
+package com.vpulse.ftpnext.ftpnavigation;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -17,7 +15,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.text.HtmlCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -26,11 +23,9 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
-import android.text.Spanned;
 import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.BounceInterpolator;
@@ -39,30 +34,23 @@ import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
-import android.widget.RadioGroup;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.vpulse.ftpnext.adapters.NarrowTransferAdapter;
+import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
-import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LogManager;
-import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
-import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection;
-import com.vpulse.ftpnext.ftpservices.FTPLogManager;
 import com.vpulse.ftpnext.ftpservices.FTPServices;
 import com.vpulse.ftpnext.ftpservices.FTPTransfer;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -72,66 +60,70 @@ public class FTPNavigationActivity extends AppCompatActivity {
     public static final String ROOT_DIRECTORY = "/";
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
     public static final String KEY_DIRECTORY_PATH = "KEY_DIRECTORY_PATH";
+
+    protected static final int NAVIGATION_MESSAGE_CONNECTION_SUCCESS = 10;
+    protected static final int NAVIGATION_MESSAGE_CONNECTION_FAIL = 11;
+    protected static final int NAVIGATION_MESSAGE_CONNECTION_LOST = 12;
+    protected static final int NAVIGATION_MESSAGE_RECONNECT_SUCCESS = 13;
+    protected static final int NAVIGATION_MESSAGE_RECONNECT_FAIL = 14;
+    protected static final int NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS = 15;
+    protected static final int NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL = 16;
+    protected static final int NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH = 17;
+    protected static final int NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE = 18;
+    protected static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH = 19;
+    protected static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_UPDATE = 20;
+
+    protected static final int NAVIGATION_ORDER_DISMISS_DIALOGS = 100;
+    protected static final int NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS = 101;
+    protected static final int NAVIGATION_ORDER_STOP_DELETING = 102;
+    protected static final int NAVIGATION_ORDER_REFRESH_DATA = 103;
+    protected static final int NAVIGATION_ORDER_SELECTED_MODE_ON = 104;
+    protected static final int NAVIGATION_ORDER_SELECTED_MODE_OFF = 105;
+
     private static final String TAG = "FTP NAVIGATION ACTIVITY";
     private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
     private static final int LARGE_DIRECTORY_SIZE = 30000;
     private static final int BAD_CONNECTION_TIME = 50;
 
-    private static final int NAVIGATION_MESSAGE_CONNECTION_SUCCESS = 10;
-    private static final int NAVIGATION_MESSAGE_CONNECTION_FAIL = 11;
-    private static final int NAVIGATION_MESSAGE_CONNECTION_LOST = 12;
-    private static final int NAVIGATION_MESSAGE_RECONNECT_SUCCESS = 13;
-    private static final int NAVIGATION_MESSAGE_RECONNECT_FAIL = 14;
-    private static final int NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS = 15;
-    private static final int NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL = 16;
-    private static final int NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH = 17;
-    private static final int NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE = 18;
-    private static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH = 19;
-    private static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_UPDATE = 20;
+    protected boolean mIsShowingDownload;
+    protected boolean mIsLargeDirectory;
 
-    private static final int NAVIGATION_ORDER_DISMISS_DIALOGS = 100;
-    private static final int NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS = 101;
-    private static final int NAVIGATION_ORDER_STOP_DELETING = 102;
-    private static final int NAVIGATION_ORDER_REFRESH_DATA = 103;
-    private static final int NAVIGATION_ORDER_SELECTED_MODE_ON = 104;
-    private static final int NAVIGATION_ORDER_SELECTED_MODE_OFF = 105;
+    protected NavigationRecyclerViewAdapter mCurrentAdapter;
+
+    protected ProgressDialog mLoadingDialog;
+    protected ProgressDialog mCancelingDialog;
+    protected ProgressDialog mLargeDirDialog;
+    protected ProgressDialog mReconnectDialog;
+
+    protected AlertDialog mErrorAlertDialog;
+    protected AlertDialog mCreateFolderDialog;
+    protected AlertDialog mIndexingPendingFilesDialog;
+    protected AlertDialog mDownloadingDialog;
+    protected AlertDialog mChooseExistingFileAction;
+    protected AlertDialog mDeletingInfoDialog;
+    protected AlertDialog mDeletingErrorDialog;
+
+    protected Handler mHandler;
+    protected boolean mWasOnPause;
+
+    protected FTPServer mFTPServer;
+    protected FTPServices mFTPServices;
 
     private boolean mIsRunning;
 
+    private FTPNavigationDownload mFTPNavigationDownload;
+
     private OnPermissionAnswer mOnPermissionAnswer;
 
-    private FTPServer mFTPServer;
-    private FTPServices mFTPServices;
-    private int mErrorCode;
-
-    private NavigationRecyclerViewAdapter mCurrentAdapter;
-    private NarrowTransferAdapter mNarrowTransferAdapter;
-    private FrameLayout mRecyclerSection;
     private String mDirectoryPath;
-    private boolean mIsDirectoryFetchFinished;
-    private boolean mIsShowingDownload;
-    private boolean mIsLargeDirectory;
+    private FrameLayout mRecyclerSection;
 
-    private ProgressDialog mLoadingDialog;
-    private ProgressDialog mCancelingDialog;
-    private ProgressDialog mLargeDirDialog;
-    private ProgressDialog mReconnectDialog;
-    private AlertDialog mErrorAlertDialog;
-    private AlertDialog mCreateFolderDialog;
-    private AlertDialog mIndexingPendingFilesDialog;
-    private AlertDialog mDownloadingDialog;
-    private AlertDialog mChooseExistingFileAction;
-    private AlertDialog mDeletingInfoDialog;
-    private AlertDialog mDeletingErrorDialog;
-
-    private Handler mHandler;
-    private boolean mWasOnPause;
-
-    private boolean mIsFABOpen;
-    private boolean mCanAutoScrollInLogView;
     private FloatingActionButton mMainFAB;
     private FloatingActionButton mCreateFolderFAB;
     private FloatingActionButton mUploadFileFAB;
+    private int mErrorCode;
+    private boolean mIsDirectoryFetchFinished;
+    private boolean mIsFABOpen;
 
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
@@ -319,6 +311,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
         // Directory path
         if (mDirectoryPath == null)
             mDirectoryPath = lBundle.getString(KEY_DIRECTORY_PATH, ROOT_DIRECTORY);
+
+        // Download procedures
+        mFTPNavigationDownload = new FTPNavigationDownload(this, mHandler);
 
         // Bad connection, Large dir, Reconnect dialog
         initializeDialogs();
@@ -1097,389 +1092,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
         // TODO : upload file
     }
 
-    private void createDialogDownloadSelection() {
-        LogManager.info(TAG, "Create dialog download selection");
-        final FTPFile[] lSelectedFiles = mCurrentAdapter.getSelection();
-
-        if (lSelectedFiles.length == 0)
-            createDialogError("Select something.").show();
-        else {
-            mIndexingPendingFilesDialog = new AlertDialog.Builder(this)
-                    .setTitle("Downloading :") // TODO : Strings
-                    .setMessage("Do you confirm the download of " + lSelectedFiles.length + " files ?")
-                    .setPositiveButton("yes", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface iDialog, int iWhich) {
-                            iDialog.dismiss();
-                            indexesFilesForDownload(lSelectedFiles);
-                        }
-                    })
-                    .setNegativeButton("cancel", null)
-                    .show();
-        }
-    }
-
     private void onClickDownload() {
         if (mCurrentAdapter.isInSelectionMode())
-            createDialogDownloadSelection();
+            mFTPNavigationDownload.createDialogDownloadSelection();
         else
             createDialogError("Select something.").show();
-    }
-
-    private void indexesFilesForDownload(final FTPFile[] iSelectedFiles) {
-        LogManager.info(TAG, "Download file");
-        mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
-
-        mFTPServices.indexingPendingFilesProcedure(iSelectedFiles, new FTPServices.OnIndexingPendingFilesListener() {
-
-            TextView mIndexingFolderText;
-            TextView mIndexingFileText;
-
-            @Override
-            public void onStart() {
-                LogManager.info(TAG, "Indexing listener : On start");
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
-                        View mIndexingPendingFilesView = View.inflate(FTPNavigationActivity.this,
-                                R.layout.dialog_indexing_progress, null);
-
-                        mIndexingFolderText = mIndexingPendingFilesView.findViewById(R.id.dialog_indexing_folder);
-                        mIndexingFileText = mIndexingPendingFilesView.findViewById(R.id.dialog_indexing_file);
-
-                        lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface iDialog, int iWhich) {
-                                iDialog.dismiss();
-                                mFTPServices.abortIndexingPendingFiles();
-                            }
-                        });
-
-                        lBuilder.setCancelable(false);
-                        lBuilder.setView(mIndexingPendingFilesView);
-                        lBuilder.setMessage("Indexing files :"); // TODO : strings
-                        mIndexingPendingFilesDialog = lBuilder.create();
-                        mIndexingPendingFilesDialog.show();
-                    }
-                });
-            }
-
-            @Override
-            public void onFetchingFolder(final String iPath) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mIndexingFolderText.setText(iPath);
-                    }
-                });
-            }
-
-            @Override
-            public void onNewIndexedFile(final PendingFile iPendingFile) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mIndexingFileText.setText(iPendingFile.getName());
-                    }
-                });
-            }
-
-            @Override
-            public void onResult(boolean isSuccess, PendingFile[] iPendingFiles) {
-                LogManager.info(TAG, "Indexing : On result");
-                if (!isSuccess)
-                    return;
-
-                DataBase.getPendingFileDAO().deleteAll(); // TODO : DATA BASE RESET HERE
-                DataBase.getPendingFileDAO().add(iPendingFiles);
-
-                if (mIndexingPendingFilesDialog != null) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mIndexingPendingFilesDialog.cancel();
-                        }
-                    });
-                }
-
-                DownloadFiles(iPendingFiles);
-
-            }
-        });
-    }
-
-    private void DownloadFiles(final PendingFile[] iPendingFiles) {
-        final List<FTPTransfer> lFTPTransferList = new ArrayList<>();
-
-        mHandler.post(new Runnable() {
-            @SuppressLint("ClickableViewAccessibility")
-            @Override
-            public void run() {
-                final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
-
-                View lDownloadingDialogView = View.inflate(FTPNavigationActivity.this,
-                        R.layout.dialog_download_progress, null);
-
-                RecyclerView lNarrowTransferRecyclerView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_recycler_view);
-                lNarrowTransferRecyclerView.setLayoutManager(new LinearLayoutManager(FTPNavigationActivity.this));
-
-                final TextView lLogView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_log_view);
-                final ScrollView lScrollView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_scroll_view);
-                lScrollView.setSmoothScrollingEnabled(true);
-                mCanAutoScrollInLogView = true;
-
-                lLogView.setOnTouchListener(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View v, MotionEvent event) {
-                        if (event.getAction() == MotionEvent.ACTION_DOWN)
-                            mCanAutoScrollInLogView = false;
-                        return false;
-                    }
-
-                });
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    lScrollView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-                        @Override
-                        public void onScrollChange(View iV, int iScrollX, int iScrollY, int iOldScrollX, int iOldScrollY) {
-                            if (!lScrollView.canScrollVertically(1)) {
-                                mCanAutoScrollInLogView = true;
-                            }
-                        }
-                    });
-                }
-                final FTPLogManager.OnNewFTPLogColored lOnNewFTPLogColored = new FTPLogManager.OnNewFTPLogColored() {
-
-                    int mCount = 0;
-                    String mCompleteLog = "";
-
-                    @Override
-                    public void onNewFTPLogColored(final String iLog) {
-                        mCount++;
-
-                        if (mCount > 150)
-                            mCompleteLog = mCompleteLog.substring(mCompleteLog.indexOf("<br/>") + 5);
-                        mCompleteLog += iLog + "<br/>";
-                        final Spanned s = HtmlCompat.fromHtml(mCompleteLog, HtmlCompat.FROM_HTML_MODE_LEGACY);
-
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                lLogView.setText(s);
-                                if (mCanAutoScrollInLogView)
-                                    lScrollView.fullScroll(ScrollView.FOCUS_DOWN);
-                            }
-                        });
-                    }
-                };
-                FTPLogManager.subscribeOnNewFTPLogColored(lOnNewFTPLogColored);
-
-                if (iPendingFiles.length > 1) {
-                    DividerItemDecoration lDividerItemDecoration = new DividerItemDecoration(
-                            FTPNavigationActivity.this, DividerItemDecoration.VERTICAL);
-                    lNarrowTransferRecyclerView.addItemDecoration(lDividerItemDecoration);
-                }
-
-                mNarrowTransferAdapter = new NarrowTransferAdapter(iPendingFiles, FTPNavigationActivity.this);
-                lNarrowTransferRecyclerView.setAdapter(mNarrowTransferAdapter);
-
-                lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface iDialog, int iWhich) {
-                        iDialog.dismiss();
-                        for (FTPTransfer lItem : lFTPTransferList) {
-                            lItem.destroyConnection();
-                        }
-                    }
-                });
-
-//                lBuilder.setNeutralButton("Background", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface iDialog, int iWhich) {
-//                        iDialog.dismiss();
-//                    }
-//                });
-
-                lBuilder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        mIsShowingDownload = false;
-                        FTPLogManager.unsubscribeOnNewFTPLogColored(lOnNewFTPLogColored);
-                    }
-                });
-
-                lBuilder.setCancelable(false);
-                lBuilder.setView(lDownloadingDialogView);
-                lBuilder.setMessage("Downloading ..."); // TODO : strings
-                mDownloadingDialog = lBuilder.create();
-                mDownloadingDialog.show();
-                mIsShowingDownload = true;
-            }
-        });
-
-        int lI = -1;
-        int lMaxSimultaneousDownload = PreferenceManager.getMaxTransfer();
-        while (++lI < lMaxSimultaneousDownload && lI < iPendingFiles.length) {
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    final FTPTransfer lFTPTransfer = new FTPTransfer(mFTPServer.getDataBaseId());
-                    lFTPTransferList.add(lFTPTransfer);
-
-                    lFTPTransfer.downloadFiles(iPendingFiles, lFTPTransfer.new OnTransferListener() {
-                        @Override
-                        public void onConnected(PendingFile iPendingFile) {
-
-                        }
-
-                        @Override
-                        public void onConnectionLost(final PendingFile iPendingFile) {
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onNewFileSelected(final PendingFile iPendingFile) {
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onDownloadProgress(final PendingFile iPendingFile, final long iProgress, final long iSize) {
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onDownloadSuccess(final PendingFile iPendingFile) {
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    DataBase.getPendingFileDAO().delete(iPendingFile);
-                                    mNarrowTransferAdapter.addPendingFileToRemove(iPendingFile);
-                                    if (mNarrowTransferAdapter.getItemCount() == 0)
-                                        mDownloadingDialog.dismiss();
-
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onRightAccessFail(PendingFile iPendingFile) {
-
-                        }
-
-                        @Override
-                        public void onExistingFile(final PendingFile iPendingFile) {
-                            final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
-                            lBuilder.setTitle("File already existing..."); // TODO : strings
-                            lBuilder.setMessage(iPendingFile.getName());
-
-                            View lAskExistingFileAction = View.inflate(FTPNavigationActivity.this, R.layout.dialog_existing_file_action, null);
-
-                            final RadioGroup lRadioGroup = lAskExistingFileAction.findViewById(R.id.existing_action_radio_group);
-                            final CheckBox lDoNotAskAgainCheckBox = lAskExistingFileAction.findViewById(R.id.existing_action_do_not_ask_again);
-
-                            lBuilder.setView(lAskExistingFileAction);
-                            lBuilder.setCancelable(false);
-
-                            lBuilder.setPositiveButton("continue", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface iDialog, int iWhich) {
-                                    iDialog.dismiss();
-
-                                    ExistingFileAction lExistingFileAction = ExistingFileAction.REPLACE_FILE;
-
-                                    switch (lRadioGroup.getCheckedRadioButtonId()) {
-                                        case R.id.existing_action_ignore:
-                                            lExistingFileAction = ExistingFileAction.IGNORE;
-                                            break;
-                                        case R.id.existing_action_resume:
-                                            lExistingFileAction = ExistingFileAction.RESUME_FILE_TRANSFER;
-                                            break;
-                                        case R.id.existing_action_replace:
-                                            lExistingFileAction = ExistingFileAction.REPLACE_FILE;
-                                            break;
-                                        case R.id.existing_action_replace_if_size_diff:
-                                            lExistingFileAction = ExistingFileAction.REPLACE_IF_SIZE_IS_DIFFERENT;
-                                            break;
-                                        case R.id.existing_action_replace_if_more_recent:
-                                            lExistingFileAction = ExistingFileAction.REPLACE_IF_FILE_IS_MORE_RECENT;
-                                            break;
-                                        case R.id.existing_action_replace_if_size_diff_or_more_recent:
-                                            lExistingFileAction = ExistingFileAction.REPLACE_IF_SIZE_IS_DIFFERENT_OR_FILE_IS_MORE_RECENT;
-                                            break;
-                                        case R.id.existing_action_rename:
-                                            lExistingFileAction = ExistingFileAction.RENAME_FILE;
-                                            break;
-                                    }
-
-                                    if (lDoNotAskAgainCheckBox.isChecked()) {
-                                        for (PendingFile lItem : iPendingFiles) {
-                                            if (lItem.getExistingFileAction() == ExistingFileAction.NOT_DEFINED)
-                                                lItem.setExistingFileAction(lExistingFileAction);
-                                        }
-                                    } else {
-                                        iPendingFile.setExistingFileAction(lExistingFileAction);
-                                    }
-                                    FTPTransfer.notifyExistingFileActionIsDefined();
-                                }
-                            });
-
-                            lBuilder.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface iDialog, int iWhich) {
-                                    mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
-                                    mDownloadingDialog.dismiss();
-                                    for (FTPTransfer lItem : lFTPTransferList) {
-                                        lItem.destroyConnection();
-                                    }
-                                }
-                            });
-
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mChooseExistingFileAction = lBuilder.create();
-                                    mChooseExistingFileAction.show();
-
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onFail(final PendingFile iPendingFile) {
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mNarrowTransferAdapter.showError(iPendingFile);
-                                    DataBase.getPendingFileDAO().delete(iPendingFile);
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onStop() {
-
-                        }
-                    });
-
-                }
-            });
-        }
     }
 
     private void createDialogDeleteSelection() {
@@ -1678,7 +1295,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
     }
 
-    private AlertDialog createDialogError(String iMessage) { // TODO : Replace by resources
+    public AlertDialog createDialogError(String iMessage) { // TODO : Replace by resources
         mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
                 .setTitle("Error") // TODO : string
                 .setMessage(iMessage)

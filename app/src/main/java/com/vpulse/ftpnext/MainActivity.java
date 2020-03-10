@@ -10,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,7 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.vpulse.ftpnext.core.PreferenceManager;
+import com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection.ErrorCodeDescription;
 import com.vpulse.ftpnext.adapters.MainRecyclerViewAdapter;
@@ -29,10 +28,8 @@ import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.DataBase;
-import com.vpulse.ftpnext.database.DataBaseTests;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
-import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 import com.vpulse.ftpnext.ftpservices.FTPServices;
 
 import org.jetbrains.annotations.NotNull;
