@@ -26,12 +26,11 @@ public class FTPTransfer extends AFTPConnection {
 
     private static final long UPDATE_TRANSFER_TIMER = 200;
     private static final int TRANSFER_FINISH_BREAK = 100;
+    private static final int USER_WAIT_BREAK = 300;
 
     private static List<FTPTransfer> sFTPTransferInstances;
 
     private static boolean mIsAskingActionForExistingFile;
-
-    private ExistingFileAction mExistingFileAction;
 
     private OnTransferListener mOnTransferListener;
     private PendingFile mCandidate;
@@ -78,6 +77,10 @@ public class FTPTransfer extends AFTPConnection {
                 lFTPTransferList.add(lItem);
         }
         return lFTPTransferList.toArray(new FTPTransfer[0]);
+    }
+
+    public static void notifyExistingFileActionIsDefined() {
+        mIsAskingActionForExistingFile = false;
     }
 
     @Override
@@ -215,49 +218,6 @@ public class FTPTransfer extends AFTPConnection {
                             "\nGoing to fetch from the server path :\n\t" +
                             lRemotePath);
 
-                    // ---------------- INIT LOCAL FILE
-                    File lLocalFile = new File(mFTPServer.getAbsolutePath() + "/" +
-                            mCandidate.getEnclosingName() + mCandidate.getName());
-                    try {
-//                        if (lLocalFile.exists())
-//                            lLocalFile.delete(); // TODO : Debug, remove this
-
-                        if (!lLocalFile.exists()) {
-                            if (lLocalFile.getParentFile().mkdirs()) // TODO : Test with lLocalFile = "/"
-                                LogManager.info(TAG, "mkdir success");
-                            if (!lLocalFile.createNewFile()) {
-                                LogManager.error(TAG, "Impossible to create new file");
-                                mCandidate.setIsAnError(true);
-                                mOnTransferListener.onFail(mCandidate);
-                                if (mIsInterrupted)
-                                    break;
-                                continue;
-                            } else
-                                LogManager.info(TAG, "Local creation success");
-                        } else {
-                            // ----------------------------- IN PROGRESS
-
-
-                            if (mExistingFileAction == ExistingFileAction.NOT_DEFINED) {
-                                mIsAskingActionForExistingFile = true;
-                            } else if (mExistingFileAction == ExistingFileAction.IGNORE) {
-                                mOnTransferListener.onDownloadSuccess(mCandidate);
-                                continue;
-                            }
-
-
-                            // ----------------------------- IN PROGRESS
-
-                            mCandidate.setProgress((int) lLocalFile.length());
-                        }
-
-                    } catch (Exception iE) {
-                        iE.printStackTrace();
-                        mCandidate.setIsAnError(true);
-                        mOnTransferListener.onFail(mCandidate);
-                        continue;
-                    }
-
                     // ---------------- INIT FTP FILE
                     mFTPClient.enterLocalPassiveMode();
                     FTPFile lFTPFile;
@@ -276,7 +236,68 @@ public class FTPTransfer extends AFTPConnection {
                         continue;
                     }
 
-                    mCandidate.setSize((int) lFTPFile.getSize());
+                    // ---------------- INIT LOCAL FILE
+                    File lLocalFile = new File(mFTPServer.getAbsolutePath() + "/" +
+                            mCandidate.getEnclosingName() + mCandidate.getName());
+                    try {
+//                        if (lLocalFile.exists())
+//                            lLocalFile.delete(); // TODO : Debug, remove this
+
+                        if (!lLocalFile.exists()) {
+                            if (lLocalFile.getParentFile().mkdirs()) // TODO : Test with lLocalFile = "/"
+                                LogManager.info(TAG, "mkdir success");
+
+                            if (lLocalFile.createNewFile())
+                                LogManager.info(TAG, "Local creation success");
+                            else {
+                                LogManager.error(TAG, "Impossible to create new file");
+                                mCandidate.setIsAnError(true);
+                                mOnTransferListener.onFail(mCandidate);
+                                if (mIsInterrupted)
+                                    break;
+                                continue;
+                            }
+
+                        } else {
+
+                            while (mCandidate.getExistingFileAction() == ExistingFileAction.NOT_DEFINED &&
+                                    !mIsInterrupted) {
+                                existingFileLooper();
+                            }
+
+                            if (mIsInterrupted)
+                                break;
+
+                            switch (mCandidate.getExistingFileAction()) {
+                                case REPLACE_FILE:
+                                    lLocalFile.delete();
+                                    break;
+                                case RESUME_FILE_TRANSFER:
+                                    break;
+                                case REPLACE_IF_SIZE_IS_DIFFERENT:
+                                    if (lLocalFile.length() != lFTPFile.getSize())
+                                        lLocalFile.delete();
+                                    break;
+                                case REPLACE_IF_FILE_IS_MORE_RECENT:
+                                case REPLACE_IF_SIZE_IS_DIFFERENT_OR_FILE_IS_MORE_RECENT:
+                                case IGNORE:
+                                default:
+                                    mCandidate.setProgress((int) lLocalFile.length());
+                                    mCandidate.setFinished(true);
+                                    mOnTransferListener.onDownloadSuccess(mCandidate);
+                                    continue;
+//                                    break;
+                            }
+
+                            mCandidate.setProgress((int) lLocalFile.length());
+                        }
+
+                    } catch (Exception iE) {
+                        iE.printStackTrace();
+                        mCandidate.setIsAnError(true);
+                        mOnTransferListener.onFail(mCandidate);
+                        continue;
+                    }
 
                     // ---------------- DOWNLOAD
                     boolean lFinished = false;
@@ -308,6 +329,7 @@ public class FTPTransfer extends AFTPConnection {
                             int lBytesRead;
                             int lTotalRead = (int) lLocalFile.length();
                             int lFinalSize = (int) lFTPFile.getSize();
+                            mCandidate.setSize(lFinalSize);
                             mCandidate.setProgress((int) lLocalFile.length());
                             mFTPClient.setRestartOffset(mCandidate.getProgress());
 
@@ -322,6 +344,7 @@ public class FTPTransfer extends AFTPConnection {
 
                             FTPLogManager.pushStatusLog(
                                     "Start download of " + mCandidate.getName());
+
                             // ---------------- DOWNLAND LOOP
                             while ((lBytesRead = lRemoteStream.read(bytesArray)) != -1) {
                                 mIsTransferring = true;
@@ -333,6 +356,8 @@ public class FTPTransfer extends AFTPConnection {
                                 if (mIsInterrupted)
                                     break;
                             }
+                            // ---------------- DOWNLAND LOOP
+
                             notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize, true);
                             mIsTransferring = false;
                             lFinished = true;
@@ -383,7 +408,6 @@ public class FTPTransfer extends AFTPConnection {
         mTransferThread.start();
     }
 
-
     public void uploadFiles(final PendingFile[] iSelection, @NotNull final OnTransferListener iOnTransferListener) {
         // TODO : Guard of if it's not already downloading
     }
@@ -428,7 +452,22 @@ public class FTPTransfer extends AFTPConnection {
 
     private void existingFileLooper() {
         LogManager.info(TAG, "Existing file looper");
-//        while (!mIsInterrupted &&)
+
+        while (mIsAskingActionForExistingFile && !mIsInterrupted) {
+            Utils.sleep(USER_WAIT_BREAK);
+        }
+
+        if (mIsInterrupted)
+            return;
+
+        if (mCandidate.getExistingFileAction() == ExistingFileAction.NOT_DEFINED) {
+            mIsAskingActionForExistingFile = true;
+
+            mOnTransferListener.onExistingFile(mCandidate);
+
+            while (mIsAskingActionForExistingFile && !mIsInterrupted)
+                Utils.sleep(USER_WAIT_BREAK);
+        }
     }
 
     private void closeStreams(OutputStream iLocalStream, InputStream iRemoteStream) {
@@ -481,6 +520,15 @@ public class FTPTransfer extends AFTPConnection {
         public abstract void onDownloadSuccess(PendingFile iPendingFile);
 
         public abstract void onRightAccessFail(PendingFile iPendingFile);
+
+
+        /**
+         * Called when the file to download is already existing on the local storage.
+         * You should call {@link #notifyExistingFileActionIsDefined} to make recover all the transfers
+         *
+         * @param iPendingFile Already existing file
+         */
+        public abstract void onExistingFile(PendingFile iPendingFile);
 
         /**
          * @param iPendingFile File that it's impossible to download for any error

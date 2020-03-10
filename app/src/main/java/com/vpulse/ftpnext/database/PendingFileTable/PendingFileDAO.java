@@ -110,8 +110,6 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
         LogManager.info(TAG, "On update table");
         if (iOldVersion < VERSION_ADD_EXISTING_FILE_ACTION) {
 
-            LogManager.info(TAG, "On upgrade existing file action ");
-
             mDataBase.execSQL("ALTER TABLE " + TABLE +
                     " ADD " + COLUMN_EXISTING_FILE_ACTION + " INTEGER DEFAULT 0");
         }

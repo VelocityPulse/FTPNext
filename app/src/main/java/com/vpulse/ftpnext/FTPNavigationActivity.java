@@ -38,6 +38,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -45,6 +46,7 @@ import com.vpulse.ftpnext.adapters.NarrowTransferAdapter;
 import com.vpulse.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
+import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
@@ -117,6 +119,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private AlertDialog mCreateFolderDialog;
     private AlertDialog mIndexingPendingFilesDialog;
     private AlertDialog mDownloadingDialog;
+    private AlertDialog mChooseExistingFileAction;
     private AlertDialog mDeletingInfoDialog;
     private AlertDialog mDeletingErrorDialog;
 
@@ -1252,7 +1255,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                 lLogView.append(HtmlCompat.fromHtml(iLog + "<br/>", HtmlCompat.FROM_HTML_MODE_LEGACY));
                                 if (mCanAutoScrollInLogView)
                                     lScrollView.fullScroll(ScrollView.FOCUS_DOWN);
-                                // Scroll to the end ?
                             }
                         });
                     }
@@ -1273,8 +1275,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     public void onClick(DialogInterface iDialog, int iWhich) {
                         iDialog.dismiss();
                         for (FTPTransfer lItem : lFTPTransferList) {
-                            lItem.abortTransfer();
-//                            lItem.destroyConnection();
+                            lItem.destroyConnection();
                         }
                     }
                 });
@@ -1369,8 +1370,85 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         }
 
                         @Override
+                        public void onExistingFile(final PendingFile iPendingFile) {
+                            final AlertDialog.Builder lBuilder = new AlertDialog.Builder(FTPNavigationActivity.this);
+                            lBuilder.setTitle("File already existing..."); // TODO : strings
+                            lBuilder.setMessage(iPendingFile.getName());
+
+                            View lAskExistingFileAction = View.inflate(FTPNavigationActivity.this, R.layout.dialog_existing_file_action, null);
+
+                            final RadioGroup lRadioGroup = lAskExistingFileAction.findViewById(R.id.existing_action_radio_group);
+                            final CheckBox lDoNotAskAgainCheckBox = lAskExistingFileAction.findViewById(R.id.existing_action_do_not_ask_again);
+
+                            lBuilder.setView(lAskExistingFileAction);
+                            lBuilder.setCancelable(false);
+
+                            lBuilder.setPositiveButton("continue", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface iDialog, int iWhich) {
+                                    iDialog.dismiss();
+
+                                    ExistingFileAction lExistingFileAction = ExistingFileAction.REPLACE_FILE;
+
+                                    switch (lRadioGroup.getCheckedRadioButtonId()) {
+                                        case R.id.existing_action_ignore:
+                                            lExistingFileAction = ExistingFileAction.IGNORE;
+                                            break;
+                                        case R.id.existing_action_resume:
+                                            lExistingFileAction = ExistingFileAction.RESUME_FILE_TRANSFER;
+                                            break;
+                                        case R.id.existing_action_replace:
+                                            lExistingFileAction = ExistingFileAction.REPLACE_FILE;
+                                            break;
+                                        case R.id.existing_action_replace_if_size_diff:
+                                            lExistingFileAction = ExistingFileAction.REPLACE_IF_SIZE_IS_DIFFERENT;
+                                            break;
+                                        case R.id.existing_action_replace_if_more_recent:
+                                            lExistingFileAction = ExistingFileAction.REPLACE_IF_FILE_IS_MORE_RECENT;
+                                            break;
+                                        case R.id.existing_action_replace_if_size_diff_or_more_recent:
+                                            lExistingFileAction = ExistingFileAction.REPLACE_IF_SIZE_IS_DIFFERENT_OR_FILE_IS_MORE_RECENT;
+                                            break;
+                                        case R.id.existing_action_rename:
+                                            lExistingFileAction = ExistingFileAction.RENAME_FILE;
+                                            break;
+                                    }
+
+                                    if (lDoNotAskAgainCheckBox.isChecked()) {
+                                        for (PendingFile lItem : iPendingFiles) {
+                                            if (lItem.getExistingFileAction() == ExistingFileAction.NOT_DEFINED)
+                                                lItem.setExistingFileAction(lExistingFileAction);
+                                        }
+                                    } else {
+                                        iPendingFile.setExistingFileAction(lExistingFileAction);
+                                    }
+                                    FTPTransfer.notifyExistingFileActionIsDefined();
+                                }
+                            });
+
+                            lBuilder.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface iDialog, int iWhich) {
+                                    mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
+                                    mDownloadingDialog.dismiss();
+                                    for (FTPTransfer lItem : lFTPTransferList) {
+                                        lItem.destroyConnection();
+                                    }
+                                }
+                            });
+
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mChooseExistingFileAction = lBuilder.create();
+                                    mChooseExistingFileAction.show();
+
+                                }
+                            });
+                        }
+
+                        @Override
                         public void onFail(final PendingFile iPendingFile) {
-                            LogManager.info(TAG, "On fail " + iPendingFile.getName());
                             mHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -1615,6 +1693,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mErrorAlertDialog.cancel();
         if (mDownloadingDialog != null)
             mDownloadingDialog.cancel();
+        if (mChooseExistingFileAction != null)
+            mChooseExistingFileAction.cancel();
         if (mDeletingInfoDialog != null)
             mDeletingInfoDialog.cancel();
         if (mDeletingErrorDialog != null)
@@ -1636,6 +1716,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mErrorAlertDialog.cancel();
         if (mDownloadingDialog != null && !lDialogList.contains(mDownloadingDialog))
             mDownloadingDialog.cancel();
+        if (mChooseExistingFileAction != null && !lDialogList.contains(mChooseExistingFileAction))
+            mChooseExistingFileAction.cancel();
         if (mDeletingInfoDialog != null && !lDialogList.contains(mDeletingInfoDialog))
             mDeletingInfoDialog.cancel();
         if (mDeletingErrorDialog != null && !lDialogList.contains(mDeletingErrorDialog))

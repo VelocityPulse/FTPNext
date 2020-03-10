@@ -31,7 +31,7 @@ public class NarrowTransferAdapter
     private static final int REMOVE_BREAK_TIMER = 1000;
     private final List<PendingFileItem> mToRemovePendingFileItemList;
     private final List<PendingFileItem> mPendingFileItemList;
-    private List<CustomItemViewAdapter> mCustomItemViewAdapterList;
+    private final List<CustomItemViewAdapter> mCustomItemViewAdapterList;
 
     private Context mContext;
 
@@ -62,6 +62,17 @@ public class NarrowTransferAdapter
     public void onAttachedToRecyclerView(@NonNull RecyclerView iRecyclerView) {
         super.onAttachedToRecyclerView(iRecyclerView);
         mRecyclerView = iRecyclerView;
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        LogManager.info(TAG, "On detached from recycler view");
+        mToRemovePendingFileItemList.clear();
+        mPendingFileItemList.clear();
+        mCustomItemViewAdapterList.clear();
+        mRecyclerView = null;
+        mContext = null;
+        super.onDetachedFromRecyclerView(recyclerView);
     }
 
     @NonNull
@@ -169,7 +180,8 @@ public class NarrowTransferAdapter
 
     public void updatePendingFileData(PendingFile iPendingFile) {
         for (CustomItemViewAdapter lItem : mCustomItemViewAdapterList) {
-            if (lItem.mPendingFileItem.mPendingFile == iPendingFile) {
+            if (!lItem.mPendingFileItem.mHasBeenRemoved &&
+                    lItem.mPendingFileItem.mPendingFile == iPendingFile) {
                 onBindViewHolder(lItem, mPendingFileItemList.indexOf(lItem.mPendingFileItem));
                 return;
             }
@@ -196,6 +208,7 @@ public class NarrowTransferAdapter
                     lIndex = mPendingFileItemList.indexOf(lItem);
                     mPendingFileItemList.remove(lItem);
                     notifyItemRemoved(lIndex);
+                    lItem.mHasBeenRemoved = true;
                 }
 
                 mToRemovePendingFileItemList.clear();
@@ -255,6 +268,7 @@ public class NarrowTransferAdapter
         PendingFile mPendingFile;
         boolean isErrorAlreadyProceed;
         int mTimeOfErrorNotified;
+        boolean mHasBeenRemoved;
 
         PendingFileItem(PendingFile iPendingFile) {
             mPendingFile = iPendingFile;

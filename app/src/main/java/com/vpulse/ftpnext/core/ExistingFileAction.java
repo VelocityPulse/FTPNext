@@ -1,7 +1,5 @@
 package com.vpulse.ftpnext.core;
 
-import org.jetbrains.annotations.Contract;
-
 public enum ExistingFileAction {
 
     NOT_DEFINED(0),
