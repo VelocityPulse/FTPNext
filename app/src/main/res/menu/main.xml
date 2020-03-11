@@ -4,7 +4,8 @@
     <item
         android:id="@+id/action_parameters"
         android:orderInCategory="100"
-        android:title="Parameters (Unavailable)"
-        app:showAsAction="never" />
+        android:icon="@drawable/ic_settings"
+        android:title="Parameters"
+        app:showAsAction="ifRoom" />
     <!--    TODO : Strings -->
 </menu>

@@ -2,11 +2,13 @@
     <string name="app_name">FTPNext</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Android Studio</string>
+
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
+
     <string name="action_settings">Settings</string>
     <string name="configure_ftp_server">Configure FTP Server</string>
+    <string name="settings">Settings</string>
     <string name="ftp_navigation">FTP Navigation</string>
 
     <string-array name="string_array_name">

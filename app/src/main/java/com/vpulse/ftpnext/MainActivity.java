@@ -20,9 +20,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity;
-import com.vpulse.ftpnext.ftpservices.AFTPConnection;
-import com.vpulse.ftpnext.ftpservices.AFTPConnection.ErrorCodeDescription;
 import com.vpulse.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
@@ -30,6 +27,9 @@ import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
+import com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity;
+import com.vpulse.ftpnext.ftpservices.AFTPConnection;
+import com.vpulse.ftpnext.ftpservices.AFTPConnection.ErrorCodeDescription;
 import com.vpulse.ftpnext.ftpservices.FTPServices;
 
 import org.jetbrains.annotations.NotNull;
@@ -75,8 +75,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
     private static final int ACTIVITY_REQUEST_CODE_CONFIGURE_SERVER = 2;
-    private static final int ACTIVITY_REQUEST_CODE = 3;
-    private static final int ACTIVITY_REQUEST_CODE_INTERNET = 4;
+    private static final int ACTIVITY_REQUEST_CODE_NAVIGATION = 3;
+    private static final int ACTIVITY_REQUEST_CODE_SETTINGS = 4;
+    private static final int ACTIVITY_REQUEST_CODE_INTERNET = 5;
 
 
     private MainRecyclerViewAdapter mAdapter;
@@ -90,7 +91,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
-        // TODO introduce animation / splash screen
 
         setContentView(R.layout.activity_main);
 
@@ -130,11 +130,10 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem iMenuItem) {
+    @Override public boolean onOptionsItemSelected(MenuItem iMenuItem) {
         int id = iMenuItem.getItemId();
         if (id == R.id.action_parameters) {
-
+            startSettingsActivity();
             return true;
         }
 
@@ -214,13 +213,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializePermissions() {
 //        if (AppCore.isTheFirstRun()) {
-            String[] lPermissionsReadWrite = new String[]{
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        String[] lPermissionsReadWrite = new String[]{
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
-            ActivityCompat.requestPermissions(this,
-                    lPermissionsReadWrite,
-                    ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE);
+        ActivityCompat.requestPermissions(this,
+                lPermissionsReadWrite,
+                ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE);
 
     }
 
@@ -237,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // TODO : Make an automatic permission algorithm
-                String[] lPermissionNetwork = new String[] {
+                String[] lPermissionNetwork = new String[]{
                         Manifest.permission.INTERNET
                 };
                 ActivityCompat.requestPermissions(this,
@@ -347,7 +346,7 @@ public class MainActivity extends AppCompatActivity {
         Intent lIntent = new Intent(MainActivity.this, FTPNavigationActivity.class);
         lIntent.putExtra(FTPNavigationActivity.KEY_DATABASE_ID, iServerID);
         lIntent.putExtra(FTPNavigationActivity.KEY_DIRECTORY_PATH, FTPNavigationActivity.ROOT_DIRECTORY);
-        startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE);
+        startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE_NAVIGATION);
     }
 
     private void startFTPConfigureServerActivity(int iFTPServerId) {
@@ -356,6 +355,12 @@ public class MainActivity extends AppCompatActivity {
         lIntent.putExtra(FTPConfigureServerActivity.KEY_DATABASE_ID, iFTPServerId);
         startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE_CONFIGURE_SERVER);
         overridePendingTransition(R.anim.activity_fade_in_centered, R.anim.no_animation);
+    }
+
+    private void startSettingsActivity() {
+        Intent lIntent = new Intent(MainActivity.this, SettingsActivity.class);
+
+        startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE_SETTINGS);
     }
 
     private void runTests() {
