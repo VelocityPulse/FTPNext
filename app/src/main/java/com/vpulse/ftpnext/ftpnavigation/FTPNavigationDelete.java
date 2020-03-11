@@ -15,7 +15,6 @@ import org.apache.commons.net.ftp.FTPFile;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_REFRESH_DATA;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_STOP_DELETING;
 
 public class FTPNavigationDelete {
 
@@ -81,7 +80,7 @@ public class FTPNavigationDelete {
                         lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() { // TODO : Strings
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mHandler.sendEmptyMessage(NAVIGATION_ORDER_STOP_DELETING);
+                                stopDeleting();
                             }
                         });
                         mContextActivity.mDeletingInfoDialog = lBuilder.create();
@@ -138,9 +137,6 @@ public class FTPNavigationDelete {
                             @Override
                             public void onClick(DialogInterface iDialog, int iWhich) {
                                 iDialog.dismiss();
-                                mContextActivity.mDeletingErrorDialog = null;
-                                if (mContextActivity.mDeletingInfoDialog != null)
-                                    mContextActivity.mDeletingInfoDialog.show();
                                 mContextActivity.mFTPServices.setDeletingByPassRightErrors(lCheckBox.isChecked());
                                 mContextActivity.mFTPServices.resumeDeleting();
                             }
@@ -150,13 +146,10 @@ public class FTPNavigationDelete {
                             @Override
                             public void onClick(DialogInterface iDialog, int iWhich) {
                                 iDialog.dismiss();
-                                mContextActivity.mDeletingErrorDialog = null; // check at null used in NAVIGATION_MESSAGE_RECONNECT_SUCCESS
-                                mContextActivity.mCurrentAdapter.setSelectionMode(false);
-                                mContextActivity.mFTPServices.abortDeleting();
+                                stopDeleting();
                             }
                         });
                         mContextActivity.mDeletingErrorDialog = lBuilder.create();
-                        mContextActivity.mDeletingInfoDialog.hide();
                         mContextActivity.mDeletingErrorDialog.show();
                     }
                 });
@@ -164,15 +157,6 @@ public class FTPNavigationDelete {
 
             @Override
             public void onFinish() {
-                if (mContextActivity.mDeletingInfoDialog != null) {
-                    mContextActivity.mDeletingInfoDialog.cancel();
-                    mContextActivity.mDeletingInfoDialog = null; // check at null used in NAVIGATION_MESSAGE_RECONNECT_SUCCESS
-                }
-                if (mContextActivity.mDeletingErrorDialog != null) {
-                    mContextActivity.mDeletingErrorDialog.cancel();
-                    mContextActivity.mDeletingErrorDialog = null;
-                }
-
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
             }
@@ -213,9 +197,7 @@ public class FTPNavigationDelete {
                             @Override
                             public void onClick(DialogInterface iDialog, int iWhich) {
                                 iDialog.dismiss();
-                                mContextActivity.mDeletingErrorDialog = null;
-                                mContextActivity.mCurrentAdapter.setSelectionMode(false);
-                                mContextActivity.mFTPServices.abortDeleting();
+                                stopDeleting();
                             }
                         });
                         if (mContextActivity.mDeletingInfoDialog != null)
@@ -229,5 +211,10 @@ public class FTPNavigationDelete {
         });
     }
 
-
+    private void stopDeleting() {
+        mContextActivity.mCurrentAdapter.setSelectionMode(false);
+        mContextActivity.mFTPServices.abortDeleting();
+        mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
+        mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
+    }
 }

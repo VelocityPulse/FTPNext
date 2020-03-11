@@ -74,7 +74,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     protected static final int NAVIGATION_ORDER_DISMISS_DIALOGS = 100;
     protected static final int NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS = 101;
-    protected static final int NAVIGATION_ORDER_STOP_DELETING = 102;
     protected static final int NAVIGATION_ORDER_REFRESH_DATA = 103;
     protected static final int NAVIGATION_ORDER_SELECTED_MODE_ON = 104;
     protected static final int NAVIGATION_ORDER_SELECTED_MODE_OFF = 105;
@@ -634,18 +633,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                     .create();
                             mErrorAlertDialog.show();
                         }
-                        break;
-
-                    case NAVIGATION_ORDER_STOP_DELETING:
-                        LogManager.info(TAG, "Handle : NAVIGATION_ORDER_STOP_DELETING");
-                        if (mDeletingInfoDialog != null && mDeletingInfoDialog.isShowing())
-                            mDeletingInfoDialog.cancel();
-                        if (mDeletingErrorDialog != null && mDeletingErrorDialog.isShowing())
-                            mDeletingErrorDialog.cancel();
-                        mFTPServices.abortDeleting();
-                        mDeletingInfoDialog = null;
-                        mDeletingErrorDialog = null;
-                        mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
                         break;
                 }
             }
