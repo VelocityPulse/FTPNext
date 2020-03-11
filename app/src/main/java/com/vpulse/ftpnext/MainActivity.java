@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -141,8 +142,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeGUI() {
-        Toolbar lToolBar = findViewById(R.id.toolbar);
-        setSupportActionBar(lToolBar);
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        getSupportActionBar().setCustomView(R.layout.action_bar_main);
 
         FloatingActionButton lFloatingActionButton = findViewById(R.id.navigation_floating_action_button);
         lFloatingActionButton.setOnClickListener(new View.OnClickListener() {

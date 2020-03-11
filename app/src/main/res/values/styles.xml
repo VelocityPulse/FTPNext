@@ -1,8 +1,6 @@
 <resources>
 
-    <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light">
-        <!-- Customize your theme here. -->
 
         <item name="colorPrimary">@color/primary</item>
         <item name="colorAccent">#5eb8ff</item>
@@ -10,29 +8,30 @@
         <item name="colorSecondary">@color/secondary</item>
         <item name="colorError">#F44336</item>
         <item name="android:colorBackground">@color/background</item>
-        <!--<item name="android:buttonStyle"></item>-->
 
-        <item name="android:itemTextAppearance">@style/MyActionBar.MenuTextStyle</item>
         <item name="android:itemBackground">@color/primary</item>
-
     </style>
 
-    // item menus
-    <style name="MyActionBar.MenuTextStyle" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
-        <item name="android:textSize">16sp</item>
+    <!-- interesting to add in CustomActionBar if we want to remove the background
+        <style name="StyleActionBar" parent="Widget.AppCompat.Light.ActionBar.Solid">
+            <item name="android:background">@color/primary</item>
+            <item name="background">@color/primary</item>
+        </style>
+        -->
+
+    <style name="ThemeActionBar" parent="@style/ThemeOverlay.AppCompat.ActionBar">
+        <item name="colorControlNormal">@android:color/white</item>
     </style>
 
-    <!--<style name="Button">-->
-        <!--&lt;!&ndash;<item name="colorAccent">@android:color/wh</item>&ndash;&gt;-->
-    <!--</style>-->
+    <style name="AppTheme.CustomActionBar">
+        <item name="windowActionBar">true</item>
+        <item name="android:windowFullscreen">false</item>
 
-    <style name="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+        <item name="windowActionBarOverlay">true</item>
+        <item name="android:windowActionBarOverlay">true</item>
+
+        <item name="actionBarTheme">@style/ThemeActionBar</item>
+        <item name="android:actionBarTheme">@style/ThemeActionBar</item>
     </style>
-
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 </resources>

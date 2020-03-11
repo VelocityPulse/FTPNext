@@ -17,6 +17,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -393,11 +394,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void initializeGUI() {
-        Toolbar lToolBar = findViewById(R.id.toolbar);
-        setSupportActionBar(lToolBar);
-
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setCustomView(R.layout.action_bar_navigation);
 
         mMainFAB = findViewById(R.id.navigation_floating_action_button);
         mCreateFolderFAB = findViewById(R.id.navigation_fab_create_folder);

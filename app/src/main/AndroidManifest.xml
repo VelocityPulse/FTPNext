@@ -19,7 +19,7 @@
             android:name="com.vpulse.ftpnext.MainActivity"
             android:configChanges="orientation|screenLayout|screenSize"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.CustomActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW" />
@@ -31,18 +31,18 @@
             android:name="com.vpulse.ftpnext.FTPConfigureServerActivity"
             android:configChanges="orientation|screenLayout|screenSize"
             android:label="@string/configure_ftp_server"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.CustomActionBar" />
         <activity
             android:name="com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity"
             android:configChanges="orientation|screenLayout|screenSize"
             android:label="@string/ftp_navigation"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:theme="@style/AppTheme.CustomActionBar"
             android:windowSoftInputMode="adjustNothing" />
         <activity
             android:name=".SettingsActivity"
             android:configChanges="orientation|screenLayout|screenSize"
             android:label="@string/settings"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:theme="@style/AppTheme.CustomActionBar"
             android:windowSoftInputMode="adjustNothing" />
     </application>
 
