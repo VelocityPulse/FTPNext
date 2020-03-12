@@ -220,7 +220,7 @@ public class FTPNavigationDownload {
 
                         if (mCount > 150)
                             mCompleteLog = mCompleteLog.substring(mCompleteLog.indexOf("<br/>") + 5);
-                        mCompleteLog += iLog + "<br/>";
+                        mCompleteLog += "<br/>" + iLog;
                         final Spanned s = HtmlCompat.fromHtml(mCompleteLog, HtmlCompat.FROM_HTML_MODE_LEGACY);
 
                         mHandler.post(new Runnable() {
