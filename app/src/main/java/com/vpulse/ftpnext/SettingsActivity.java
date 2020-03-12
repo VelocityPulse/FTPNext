@@ -5,9 +5,13 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
-import android.view.WindowManager;
+import android.view.View;
+
+import com.vpulse.ftpnext.core.LogManager;
 
 public class SettingsActivity extends AppCompatActivity {
+
+    private final static String TAG = "SETTINGS ACTIVITY";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -29,4 +33,5 @@ public class SettingsActivity extends AppCompatActivity {
         }
         return false;
     }
+
 }
