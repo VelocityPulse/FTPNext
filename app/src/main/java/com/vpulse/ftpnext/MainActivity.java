@@ -47,7 +47,6 @@ Ideas :
     - Display to type of file/dir rights xxx-xxx-xxx or read
     - Remember the last folder used for create a server
     - Queues of file to download even if the connection fail
-    - Wifi download/upload only
     - Notification view of transfer
     - Check if the download can continue after a stop
     - Connection with ssh

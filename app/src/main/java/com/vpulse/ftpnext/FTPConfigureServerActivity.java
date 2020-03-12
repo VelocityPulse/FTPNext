@@ -100,7 +100,6 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
     }
 
     private void initializeGUI() {
-//        getSupportActionBar().setIcon(R.drawable.baseline_bookmark);
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_arrow_up);
