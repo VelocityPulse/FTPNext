@@ -100,8 +100,10 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
     }
 
     private void initializeGUI() {
+//        getSupportActionBar().setIcon(R.drawable.baseline_bookmark);
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_arrow_up);
         getSupportActionBar().setCustomView(R.layout.action_bar_configure_server);
 
         mRootView = findViewById(R.id.activity_configure_ftp_server_scrollview);
