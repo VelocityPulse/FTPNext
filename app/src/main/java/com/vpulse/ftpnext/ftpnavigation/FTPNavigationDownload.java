@@ -66,23 +66,8 @@ public class FTPNavigationDownload {
 
         if (lSelectedFiles.length == 0)
             mContextActivity.createDialogError("Select something.").show();
-        else {
-
-            AlertDialog.Builder lBuilder = new AlertDialog.Builder(mContextActivity)
-                    .setTitle("Downloading :") // TODO : Strings
-                    .setMessage("Do you confirm the download of " + lSelectedFiles.length + " files ?")
-                    .setPositiveButton("yes", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface iDialog, int iWhich) {
-                            iDialog.dismiss();
-                            indexesFilesForDownload(lSelectedFiles);
-                        }
-                    })
-                    .setNegativeButton("cancel", null);
-
-            mContextActivity.mIndexingPendingFilesDialog = lBuilder.create();
-            mContextActivity.mIndexingPendingFilesDialog.show();
-        }
+        else
+            showDownloadConfirmation(lSelectedFiles);
     }
 
     private void indexesFilesForDownload(final FTPFile[] iSelectedFiles) {
@@ -271,7 +256,7 @@ public class FTPNavigationDownload {
 
                 lBuilder.setCancelable(false);
                 lBuilder.setView(lDownloadingDialogView);
-                lBuilder.setMessage("Downloading ..."); // TODO : strings
+                lBuilder.setTitle("Downloading ..."); // TODO : strings
                 mContextActivity.mDownloadingDialog = lBuilder.create();
                 mContextActivity.mDownloadingDialog.show();
                 mContextActivity.mIsShowingDownload = true;
@@ -280,11 +265,9 @@ public class FTPNavigationDownload {
 
         int lI = -1;
         int lMaxSimultaneousDownload = PreferenceManager.getMaxTransfers();
-        while (++lI < lMaxSimultaneousDownload && lI < mPendingFiles.length) {
 
+        while (++lI < lMaxSimultaneousDownload && lI < mPendingFiles.length)
             createNewFTPTransfer();
-
-        }
     }
 
     private void createNewFTPTransfer() {
@@ -368,17 +351,23 @@ public class FTPNavigationDownload {
                     @Override
                     public void onStop() {
                         mFTPTransferList.remove(lFTPTransfer);
+                        if (mFTPTransferList.size() == 0) {
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mContextActivity.mDownloadingDialog.dismiss();
+                                    showSuccessDownload();
+                                }
+                            });
+                        }
                     }
                 });
             }
         });
-
     }
 
     private void createExistingFileDialog(final PendingFile iPendingFile) {
         final AlertDialog.Builder lBuilder = new AlertDialog.Builder(mContextActivity);
-        lBuilder.setTitle("File already existing..."); // TODO : strings
-        lBuilder.setMessage(iPendingFile.getName());
 
         View lAskExistingFileAction = View.inflate(mContextActivity, R.layout.dialog_existing_file_action, null);
 
@@ -387,6 +376,8 @@ public class FTPNavigationDownload {
 
         lBuilder.setView(lAskExistingFileAction);
         lBuilder.setCancelable(false);
+        lBuilder.setTitle("File already existing..."); // TODO : strings
+        lBuilder.setMessage(iPendingFile.getName());
 
         lBuilder.setPositiveButton("continue", new DialogInterface.OnClickListener() {
             @Override
@@ -405,9 +396,9 @@ public class FTPNavigationDownload {
             public void onClick(DialogInterface iDialog, int iWhich) {
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
                 mContextActivity.mDownloadingDialog.dismiss();
-                for (FTPTransfer lItem : mFTPTransferList) {
+
+                for (FTPTransfer lItem : mFTPTransferList)
                     lItem.destroyConnection();
-                }
             }
         });
 
@@ -416,7 +407,6 @@ public class FTPNavigationDownload {
             public void run() {
                 mContextActivity.mChooseExistingFileAction = lBuilder.create();
                 mContextActivity.mChooseExistingFileAction.show();
-
             }
         });
     }
@@ -459,4 +449,38 @@ public class FTPNavigationDownload {
         }
         FTPTransfer.notifyExistingFileActionIsDefined();
     }
+
+    private void showSuccessDownload() {
+        AlertDialog.Builder lBuilder = new AlertDialog.Builder(mContextActivity)
+                .setTitle("Success downloading !") // TODO : Strings
+                .setMessage("All files has been downloaded")
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface iDialog, int iWhich) {
+                        iDialog.dismiss();
+                    }
+                });
+
+        mContextActivity.mDownloadingDialog = lBuilder.create();
+        mContextActivity.mDownloadingDialog.show();
+    }
+
+    private void showDownloadConfirmation(final FTPFile[] iSelectedFiles) {
+
+        AlertDialog.Builder lBuilder = new AlertDialog.Builder(mContextActivity)
+                .setTitle("Downloading") // TODO : Strings
+                .setMessage("Do you confirm the download of " + iSelectedFiles.length + " files ?")
+                .setPositiveButton("yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface iDialog, int iWhich) {
+                        iDialog.dismiss();
+                        indexesFilesForDownload(iSelectedFiles);
+                    }
+                })
+                .setNegativeButton("cancel", null);
+
+        mContextActivity.mIndexingPendingFilesDialog = lBuilder.create();
+        mContextActivity.mIndexingPendingFilesDialog.show();
+    }
+
 }

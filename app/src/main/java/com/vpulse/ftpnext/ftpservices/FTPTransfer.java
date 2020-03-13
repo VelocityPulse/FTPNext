@@ -461,13 +461,16 @@ public class FTPTransfer extends AFTPConnection {
         if (mIsInterrupted)
             return;
 
-        if (mCandidate.getExistingFileAction() == ExistingFileAction.NOT_DEFINED) {
-            mIsAskingActionForExistingFile = true;
+        synchronized (FTPTransfer.class) {
+            if (mCandidate.getExistingFileAction() == ExistingFileAction.NOT_DEFINED &&
+                    !mIsAskingActionForExistingFile) {
+                mIsAskingActionForExistingFile = true;
 
-            mOnTransferListener.onExistingFile(mCandidate);
+                mOnTransferListener.onExistingFile(mCandidate);
 
-            while (mIsAskingActionForExistingFile && !mIsInterrupted)
-                Utils.sleep(USER_WAIT_BREAK);
+                while (mIsAskingActionForExistingFile && !mIsInterrupted)
+                    Utils.sleep(USER_WAIT_BREAK);
+            }
         }
     }
 
