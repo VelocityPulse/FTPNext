@@ -11,16 +11,20 @@ public class PreferenceManager {
     public static final boolean SILENT_LOG_CAT = true;
 
     // Default values :
-    public static final int DEFAULT_MAX_TRANSFER_VALUE = 2;
+    public static final int DEFAULT_MAX_TRANSFERS_VALUE = 2;
     public static final ExistingFileAction DEFAULT_EXISTING_FILE_ACTION = NOT_DEFINED;
+    public static final boolean DEFAULT_WIFI_ONLY = true;
+    public static final boolean DEFAULT_IS_DARK_THEME = false;
     public static final String DEFAULT_LOGS_VALUE = "";
 
     private static final String TAG = "PREFERENCE MANAGER";
 
     // Preferences tags :
     private static final String PREFERENCE_FIRST_RUN = "PREFS_FIRST_RUN";
-    private static final String PREFERENCE_MAX_TRANSFER = "PREFS_MAX_TRANSFER";
-    private static final String PREFERENCES_EXISTING_FILE_ACTION = "PREFS_EXISTING_FILE_ACTION";
+    private static final String PREFERENCE_MAX_TRANSFERS = "PREFS_MAX_TRANSFER";
+    private static final String PREFERENCE_EXISTING_FILE_ACTION = "PREFS_EXISTING_FILE_ACTION";
+    private static final String PREFERENCE_WIFI_ONLY = "PREF_WIFI_ONLY";
+    private static final String PREFERENCE_DARK_THEME = "PREF_DARK_THEME";
     private static final String PREFERENCE_LOGS = "PREFS_LOGS";
 
     private static PreferenceManager sSingleton;
@@ -41,7 +45,7 @@ public class PreferenceManager {
         }
         return ExistingFileAction.getValue(
                 mSharedPreferences.getInt(
-                        PREFERENCES_EXISTING_FILE_ACTION, DEFAULT_EXISTING_FILE_ACTION.getValue()));
+                        PREFERENCE_EXISTING_FILE_ACTION, DEFAULT_EXISTING_FILE_ACTION.getValue()));
     }
 
     public static void setExistingFileAction(ExistingFileAction iAction) {
@@ -50,19 +54,55 @@ public class PreferenceManager {
             return;
         }
 
-        mSharedPreferences.edit().putInt(PREFERENCES_EXISTING_FILE_ACTION, iAction.getValue()).apply();
+        mSharedPreferences.edit().putInt(PREFERENCE_EXISTING_FILE_ACTION, iAction.getValue()).apply();
     }
 
-    public static int getMaxTransfer() {
+    public static boolean isWifiOnly() {
+        if (mSharedPreferences == null) {
+            LogManager.error(TAG, "Shared preferences null");
+            return DEFAULT_WIFI_ONLY;
+        }
+
+        return mSharedPreferences.getBoolean(PREFERENCE_WIFI_ONLY, DEFAULT_WIFI_ONLY);
+    }
+
+    public static void setWifiOnly(boolean iWifiOnly) {
+        if (mSharedPreferences == null) {
+            LogManager.error(TAG, "Shared preferences null");
+            return;
+        }
+
+        mSharedPreferences.edit().putBoolean(PREFERENCE_WIFI_ONLY, iWifiOnly).apply();
+    }
+
+    public static boolean isDarkTheme() {
+        if (mSharedPreferences == null) {
+            LogManager.error(TAG, "Shared preferences null");
+            return DEFAULT_IS_DARK_THEME;
+        }
+
+        return mSharedPreferences.getBoolean(PREFERENCE_DARK_THEME, DEFAULT_IS_DARK_THEME);
+    }
+
+    public static void setDarkTheme(boolean iIsDarkTheme) {
+        if (mSharedPreferences == null) {
+            LogManager.error(TAG, "Shared preferences null");
+            return;
+        }
+
+        mSharedPreferences.edit().putBoolean(PREFERENCE_DARK_THEME, iIsDarkTheme).apply();
+    }
+
+    public static int getMaxTransfers() {
         if (mSharedPreferences == null) {
             LogManager.error(TAG, "Shared preferences null");
             return 0;
         }
 
-        return mSharedPreferences.getInt(PREFERENCE_MAX_TRANSFER, DEFAULT_MAX_TRANSFER_VALUE);
+        return mSharedPreferences.getInt(PREFERENCE_MAX_TRANSFERS, DEFAULT_MAX_TRANSFERS_VALUE);
     }
 
-    public static void setMaxTransfer(int iMax) {
+    public static void setMaxTransfers(int iMax) {
         if (mSharedPreferences == null) {
             LogManager.error(TAG, "Shared preferences null");
             return;
@@ -70,7 +110,7 @@ public class PreferenceManager {
 
         if (iMax <= 0)
             iMax = 1;
-        mSharedPreferences.edit().putInt(PREFERENCE_MAX_TRANSFER, iMax).apply();
+        mSharedPreferences.edit().putInt(PREFERENCE_MAX_TRANSFERS, iMax).apply();
     }
 
     public static boolean isTheFirstRun() {

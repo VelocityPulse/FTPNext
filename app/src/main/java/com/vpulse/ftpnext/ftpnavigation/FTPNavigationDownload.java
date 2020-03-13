@@ -279,7 +279,7 @@ public class FTPNavigationDownload {
         });
 
         int lI = -1;
-        int lMaxSimultaneousDownload = PreferenceManager.getMaxTransfer();
+        int lMaxSimultaneousDownload = PreferenceManager.getMaxTransfers();
         while (++lI < lMaxSimultaneousDownload && lI < mPendingFiles.length) {
 
             createNewFTPTransfer();
