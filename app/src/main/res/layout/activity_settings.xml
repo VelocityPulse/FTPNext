@@ -29,7 +29,7 @@
             <RelativeLayout
                 android:id="@+id/settings_wifi_only_layout"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="@dimen/settings_height_line"
                 android:background="@drawable/ripple_effect_primary"
                 android:clickable="true"
                 android:focusable="true"
@@ -39,7 +39,6 @@
                 android:paddingEnd="@dimen/settings_line_padding_start">
 
                 <ImageView
-                    android:id="@+id/setting_image"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
@@ -53,7 +52,8 @@
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
                     android:layout_marginStart="40dp"
-                    android:text="Transferts only on Wi-Fi" />
+                    android:text="Transferts only on Wi-Fi"
+                    android:textSize="@dimen/settings_title_text_size" />
 
                 <Switch
                     android:id="@+id/settings_wifi_only_switch"
@@ -66,86 +66,129 @@
 
             </RelativeLayout>
 
-
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="70dp"
-                android:gravity="center_vertical"
+                android:layout_height="@dimen/settings_height_line"
                 android:orientation="horizontal"
                 android:paddingStart="@dimen/settings_line_padding_start"
                 android:paddingEnd="@dimen/settings_line_padding_start">
 
-                <RelativeLayout
+                <ImageView
                     android:layout_width="wrap_content"
-                    android:layout_height="60dp">
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:src="@drawable/ic_cable_connection"
+                    android:tint="@color/primary"
+                    tools:ignore="ContentDescription" />
 
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:src="@drawable/ic_cable_connection"
-                        android:tint="@color/primary"
-                        tools:ignore="ContentDescription" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:orientation="vertical">
 
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-
-                        android:layout_centerVertical="true">
+                        android:layout_marginStart="40dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="40dp"
-                            android:text="Simultaneous transferts :" />
+                            android:text="Simultaneous transferts :"
+                            android:textSize="@dimen/settings_title_text_size" />
 
                         <TextView
                             android:id="@+id/settings_download_text_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="5dp"
-                            android:text="2" />
-
+                            android:text="2"
+                            android:textSize="@dimen/settings_title_text_size" />
 
                     </LinearLayout>
 
-
-                </RelativeLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="25dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginStart="40dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/settings_text_min_download"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text="1"
-                        tools:ignore="HardcodedText" />
+                        android:layout_marginStart="40dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <SeekBar
-                        android:id="@+id/settings_seek_bar"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:max="10"
-                        android:progress="2" />
+                        <TextView
+                            android:id="@+id/settings_text_min_download"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="1"
+                            android:textSize="@dimen/settings_title_text_size"
+                            tools:ignore="HardcodedText" />
 
-                    <TextView
-                        android:id="@+id/settings_text_max_download"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="2" />
+                        <SeekBar
+                            android:id="@+id/settings_seek_bar"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:max="10"
+                            android:progress="2" />
+
+                        <TextView
+                            android:id="@+id/settings_text_max_download"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2"
+                            android:textSize="@dimen/settings_title_text_size" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
             </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_existing_file_layout"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/settings_height_line"
+                android:background="@drawable/ripple_effect_primary"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/settings_line_padding_start"
+                android:paddingEnd="@dimen/settings_line_padding_start">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:src="@drawable/ic_settings"
+                    android:tint="@color/primary"
+                    tools:ignore="ContentDescription" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="40dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Default action on existing file"
+                        android:textSize="@dimen/settings_title_text_size" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Resume download"
+                        android:textSize="@dimen/settings_info_text_size" />
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
 
         </LinearLayout>
 
@@ -169,7 +212,7 @@
         <RelativeLayout
             android:id="@+id/settings_dark_theme_layout"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="@dimen/settings_height_line"
             android:background="@drawable/ripple_effect_primary"
             android:clickable="false"
             android:focusable="true"

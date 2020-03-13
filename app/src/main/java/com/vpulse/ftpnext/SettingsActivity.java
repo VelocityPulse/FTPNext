@@ -1,8 +1,8 @@
 package com.vpulse.ftpnext;
 
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
@@ -90,10 +90,14 @@ public class SettingsActivity extends AppCompatActivity {
                 mDownloadValueTextView.setText(String.valueOf(iProgress + 1));
                 PreferenceManager.setMaxTransfers(iProgress + 1);
             }
+
             @Override
-            public void onStartTrackingTouch(SeekBar iSeekBar) {}
+            public void onStartTrackingTouch(SeekBar iSeekBar) {
+            }
+
             @Override
-            public void onStopTrackingTouch(SeekBar iSeekBar) {}
+            public void onStopTrackingTouch(SeekBar iSeekBar) {
+            }
         });
 
     }
@@ -106,5 +110,13 @@ public class SettingsActivity extends AppCompatActivity {
                 return true;
         }
         return false;
+    }
+
+    private void showBottomSheetDialog() {
+
+    }
+
+    public void onClickTest(View view) {
+        showBottomSheetDialog();
     }
 }

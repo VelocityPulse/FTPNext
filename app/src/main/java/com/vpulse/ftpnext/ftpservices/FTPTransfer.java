@@ -525,7 +525,6 @@ public class FTPTransfer extends AFTPConnection {
 
         public abstract void onRightAccessFail(PendingFile iPendingFile);
 
-
         /**
          * Called when the file to download is already existing on the local storage.
          * You should call {@link #notifyExistingFileActionIsDefined} to make recover all the transfers
