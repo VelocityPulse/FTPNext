@@ -6,6 +6,7 @@ import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.core.NetworkManager;
+import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
@@ -215,6 +216,13 @@ public abstract class AFTPConnection {
             return;
         }
 
+        if (PreferenceManager.isWifiOnly() && !AppCore.getNetworkManager().isCurrentNetworkIsWifi()) {
+            LogManager.error(TAG, "Connection : Only allowed to connect in Wi-Fi");
+            if (onConnectionResult != null)
+                onConnectionResult.onFail(ErrorCodeDescription.ERROR_CONNECTION_ONLY_IN_WIFI,
+                        FTPReply.CANNOT_OPEN_DATA_CONNECTION);
+        }
+
         mConnectionThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -344,6 +352,7 @@ public abstract class AFTPConnection {
         ERROR_CONNECTION_TIMEOUT,
         ERROR_ALREADY_CONNECTED,
         ERROR_ALREADY_CONNECTING,
+        ERROR_CONNECTION_ONLY_IN_WIFI,
         ERROR_CONNECTION_INTERRUPTED,
         ERROR_DIRECTORY_ALREADY_EXISTING,
         ERROR_NO_INTERNET,

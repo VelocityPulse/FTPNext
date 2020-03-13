@@ -1,8 +1,9 @@
 package com.vpulse.ftpnext;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
@@ -74,7 +75,10 @@ public class SettingsActivity extends AppCompatActivity {
         mWifiOnlyLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                mWifiOnlySwitch
+                mWifiOnlySwitch.setChecked(!mWifiOnlySwitch.isChecked());
+                if (!mWifiOnlySwitch.isChecked()) {
+                    showWifiOnlySecurityDialog();
+                }
             }
         });
 //        mDarkThemeLayout.setOnClickListener(new View.OnClickListener() {
@@ -112,11 +116,26 @@ public class SettingsActivity extends AppCompatActivity {
         return false;
     }
 
-    private void showBottomSheetDialog() {
+    private void showWifiOnlySecurityDialog() {
+        AlertDialog.Builder lBuilder = new AlertDialog.Builder(this)
+                .setTitle("Disable Wi-Fi only") // TODO : Strings
+                .setMessage("Warning : That could cause additional costs")
+                .setPositiveButton("Disable", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface iDialog, int iWhich) {
+                        iDialog.dismiss();
+                        PreferenceManager.setWifiOnly(false);
+                    }
+                })
+                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface iDialog, int iWhich) {
+                        PreferenceManager.setWifiOnly(true);
+                        mWifiOnlySwitch.setChecked(true);
+                    }
+                });
 
+        lBuilder.create().show();
     }
 
-    public void onClickTest(View view) {
-        showBottomSheetDialog();
-    }
 }
