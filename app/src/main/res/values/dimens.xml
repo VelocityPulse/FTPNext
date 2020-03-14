@@ -22,14 +22,16 @@
     <dimen name="settings_title_padding_start">20dp</dimen>
     <dimen name="settings_title_padding_top">15dp</dimen>
     <dimen name="settings_title_padding_end">0dp</dimen>
-    <dimen name="settings_title_padding_bottom">15dp</dimen>
+    <dimen name="settings_title_padding_bottom">5dp</dimen>
 
     <dimen name="settings_title_text_size">17sp</dimen>
     <dimen name="settings_info_text_size">14sp</dimen>
 
     <dimen name="settings_height_line">70dp</dimen>
-    <dimen name="settings_line_padding_start">20dp</dimen>
-    <dimen name="settings_line_padding_end">20dp</dimen>
+    <dimen name="settings_line_horizontal_padding">20dp</dimen>
+    <dimen name="settings_line_navigation_horizontal_padding">10dp</dimen>
+    <dimen name="settings_line_text_padding_start">40dp</dimen>
+    <dimen name="settings_line_text_margin_end">45dp</dimen>
 
     <dimen name="existing_file_padding">20dp</dimen>
     <dimen name="existing_file_description_text_size">16sp</dimen>
