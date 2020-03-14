@@ -25,6 +25,7 @@ import com.vpulse.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.LogManager;
+import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
@@ -217,7 +218,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializePermissions() {
-//        if (AppCore.isTheFirstRun()) {
         String[] lPermissionsReadWrite = new String[]{
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE};
@@ -284,7 +284,6 @@ public class MainActivity extends AppCompatActivity {
 //            return;
 //        }
 
-
         final FTPServer lFTPServer = mFTPServerDAO.fetchById(iServerID);
         final ProgressDialog lLoadingAlertDialog;
         mIsBusy = true;
@@ -293,6 +292,10 @@ public class MainActivity extends AppCompatActivity {
             Utils.createErrorAlertDialog(this, "FTP Server cannot be found").show();
             return;
         }
+
+//        if (PreferenceManager.isWifiOnly() && !AppCore.getNetworkManager().isCurrentNetworkIsWifi()) {
+//            Utils.createErrorAlertDialog(this, "")
+//        }
 
         lLoadingAlertDialog = Utils.initProgressDialog(this, null);
         lLoadingAlertDialog.setContentView(R.layout.loading_icon);
