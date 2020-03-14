@@ -342,7 +342,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
             if (!AppCore.getNetworkManager().isNetworkAvailable()) {
                 mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
-            } else if (mFTPServices.isConnected()) {
+            } else if (!mFTPServices.isConnected()) {
                 mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
             } else if (!mIsShowingDownload)
                 mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, iIsUpdating);

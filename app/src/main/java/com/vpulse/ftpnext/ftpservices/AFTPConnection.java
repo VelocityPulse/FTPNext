@@ -216,12 +216,12 @@ public abstract class AFTPConnection {
             return;
         }
 
-        if (PreferenceManager.isWifiOnly() && !AppCore.getNetworkManager().isCurrentNetworkIsWifi()) {
-            LogManager.error(TAG, "Connection : Only allowed to connect in Wi-Fi");
-            if (onConnectionResult != null)
-                onConnectionResult.onFail(ErrorCodeDescription.ERROR_CONNECTION_ONLY_IN_WIFI,
-                        FTPReply.CANNOT_OPEN_DATA_CONNECTION);
-        }
+//        if (PreferenceManager.isWifiOnly() && !AppCore.getNetworkManager().isCurrentNetworkIsWifi()) {
+//            LogManager.error(TAG, "Connection : Only allowed to connect in Wi-Fi");
+//            if (onConnectionResult != null)
+//                onConnectionResult.onFail(ErrorCodeDescription.ERROR_CONNECTION_ONLY_IN_WIFI,
+//                        FTPReply.CANNOT_OPEN_DATA_CONNECTION);
+//        }
 
         mConnectionThread = new Thread(new Runnable() {
             @Override
