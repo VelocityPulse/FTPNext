@@ -2,6 +2,7 @@ package com.vpulse.ftpnext;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
@@ -14,31 +15,46 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.vpulse.ftpnext.core.AppInfo;
+import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.PreferenceManager;
 
 public class SettingsActivity extends AppCompatActivity {
 
     private final static String TAG = "SETTINGS ACTIVITY";
 
+    private final static int ACTIVITY_REQUEST_CODE_EXISTING_FILE = 10;
+
     private TextView mMinimumDownloadTextView;
     private TextView mMaximumDownloadTextView;
     private TextView mDownloadValueTextView;
+
+    private TextView mExistingFileTextView;
+
     private SeekBar mDownloadSeekBar;
     private Switch mWifiOnlySwitch;
     private Switch mDarkThemeSwitch;
 
+    private ViewGroup mExistingFileLayout;
     private ViewGroup mWifiOnlyLayout;
     private ViewGroup mDarkThemeLayout;
+    private boolean mIsAskingWifiOnlySecurity;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(@Nullable Bundle iSavedInstanceState) {
+        super.onCreate(iSavedInstanceState);
 
         setContentView(R.layout.activity_settings);
 
         initializeGUI();
         initializeViews();
         initializeViewsListeners();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        initializeViewsValue();
     }
 
     private void initializeGUI() {
@@ -54,13 +70,17 @@ public class SettingsActivity extends AppCompatActivity {
         mDownloadValueTextView = findViewById(R.id.settings_download_text_value);
         mDownloadSeekBar = findViewById(R.id.settings_seek_bar);
 
+        mExistingFileTextView = findViewById(R.id.settings_existing_file_text);
+
         mWifiOnlySwitch = findViewById(R.id.settings_wifi_only_switch);
         mDarkThemeSwitch = findViewById(R.id.settings_dark_theme_switch);
 
+        mExistingFileLayout = findViewById(R.id.settings_existing_file_layout);
         mWifiOnlyLayout = findViewById(R.id.settings_wifi_only_layout);
         mDarkThemeLayout = findViewById(R.id.settings_dark_theme_layout);
+    }
 
-        // Set values
+    private void initializeViewsValue() {
         mWifiOnlySwitch.setChecked(PreferenceManager.isWifiOnly());
         mDarkThemeSwitch.setChecked(PreferenceManager.isDarkTheme());
 
@@ -69,16 +89,28 @@ public class SettingsActivity extends AppCompatActivity {
         mDownloadValueTextView.setText(String.valueOf(PreferenceManager.getMaxTransfers()));
         mDownloadSeekBar.setProgress(PreferenceManager.getMaxTransfers() - 1);
         mDownloadSeekBar.setMax(AppInfo.MAXIMAL_SIMULTANEOUS_DOWNLOAD - 1);
+
+        mExistingFileTextView.setText(
+                ExistingFileAction.getTextResourceId(PreferenceManager.getExistingFileAction()));
     }
 
     private void initializeViewsListeners() {
         mWifiOnlyLayout.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View iV) {
+                if (mIsAskingWifiOnlySecurity)
+                    return;
                 mWifiOnlySwitch.setChecked(!mWifiOnlySwitch.isChecked());
                 if (!mWifiOnlySwitch.isChecked()) {
                     showWifiOnlySecurityDialog();
                 }
+            }
+        });
+
+        mExistingFileLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View iV) {
+                startActivityChooseExistingFile();
             }
         });
 //        mDarkThemeLayout.setOnClickListener(new View.OnClickListener() {
@@ -103,7 +135,6 @@ public class SettingsActivity extends AppCompatActivity {
             public void onStopTrackingTouch(SeekBar iSeekBar) {
             }
         });
-
     }
 
     @Override
@@ -117,10 +148,12 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void showWifiOnlySecurityDialog() {
+        mIsAskingWifiOnlySecurity = true;
+
         AlertDialog.Builder lBuilder = new AlertDialog.Builder(this)
                 .setTitle("Disable Wi-Fi only") // TODO : Strings
                 .setMessage("Warning : That could cause additional costs")
-                .setPositiveButton("Disable", new DialogInterface.OnClickListener() {
+                .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface iDialog, int iWhich) {
                         iDialog.dismiss();
@@ -130,6 +163,7 @@ public class SettingsActivity extends AppCompatActivity {
                 .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface iDialog, int iWhich) {
+                        mIsAskingWifiOnlySecurity = false;
                         PreferenceManager.setWifiOnly(true);
                         mWifiOnlySwitch.setChecked(true);
                     }
@@ -138,4 +172,9 @@ public class SettingsActivity extends AppCompatActivity {
         lBuilder.create().show();
     }
 
+    private void startActivityChooseExistingFile() {
+        Intent lIntent = new Intent(SettingsActivity.this, ExistingFileActionActivity.class);
+
+        startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE_EXISTING_FILE);
+    }
 }

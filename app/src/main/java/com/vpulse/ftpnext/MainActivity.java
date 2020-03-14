@@ -15,7 +15,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,7 +24,6 @@ import com.vpulse.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.LogManager;
-import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
@@ -136,7 +134,8 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    @Override public boolean onOptionsItemSelected(MenuItem iMenuItem) {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem iMenuItem) {
         int id = iMenuItem.getItemId();
         if (id == R.id.action_parameters) {
             startSettingsActivity();
@@ -173,8 +172,8 @@ public class MainActivity extends AppCompatActivity {
             public void onLongClick(final int iServerID) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 // TODO strings
-                builder.setTitle("title")
-                        .setItems(R.array.string_array_name, new DialogInterface.OnClickListener() {
+                builder.setTitle(mFTPServerDAO.fetchById(iServerID).getName())
+                        .setItems(R.array.edit_server_array, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface iDialog, int iWhich) {
                                 if (iWhich == 0) {
                                     new AlertDialog.Builder(MainActivity.this)

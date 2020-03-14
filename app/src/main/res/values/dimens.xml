@@ -1,22 +1,23 @@
 <resources>
     <!-- Default screen margins, per the Android Design guidelines. -->
-    <dimen name="activity_horizontal_margin">16dp</dimen>
-    <dimen name="activity_vertical_margin">16dp</dimen>
-    <dimen name="nav_header_vertical_spacing">8dp</dimen>
-    <dimen name="nav_header_height">176dp</dimen>
 
     <dimen name="sub_floating_button_margin">27dp</dimen>
     <dimen name="sub_floating_button_size">45dp</dimen>
     <dimen name="floating_button_margin">22dp</dimen>
     <dimen name="floating_button_size">56dp</dimen>
 
+    <dimen name="arrow_navigate_next_size">28dp</dimen>
+
+    <dimen name="activity_main_description_text_size">20sp</dimen>
+
     <dimen name="sub_fab_floor_1">67dp</dimen>
     <dimen name="sub_fab_floor_2">127dp</dimen>
     <dimen name="sub_fab_floor_3">187dp</dimen>
 
-    <dimen name="list_item_height">70dp</dimen>
-    <dimen name="list_navigation_item_height">75dp</dimen>
-    <dimen name="text_input_layout_vertical_margin">6dp</dimen>
+    <dimen name="main_list_item_line_height">70dp</dimen>
+    <dimen name="navigation_list_item_height">75dp</dimen>
+
+    <dimen name="configure_server_line_vertical_margin">6dp</dimen>
 
     <dimen name="settings_title_padding_start">20dp</dimen>
     <dimen name="settings_title_padding_top">15dp</dimen>
@@ -30,7 +31,9 @@
     <dimen name="settings_line_padding_start">20dp</dimen>
     <dimen name="settings_line_padding_end">20dp</dimen>
 
-
+    <dimen name="existing_file_padding">20dp</dimen>
+    <dimen name="existing_file_description_text_size">16sp</dimen>
+    <dimen name="existing_file_radio_button_space">12dp</dimen>
 
     <dimen name="navigation_recycler_left_section_shift">32dp</dimen>
 </resources>

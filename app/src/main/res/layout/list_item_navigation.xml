@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/navigation_recycler_item"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/list_navigation_item_height"
+    android:layout_height="@dimen/navigation_list_item_height"
     android:background="@drawable/ripple_effect_primary"
     android:baselineAligned="false"
     android:clickable="true"

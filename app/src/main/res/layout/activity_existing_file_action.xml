@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/existing_file_padding"
+        android:layout_marginTop="@dimen/existing_file_padding"
+        android:layout_marginEnd="@dimen/existing_file_padding"
+        android:layout_marginBottom="@dimen/existing_file_radio_button_space"
+        android:text="Choose your default action when a file to download is already present on your local device"
+        android:textColor="@android:color/black"
+        android:textSize="@dimen/activity_main_description_text_size" />
+
+    <LinearLayout
+        android:onClick="onClickAskEachTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ripple_effect_primary"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingTop="@dimen/existing_file_radio_button_space"
+        android:paddingBottom="@dimen/existing_file_radio_button_space">
+
+        <RadioButton
+            android:id="@+id/existing_file_radio_ask_each_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/existing_file_padding"
+            android:layout_marginEnd="@dimen/existing_file_padding"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:paddingStart="@dimen/existing_file_padding"
+            android:paddingEnd="0dp"
+            android:text="@string/existing_file_ask_each_time"
+            android:textColor="@color/androidColorGray"
+            android:textSize="@dimen/existing_file_description_text_size" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:onClick="onClickReplaceFile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ripple_effect_primary"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingTop="@dimen/existing_file_radio_button_space"
+        android:paddingBottom="@dimen/existing_file_radio_button_space">
+
+        <RadioButton
+            android:id="@+id/existing_file_radio_replace_file"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/existing_file_padding"
+            android:layout_marginEnd="@dimen/existing_file_padding"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:paddingStart="@dimen/existing_file_padding"
+            android:paddingEnd="0dp"
+            android:text="@string/existing_file_replace_file"
+            android:textColor="@color/androidColorGray"
+            android:textSize="@dimen/existing_file_description_text_size" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:onClick="onClickResumeDownload"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ripple_effect_primary"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingTop="@dimen/existing_file_radio_button_space"
+        android:paddingBottom="@dimen/existing_file_radio_button_space">
+
+        <RadioButton
+            android:id="@+id/existing_file_radio_resume"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/existing_file_padding"
+            android:layout_marginEnd="@dimen/existing_file_padding"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:paddingStart="@dimen/existing_file_padding"
+            android:paddingEnd="0dp"
+            android:text="@string/existing_file_resume_download"
+            android:textColor="@color/androidColorGray"
+            android:textSize="@dimen/existing_file_description_text_size" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:onClick="onClickSizesDiff"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ripple_effect_primary"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingTop="@dimen/existing_file_radio_button_space"
+        android:paddingBottom="@dimen/existing_file_radio_button_space">
+
+        <RadioButton
+            android:id="@+id/existing_file_radio_sizes_diff"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/existing_file_padding"
+            android:layout_marginEnd="@dimen/existing_file_padding"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:paddingStart="@dimen/existing_file_padding"
+            android:paddingEnd="0dp"
+            android:text="@string/existing_file_if_sizes_diff"
+            android:textColor="@color/androidColorGray"
+            android:textSize="@dimen/existing_file_description_text_size" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:onClick="onClickIgnore"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ripple_effect_primary"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingTop="@dimen/existing_file_radio_button_space"
+        android:paddingBottom="@dimen/existing_file_radio_button_space">
+
+        <RadioButton
+            android:id="@+id/existing_file_radio_ignore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/existing_file_padding"
+            android:layout_marginEnd="@dimen/existing_file_padding"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:paddingStart="@dimen/existing_file_padding"
+            android:paddingEnd="0dp"
+            android:text="@string/existing_file_ignore"
+            android:textColor="@color/androidColorGray"
+            android:textSize="@dimen/existing_file_description_text_size" />
+
+    </LinearLayout>
+
+    <!--        android:onClick="onClickMoreRecent"-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.5"
+        android:background="@drawable/ripple_effect_primary"
+        android:clickable="false"
+        android:focusable="false"
+        android:paddingTop="@dimen/existing_file_radio_button_space"
+        android:paddingBottom="@dimen/existing_file_radio_button_space">
+
+        <RadioButton
+            android:id="@+id/existing_file_radio_more_recent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/existing_file_padding"
+            android:layout_marginEnd="@dimen/existing_file_padding"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:paddingStart="@dimen/existing_file_padding"
+            android:paddingEnd="0dp"
+            android:text="@string/existing_file_if_more_recent"
+            android:textColor="@color/androidColorGray"
+            android:textSize="@dimen/existing_file_description_text_size" />
+
+    </LinearLayout>
+
+<!--        android:onClick="onClickSizesDiffOrMoreRecent"-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.5"
+        android:background="@drawable/ripple_effect_primary"
+        android:clickable="false"
+        android:focusable="false"
+        android:paddingTop="@dimen/existing_file_radio_button_space"
+        android:paddingBottom="@dimen/existing_file_radio_button_space">
+
+        <RadioButton
+            android:id="@+id/existing_file_radio_sizes_diff_or_more_recent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/existing_file_padding"
+            android:layout_marginEnd="@dimen/existing_file_padding"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:paddingStart="@dimen/existing_file_padding"
+            android:paddingEnd="0dp"
+            android:text="@string/existing_file_if_sizes_are_diff_or_more_recent"
+            android:textColor="@color/androidColorGray"
+            android:textSize="@dimen/existing_file_description_text_size" />
+
+    </LinearLayout>
+
+<!--        android:onClick="onClickRename"-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.5"
+        android:background="@drawable/ripple_effect_primary"
+        android:clickable="false"
+        android:focusable="false"
+        android:paddingTop="@dimen/existing_file_radio_button_space"
+        android:paddingBottom="@dimen/existing_file_radio_button_space">
+
+        <RadioButton
+            android:id="@+id/existing_file_radio_rename"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/existing_file_padding"
+            android:layout_marginEnd="@dimen/existing_file_padding"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:paddingStart="@dimen/existing_file_padding"
+            android:paddingEnd="0dp"
+            android:text="@string/existing_file_rename_file"
+            android:textColor="@color/androidColorGray"
+            android:textSize="@dimen/existing_file_description_text_size" />
+
+    </LinearLayout>
+
+
+</LinearLayout>

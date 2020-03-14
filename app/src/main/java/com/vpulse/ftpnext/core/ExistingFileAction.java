@@ -1,5 +1,7 @@
 package com.vpulse.ftpnext.core;
 
+import com.vpulse.ftpnext.R;
+
 public enum ExistingFileAction {
 
     NOT_DEFINED(0),
@@ -24,10 +26,6 @@ public enum ExistingFileAction {
         this.mValue = iValue;
     }
 
-    public int getValue() {
-        return mValue;
-    }
-
     public static ExistingFileAction getValue(int iValue) {
         switch (iValue) {
             case 1:
@@ -47,5 +45,35 @@ public enum ExistingFileAction {
             default:
                 return ExistingFileAction.NOT_DEFINED;
         }
+    }
+
+    public static int getTextResourceId(int iValue) {
+        return getTextResourceId(getValue(iValue));
+    }
+
+    public static int getTextResourceId(ExistingFileAction iValue) {
+        switch (iValue) {
+            case REPLACE_FILE:
+                return R.string.existing_file_replace_file;
+            case REPLACE_IF_FILE_IS_MORE_RECENT:
+                return R.string.existing_file_if_more_recent;
+            case REPLACE_IF_SIZE_IS_DIFFERENT:
+                return R.string.existing_file_if_sizes_diff;
+            case REPLACE_IF_SIZE_IS_DIFFERENT_OR_FILE_IS_MORE_RECENT:
+                return R.string.existing_file_if_sizes_are_diff_or_more_recent;
+            case RESUME_FILE_TRANSFER:
+                return R.string.existing_file_resume_download;
+            case RENAME_FILE:
+                return R.string.existing_file_rename_file;
+            case IGNORE:
+                return R.string.existing_file_ignore;
+            case NOT_DEFINED:
+            default:
+                return R.string.existing_file_ask_each_time;
+        }
+    }
+
+    public int getValue() {
+        return mValue;
     }
 }

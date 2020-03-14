@@ -44,6 +44,12 @@
             android:label="@string/settings"
             android:theme="@style/AppTheme.CustomActionBar"
             android:windowSoftInputMode="adjustNothing" />
+        <activity
+            android:name=".ExistingFileActionActivity"
+            android:configChanges="orientation|screenLayout|screenSize"
+            android:label="@string/existing_files"
+            android:theme="@style/AppTheme.CustomActionBar"
+            android:windowSoftInputMode="adjustNothing" />
     </application>
 
 </manifest>

@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
         android:gravity="center"
-        android:text="Settings"
+        android:text="@string/existing_files"
         android:textColor="#FFFFFF" />
 
 </LinearLayout>
