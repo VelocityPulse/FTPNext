@@ -191,7 +191,7 @@ public class FTPServices extends AFTPConnection {
                     if (mDirectoryFetchThread.isInterrupted())
                         throw new InterruptedException();
 
-                    mCurrentDirectory = lTargetDirectory;
+                    updateWorkingDirectory(lTargetDirectory.getName());
                     mFTPClient.enterLocalActiveMode();
 
                     if (mDirectoryFetchThread.isInterrupted())
@@ -207,7 +207,6 @@ public class FTPServices extends AFTPConnection {
                     iOnFetchDirectoryResult.onSuccess(lFiles);
                 } catch (InterruptedException iE) {
                     updateWorkingDirectory(lLeavingDirectory.getName());
-                    mCurrentDirectory = lLeavingDirectory;
                     iOnFetchDirectoryResult.onInterrupt();
                 } catch (IOException iE) {
                     iE.printStackTrace();

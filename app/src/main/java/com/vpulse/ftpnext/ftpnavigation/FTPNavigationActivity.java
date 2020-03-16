@@ -305,10 +305,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         lUriList.add(lCD.getItemAt(i).getUri());
                 } else
                     lUriList.add(iData.getData());
-                // TODO Send data to upload system
+                if (lUriList.size() > 0)
+                    mNavigationTransfer.
             }
         }
-
     }
 
     private void initialize() {
@@ -1061,6 +1061,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 })
                 .create();
         return mErrorAlertDialog;
+    }
+
+    protected String getCurrentDirectoryPath() {
+        String oCurrentDirectoryPath = mFTPServices.getCurrentDirectory().getName();
+        if (oCurrentDirectoryPath.endsWith("/"))
+            oCurrentDirectoryPath += "/";
+
+        return oCurrentDirectoryPath;
     }
 
     protected void dismissAllDialogs() {

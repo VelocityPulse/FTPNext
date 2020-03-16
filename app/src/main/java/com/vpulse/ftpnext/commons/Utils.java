@@ -26,7 +26,7 @@ public class Utils {
         }
     }
 
-    public static String getFileNameOfPath(String lPath) {
+    public static String getFileNameFromPath(String lPath) {
         return lPath.substring(lPath.lastIndexOf(File.separator));
     }
 
