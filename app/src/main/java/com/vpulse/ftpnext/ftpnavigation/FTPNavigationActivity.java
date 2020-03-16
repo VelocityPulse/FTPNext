@@ -56,7 +56,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationFetchDir.LARGE_DIRECTORY_SIZE;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationFetchDir.LARGE_DIRECTORY_SIZE;
 
 public class FTPNavigationActivity extends AppCompatActivity {
 
@@ -117,9 +117,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private boolean mIsRunning;
 
-    private FTPNavigationDownload mFTPNavigationDownload;
-    private FTPNavigationFetchDir mFTPNavigationFetchDir;
-    private FTPNavigationDelete mFTPNavigationDelete;
+    private NavigationTransfer mNavigationTransfer;
+    private NavigationFetchDir mNavigationFetchDir;
+    private NavigationDelete mNavigationDelete;
 
     private OnPermissionAnswer mOnPermissionAnswer;
     private FrameLayout mRecyclerSection;
@@ -150,9 +150,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
         LogManager.info(TAG, "Was on pause :" + mWasOnPause);
         if (mWasOnPause)
             retrieveFTPServices(true);
-        mFTPNavigationDelete.onResume();
-        mFTPNavigationFetchDir.onResume();
-        mFTPNavigationDownload.onResume();
+        mNavigationDelete.onResume();
+        mNavigationFetchDir.onResume();
+        mNavigationTransfer.onResume();
     }
 
     @Override
@@ -233,7 +233,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 return true;
             case R.id.action_delete:
                 if (mCurrentAdapter.isInSelectionMode())
-                    mFTPNavigationDelete.createDialogDeleteSelection();
+                    mNavigationDelete.createDialogDeleteSelection();
                 else
                     mCurrentAdapter.setSelectionMode(true);
                 return true;
@@ -336,13 +336,13 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mDirectoryPath = lBundle.getString(KEY_DIRECTORY_PATH, ROOT_DIRECTORY);
 
         // Download procedures
-        mFTPNavigationDownload = new FTPNavigationDownload(this, mHandler);
+        mNavigationTransfer = new NavigationTransfer(this, mHandler);
 
         // Fetch directory procedures
-        mFTPNavigationFetchDir = new FTPNavigationFetchDir(this, mHandler);
+        mNavigationFetchDir = new NavigationFetchDir(this, mHandler);
 
         // Delete procedures
-        mFTPNavigationDelete = new FTPNavigationDelete(this, mHandler);
+        mNavigationDelete = new NavigationDelete(this, mHandler);
 
         // Bad connection, Large dir, Reconnect dialog
         initializeDialogs();
@@ -507,14 +507,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     case NAVIGATION_ORDER_FETCH_DIRECTORY:
                         LogManager.info(TAG, "Handle : NAVIGATION_ORDER_FETCH_DIRECTORY");
                         boolean lIsUpdating = (boolean) iMsg.obj;
-                        mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, lIsUpdating);
+                        mNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, lIsUpdating);
                         break;
 
                     case NAVIGATION_ORDER_REFRESH_DATA:
                         LogManager.info(TAG, "Handle : NAVIGATION_ORDER_REFRESH_DATA");
                         if (!mFTPServices.isReconnecting() && mIsDirectoryFetchFinished) {
                             mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(true);
-                            mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath, false, true);
+                            mNavigationFetchDir.runFetchProcedures(mDirectoryPath, false, true);
                         }
                         break;
 
@@ -522,12 +522,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_SUCCESS");
                         dismissAllDialogsExcepted(mDownloadingDialog, mChooseExistingFileAction);
                         if (!mIsShowingDownload)
-                            mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
+                            mNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
                         break;
 
                     case NAVIGATION_MESSAGE_CONNECTION_SUCCESS:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CONNECTION_SUCCESS");
-                        mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
+                        mNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
                         break;
 
                     case NAVIGATION_MESSAGE_CONNECTION_FAIL:
@@ -840,7 +840,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 //                                || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
                         lNewAdapter.setItemsClickable(false);
                         mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
-                        mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath + "/" + iFTPFile.getName(), mIsLargeDirectory, false);
+                        mNavigationFetchDir.runFetchProcedures(mDirectoryPath + "/" + iFTPFile.getName(), mIsLargeDirectory, false);
 //                        } else
 //                            Utils.createErrorAlertDialog(FTPNavigationActivity.this, "You don't have enough permission");
                     } else {
@@ -1043,7 +1043,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private void onDownloadClicked() {
         if (mCurrentAdapter.isInSelectionMode())
-            mFTPNavigationDownload.createDialogDownloadSelection();
+            mNavigationTransfer.createDialogDownloadSelection();
         else
             createDialogError("Select something.").show();
     }

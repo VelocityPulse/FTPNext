@@ -18,7 +18,7 @@ import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS;
 
-public class FTPNavigationFetchDir {
+public class NavigationFetchDir {
 
     protected static final int LARGE_DIRECTORY_SIZE = 30000;
 
@@ -29,7 +29,7 @@ public class FTPNavigationFetchDir {
     private final FTPNavigationActivity mContextActivity;
     private final Handler mHandler;
 
-    protected FTPNavigationFetchDir(FTPNavigationActivity iContextActivity, Handler iHandler) {
+    protected NavigationFetchDir(FTPNavigationActivity iContextActivity, Handler iHandler) {
         mContextActivity = iContextActivity;
         mHandler = iHandler;
     }

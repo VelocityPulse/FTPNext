@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
 
-public class FTPNavigationDownload {
+public class NavigationTransfer {
 
     private final static String TAG = "FTP NAVIGATION DOWNLOAD";
 
@@ -48,7 +48,7 @@ public class FTPNavigationDownload {
     private ArrayList<FTPTransfer> mFTPTransferList;
     private PendingFile[] mPendingFiles;
 
-    protected FTPNavigationDownload(FTPNavigationActivity iContextActivity, Handler iHandler) {
+    protected NavigationTransfer(FTPNavigationActivity iContextActivity, Handler iHandler) {
         mHandler = iHandler;
         mContextActivity = iContextActivity;
         mFTPTransferList = new ArrayList<>();

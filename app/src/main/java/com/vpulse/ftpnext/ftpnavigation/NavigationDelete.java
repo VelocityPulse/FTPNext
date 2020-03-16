@@ -16,14 +16,14 @@ import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_REFRESH_DATA;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
 
-public class FTPNavigationDelete {
+public class NavigationDelete {
 
     private final static String TAG = "FTP NAVIGATION DELETE";
 
     private final FTPNavigationActivity mContextActivity;
     private final Handler mHandler;
 
-    protected FTPNavigationDelete(FTPNavigationActivity iContextActivity, Handler iHandler) {
+    protected NavigationDelete(FTPNavigationActivity iContextActivity, Handler iHandler) {
         mContextActivity = iContextActivity;
         mHandler = iHandler;
     }
