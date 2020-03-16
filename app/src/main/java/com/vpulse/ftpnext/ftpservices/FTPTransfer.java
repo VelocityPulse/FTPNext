@@ -214,9 +214,8 @@ public class FTPTransfer extends AFTPConnection {
                     mOnTransferListener.onConnected(mCandidate);
 
                     // ---------------- INIT NAMES
-                    final String lLocalPath = mFTPServer.getAbsolutePath() + "/" +
-                            mCandidate.getLocalEnclosingName() + mCandidate.getName();
-                    final String lRemotePath = mCandidate.getPath();
+                    final String lLocalPath = mCandidate.getLocalPath() + mCandidate.getName();
+                    final String lRemotePath = mCandidate.getRemotePath() + mCandidate.getName();
 
                     LogManager.info(TAG, "\nGoing to write on the local path :\n\t" +
                             lLocalPath +
@@ -227,11 +226,9 @@ public class FTPTransfer extends AFTPConnection {
                     mFTPClient.enterLocalPassiveMode();
                     FTPFile lFTPFile;
                     try {
-                        lFTPFile = mFTPClient.mlistFile(mCandidate.getPath());
+                        lFTPFile = mFTPClient.mlistFile(lRemotePath);
                     } catch (Exception iE) {
                         iE.printStackTrace();
-//                        mCandidate.setIsAnError(true);
-//                        mOnTransferListener.onFail(mCandidate);
                         Utils.sleep(USER_WAIT_BREAK); // Break the while true speed
                         continue;
                     }
@@ -243,8 +240,7 @@ public class FTPTransfer extends AFTPConnection {
                     }
 
                     // ---------------- INIT LOCAL FILE
-                    File lLocalFile = new File(mFTPServer.getAbsolutePath() + "/" +
-                            mCandidate.getLocalEnclosingName() + mCandidate.getName());
+                    File lLocalFile = new File(lLocalPath);
                     try {
 //                        if (lLocalFile.exists())
 //                            lLocalFile.delete(); // TODO : Debug, remove this
@@ -338,7 +334,7 @@ public class FTPTransfer extends AFTPConnection {
                             mCandidate.setProgress((int) lLocalFile.length());
                             mFTPClient.setRestartOffset(mCandidate.getProgress());
 
-                            lRemoteStream = mFTPClient.retrieveFileStream(mCandidate.getPath());
+                            lRemoteStream = mFTPClient.retrieveFileStream(lRemotePath);
                             if (lRemoteStream == null) {
                                 LogManager.error(TAG, "Remote stream null");
                                 mCandidate.setIsAnError(true);

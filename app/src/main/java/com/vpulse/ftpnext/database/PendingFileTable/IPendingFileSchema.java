@@ -10,21 +10,21 @@ public interface IPendingFileSchema {
     String COLUMN_LOAD_DIRECTION = "column_load_direction";
     String COLUMN_STARTED = "column_started";
     String COLUMN_NAME = "column_name";
-    String COLUMN_PATH = "column_path";
-    String COLUMN_ENCLOSING_NAME = "column_enclosing_name";
+    String COLUMN_REMOTE_PATH = "column_remote_path";
+    String COLUMN_LOCAL_PATH = "column_local_path";
     String COLUMN_FINISHED = "column_finished";
     String COLUMN_PROGRESS = "column_progress";
     String COLUMN_EXISTING_FILE_ACTION = "column_existing_file_action";
 
     //Columns list
-    String[] COLUMNS = new String[]{
+    String[] COLUMN_ARRAY = new String[]{
             COLUMN_DATABASE_ID,
             COLUMN_SERVER_ID,
             COLUMN_LOAD_DIRECTION,
             COLUMN_STARTED,
             COLUMN_NAME,
-            COLUMN_PATH,
-            COLUMN_ENCLOSING_NAME,
+            COLUMN_REMOTE_PATH,
+            COLUMN_LOCAL_PATH,
             COLUMN_FINISHED,
             COLUMN_PROGRESS,
             COLUMN_EXISTING_FILE_ACTION
@@ -37,8 +37,8 @@ public interface IPendingFileSchema {
             + COLUMN_LOAD_DIRECTION + " INTEGER, "
             + COLUMN_STARTED + " INTEGER, "
             + COLUMN_NAME + " TEXT, "
-            + COLUMN_PATH + " TEXT, "
-            + COLUMN_ENCLOSING_NAME + " TEXT, "
+            + COLUMN_REMOTE_PATH + " TEXT, "
+            + COLUMN_LOCAL_PATH + " TEXT, "
             + COLUMN_FINISHED + " INTEGER, "
             + COLUMN_PROGRESS + " INTEGER, "
             + COLUMN_EXISTING_FILE_ACTION + " INTEGER"

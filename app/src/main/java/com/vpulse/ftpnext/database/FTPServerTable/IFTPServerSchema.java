@@ -17,7 +17,7 @@ public interface IFTPServerSchema {
     String COLUMN_TYPE = "column_type";
 
     //Columns list
-    String[] COLUMNS = new String[]{
+    String[] COLUMN_ARRAY = new String[]{
             COLUMN_DATABASE_ID,
             COLUMN_NAME,
             COLUMN_USER,

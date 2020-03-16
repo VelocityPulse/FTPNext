@@ -15,8 +15,8 @@ public class PendingFile extends ABaseTable {
     private LoadDirection mLoadDirection;
     private boolean mStarted;
     private String mName;
-    private String mPath;
-    private String mLocalEnclosingName;
+    private String mRemotePath;
+    private String mLocalPath;
     private boolean mFinished;
     private int mProgress;
     private ExistingFileAction mExistingFileAction;
@@ -32,21 +32,15 @@ public class PendingFile extends ABaseTable {
     }
 
     public PendingFile(int iServerId, LoadDirection iLoadDirection, boolean iStarted,
-                       String iName, String iPath, String iLocalEnclosureName,
+                       String iName, String iRemotePath, String iLocalPath,
                        ExistingFileAction iExistingFileAction) {
         mServerId = iServerId;
         mLoadDirection = iLoadDirection;
         mStarted = iStarted;
         mName = iName;
-        mPath = iPath;
+        mRemotePath = iRemotePath;
+        mLocalPath = iLocalPath;
         mExistingFileAction = iExistingFileAction;
-        if (iLocalEnclosureName == null)
-            mLocalEnclosingName = "";
-        else {
-            mLocalEnclosingName = iLocalEnclosureName;
-            if (!mLocalEnclosingName.endsWith("/"))
-                mLocalEnclosingName += "/";
-        }
     }
 
     public int getServerId() {
@@ -85,21 +79,21 @@ public class PendingFile extends ABaseTable {
         return this;
     }
 
-    public String getPath() {
-        return mPath;
+    public String getRemotePath() {
+        return mRemotePath;
     }
 
-    public PendingFile setPath(String iPath) {
-        mPath = iPath;
+    public PendingFile setRemotePath(String iRemotePath) {
+        mRemotePath = iRemotePath;
         return this;
     }
 
-    public String getLocalEnclosingName() {
-        return mLocalEnclosingName;
+    public String getLocalPath() {
+        return mLocalPath;
     }
 
-    public PendingFile setEnclosureName(String iEnclosureName) {
-        mLocalEnclosingName = iEnclosureName;
+    public PendingFile setLocalPath(String iEnclosureName) {
+        mLocalPath = iEnclosureName;
         return this;
     }
 
@@ -185,8 +179,8 @@ public class PendingFile extends ABaseTable {
                 "\nServerId: " + mServerId +
                 "\nLoadDirection: " + mLoadDirection.toString() +
                 "\nStarted: " + mStarted +
-                "\nPath:\t\t\t" + mPath +
-                "\nEnclosureName:\t" + mLocalEnclosingName +
+                "\nRemote path:\t\t\t" + mRemotePath +
+                "\nLocal path:\t" + mLocalPath +
                 "\nFinished: " + mFinished +
                 "\nmProgress: " + mProgress;
         return oToString;
@@ -203,8 +197,8 @@ public class PendingFile extends ABaseTable {
         mLoadDirection = iPendingFile.mLoadDirection;
         mStarted = iPendingFile.mStarted;
         mName = iPendingFile.mName;
-        mPath = iPendingFile.mPath;
-        mLocalEnclosingName = iPendingFile.mLocalEnclosingName;
+        mRemotePath = iPendingFile.mRemotePath;
+        mLocalPath = iPendingFile.mLocalPath;
         mFinished = iPendingFile.mFinished;
         mProgress = iPendingFile.mProgress;
     }

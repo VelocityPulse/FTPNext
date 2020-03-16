@@ -201,8 +201,6 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
         mAbsolutePath = iEditedFTPServer.getAbsolutePath();
         mFolderName = iEditedFTPServer.getFolderName();
 
-        LogManager.info(TAG, iEditedFTPServer.getAbsolutePath());
-        File f = new File(iEditedFTPServer.getAbsolutePath());
         mFolderNameEditText.setText(iEditedFTPServer.getFolderName());
 
         switch (iEditedFTPServer.getFTPType()) {
@@ -222,7 +220,7 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
         lFTPServer.setUser(mUserNameEditText.getText().toString().trim());
         lFTPServer.setPass(mPasswordEditText.getText().toString());
         String lPort = mPortEditText.getText().toString();
-        lFTPServer.setPort(lPort.equals("") ? 0 : Integer.valueOf(lPort));
+        lFTPServer.setPort(lPort.equals("") ? 0 : Integer.parseInt(lPort));
         lFTPServer.setFolderName(mFolderName);
         lFTPServer.setAbsolutePath(mAbsolutePath);
         lFTPServer.setFTPType(getRadioGroupType());
@@ -332,10 +330,15 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
                 Uri lTreeUri = iResultData.getData();
                 DocumentFile lPickedDir = DocumentFile.fromTreeUri(this, lTreeUri);
 
-                LogManager.error(TAG, lPickedDir.getName());
-                LogManager.error(TAG, FileUtils.getFullPathFromTreeUri(lTreeUri, this));
+                LogManager.info(TAG, lPickedDir.getName());
+                LogManager.info(TAG, FileUtils.getFullPathFromTreeUri(lTreeUri, this));
+
                 mFolderName = lPickedDir.getName();
                 mAbsolutePath = FileUtils.getFullPathFromTreeUri(lTreeUri, this);
+
+                if (!mAbsolutePath.endsWith("/"))
+                    mAbsolutePath += "/";
+
                 mFolderNameEditText.setText(mAbsolutePath);
             }
         }

@@ -100,15 +100,12 @@ public class FTPServer extends ABaseTable {
     }
 
     public boolean isEmpty() {
-        if (Utils.isNullOrEmpty(mName) &&
+        return Utils.isNullOrEmpty(mName) &&
                 Utils.isNullOrEmpty(mServer) &&
                 Utils.isNullOrEmpty(mUser) &&
                 Utils.isNullOrEmpty(mPass) &&
                 Utils.isNullOrEmpty(mFolderName) &&
-                Utils.isNullOrEmpty(mAbsolutePath)) {
-            return true;
-        }
-        return false;
+                Utils.isNullOrEmpty(mAbsolutePath);
     }
 
     public void updateContent(FTPServer iFTPServer) {

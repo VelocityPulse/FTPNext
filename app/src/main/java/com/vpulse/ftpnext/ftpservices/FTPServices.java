@@ -372,8 +372,7 @@ public class FTPServices extends AFTPConnection {
                         if (!lReply) {
                             FTPLogManager.pushErrorLog("Delete \"" + iFTPFile.getName() + "\"");
                             iOnDeleteListener.onFail(iFTPFile);
-                        }
-                        else
+                        } else
                             FTPLogManager.pushSuccessLog("Delete \"" + iFTPFile.getName() + "\"");
 
                     } else if (!mByPassDeletingRightErrors) {
@@ -461,7 +460,10 @@ public class FTPServices extends AFTPConnection {
         LogManager.info(TAG, "Create pending files");
         final List<PendingFile> oPendingFiles = new ArrayList<>();
         // Removing "/" if we are at the root
-        final String mCurrentLocation = "/".equals(mCurrentDirectory.getName()) ? "" : mCurrentDirectory.getName();
+        String mTmp = "/".equals(mCurrentDirectory.getName()) ? "" : mCurrentDirectory.getName();
+        if (!mTmp.endsWith("/"))
+            mTmp += "/";
+        final String mCurrentLocation = mTmp;
 
         mIndexingFilesThread = new Thread(new Runnable() {
 
@@ -492,8 +494,8 @@ public class FTPServices extends AFTPConnection {
                                 iLoadDirection,
                                 false,
                                 lItem.getName(),
-                                mCurrentLocation + "/" + lItem.getName(),
-                                null,
+                                mCurrentLocation,
+                                mFTPServer.getAbsolutePath(),
                                 PreferenceManager.getExistingFileAction()
                         );
                         FTPLogManager.pushSuccessLog("Indexing \"" + lItem.getName() + "\"");
@@ -518,7 +520,7 @@ public class FTPServices extends AFTPConnection {
                 if (mIndexingFilesThread.isInterrupted())
                     return;
 
-                iIndexingListener.onFetchingFolder(mCurrentLocation + "/" + iRelativePathToDirectory + "/");
+                iIndexingListener.onFetchingFolder(mCurrentLocation + iRelativePathToDirectory + "/");
 
                 mFTPClient.enterLocalPassiveMode();
                 while (lFilesOfFolder == null) {
@@ -529,17 +531,16 @@ public class FTPServices extends AFTPConnection {
                         // Necessary to use iRelativePathToDirectory because iDirectory always represents
                         // the directory name, and not his own sub path
 
-                        lFilesOfFolder = mFTPClient.mlistDir(mCurrentLocation + "/" + iRelativePathToDirectory);
+                        lFilesOfFolder = mFTPClient.mlistDir(mCurrentLocation + iRelativePathToDirectory);
 
                         if (mIndexingFilesThread.isInterrupted())
                             return;
                     } catch (Exception iE) {
+                        iE.printStackTrace();
                         if (!isLocallyConnected() || AppCore.getNetworkManager().isNetworkAvailable()) {
                             mIndexingFilesThread.interrupt();
                             return;
                         }
-                        iE.printStackTrace();
-//                      return;
                     }
                 }
                 mFTPClient.enterLocalActiveMode();
@@ -559,8 +560,8 @@ public class FTPServices extends AFTPConnection {
                                 iLoadDirection,
                                 false,
                                 lItem.getName(),
-                                mCurrentLocation + "/" + iRelativePathToDirectory + "/" + lItem.getName(),
-                                iRelativePathToDirectory,
+                                mCurrentLocation + iRelativePathToDirectory + "/",
+                                mFTPServer.getAbsolutePath() + iRelativePathToDirectory,
                                 PreferenceManager.getExistingFileAction()
                         );
                         FTPLogManager.pushSuccessLog("Indexing \"" + lItem.getName() + "\"");

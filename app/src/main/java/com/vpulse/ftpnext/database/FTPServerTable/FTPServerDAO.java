@@ -8,12 +8,15 @@ import com.vpulse.ftpnext.core.FTPCharacterEncoding;
 import com.vpulse.ftpnext.core.FTPType;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.ADataAccessObject;
+import com.vpulse.ftpnext.ftpservices.FTPServices;
 
 import java.util.List;
 
 public class FTPServerDAO extends ADataAccessObject<FTPServer> implements IFTPServerSchema {
 
     private static final String TAG = "DATABASE : FTP Host DAO";
+
+    private static final int VERSION_UPDATE_ABSOLUTE_PATH_VALUE = 3;
 
     public FTPServerDAO(SQLiteDatabase iDataBase) {
         super(iDataBase);
@@ -26,7 +29,7 @@ public class FTPServerDAO extends ADataAccessObject<FTPServer> implements IFTPSe
         final String lSelection = COLUMN_NAME + " = ?";
         FTPServer lObject = null;
 
-        mCursor = super.query(TABLE, COLUMNS, lSelection, lSelectionArgs, COLUMN_NAME);
+        mCursor = super.query(TABLE, COLUMN_ARRAY, lSelection, lSelectionArgs, COLUMN_NAME);
         if (mCursor != null) {
             mCursor.moveToFirst();
             while (!mCursor.isAfterLast()) {
@@ -40,12 +43,12 @@ public class FTPServerDAO extends ADataAccessObject<FTPServer> implements IFTPSe
 
     @Override
     public FTPServer fetchById(int iId) {
-        return super.fetchById(TABLE, iId, COLUMN_DATABASE_ID, COLUMNS);
+        return super.fetchById(TABLE, iId, COLUMN_DATABASE_ID, COLUMN_ARRAY);
     }
 
     @Override
     public List<FTPServer> fetchAll() {
-        return super.fetchAll(TABLE, COLUMNS, COLUMN_DATABASE_ID);
+        return super.fetchAll(TABLE, COLUMN_ARRAY, COLUMN_DATABASE_ID);
     }
 
     @Override
@@ -87,7 +90,16 @@ public class FTPServerDAO extends ADataAccessObject<FTPServer> implements IFTPSe
 
     @Override
     public void onUpgradeTable(int iOldVersion, int iNewVersion) {
+        if (iOldVersion < VERSION_UPDATE_ABSOLUTE_PATH_VALUE) {
+            List<FTPServer> lFTPServerList = fetchAll();
 
+            for (FTPServer lItem : lFTPServerList) {
+                if (!lItem.getAbsolutePath().endsWith("/")) {
+                    lItem.setAbsolutePath(lItem.getAbsolutePath() + "/");
+                    update(lItem);
+                }
+            }
+        }
     }
 
     @Override

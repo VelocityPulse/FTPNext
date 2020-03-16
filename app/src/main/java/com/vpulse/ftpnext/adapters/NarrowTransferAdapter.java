@@ -2,7 +2,6 @@ package com.vpulse.ftpnext.adapters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -20,7 +19,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.vpulse.ftpnext.R;
-import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 
@@ -125,8 +123,9 @@ public class NarrowTransferAdapter
         iCustomItemViewHolder.mPendingFileItem = lPendingFileItem;
 
         // Set text name
-        if (!iCustomItemViewHolder.mTextFileView.getText().equals(lPendingFile.getPath()))
-            iCustomItemViewHolder.mTextFileView.setText(lPendingFile.getPath());
+        String lName = lPendingFile.getRemotePath() + lPendingFile.getName();
+        if (!iCustomItemViewHolder.mTextFileView.getText().equals(lName))
+            iCustomItemViewHolder.mTextFileView.setText(lName);
 
         // Set progress bar
         if (iCustomItemViewHolder.mProgressBar.getMax() != lPendingFile.getSize())

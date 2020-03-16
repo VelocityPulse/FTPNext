@@ -167,7 +167,7 @@ public class NavigationTransfer {
                     LoadDirection.UPLOAD,
                     false,
                     Utils.getFileNameOfPath(lPath),
-                    lPath,
+                    null, // TODO : Put remote server localization
                     null,
                     PreferenceManager.getExistingFileAction()
             ));

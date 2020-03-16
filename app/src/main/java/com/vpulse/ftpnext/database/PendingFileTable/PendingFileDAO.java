@@ -18,6 +18,7 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
     private static final String TAG = "DATABASE : Pending file DAO";
 
     private static final int VERSION_ADD_EXISTING_FILE_ACTION = 2;
+    private static final int VERSION_UPDATE_PATH_AND_ENCLOSING_COLUMN_NAME = 3;
 
     public PendingFileDAO(SQLiteDatabase iDataBase) {
         super(iDataBase);
@@ -31,7 +32,7 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
         final String lSelection = COLUMN_SERVER_ID + " = ?";
         List<PendingFile> lObjectList = new ArrayList<>();
 
-        mCursor = super.query(TABLE, COLUMNS, lSelection, lSelectionArgs, COLUMN_DATABASE_ID);
+        mCursor = super.query(TABLE, COLUMN_ARRAY, lSelection, lSelectionArgs, COLUMN_DATABASE_ID);
         if (mCursor != null) {
             mCursor.moveToFirst();
             while (!mCursor.isAfterLast()) {
@@ -45,12 +46,12 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
 
     @Override
     public PendingFile fetchById(int iId) {
-        return super.fetchById(TABLE, iId, COLUMN_DATABASE_ID, COLUMNS);
+        return super.fetchById(TABLE, iId, COLUMN_DATABASE_ID, COLUMN_ARRAY);
     }
 
     @Override
     public List<PendingFile> fetchAll() {
-        return super.fetchAll(TABLE, COLUMNS, COLUMN_DATABASE_ID);
+        return super.fetchAll(TABLE, COLUMN_ARRAY, COLUMN_DATABASE_ID);
     }
 
     public int add(PendingFile[] iObjects) {
@@ -109,9 +110,13 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
     public void onUpgradeTable(int iOldVersion, int iNewVersion) {
         LogManager.info(TAG, "On update table");
         if (iOldVersion < VERSION_ADD_EXISTING_FILE_ACTION) {
-
             mDataBase.execSQL("ALTER TABLE " + TABLE +
                     " ADD " + COLUMN_EXISTING_FILE_ACTION + " INTEGER DEFAULT 0");
+        }
+
+        if (iOldVersion < VERSION_UPDATE_PATH_AND_ENCLOSING_COLUMN_NAME) {
+            mDataBase.execSQL("DROP TABLE " + TABLE);
+            mDataBase.execSQL(TABLE_CREATE);
         }
     }
 
@@ -131,8 +136,8 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
         mContentValues.put(COLUMN_LOAD_DIRECTION, iObject.getLoadDirection().getValue());
         mContentValues.put(COLUMN_STARTED, iObject.isStarted());
         mContentValues.put(COLUMN_NAME, iObject.getName());
-        mContentValues.put(COLUMN_PATH, iObject.getPath());
-        mContentValues.put(COLUMN_ENCLOSING_NAME, iObject.getLocalEnclosingName());
+        mContentValues.put(COLUMN_REMOTE_PATH, iObject.getRemotePath());
+        mContentValues.put(COLUMN_LOCAL_PATH, iObject.getLocalPath());
         mContentValues.put(COLUMN_FINISHED, iObject.isFinished());
         mContentValues.put(COLUMN_PROGRESS, iObject.getProgress());
         mContentValues.put(COLUMN_EXISTING_FILE_ACTION, iObject.getExistingFileAction().getValue());
@@ -157,10 +162,10 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
             oObject.setStarted(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_STARTED)) != 0);
         if (iCursor.getColumnIndexOrThrow(COLUMN_NAME) != -1)
             oObject.setName(iCursor.getString(iCursor.getColumnIndexOrThrow(COLUMN_NAME)));
-        if (iCursor.getColumnIndexOrThrow(COLUMN_PATH) != -1)
-            oObject.setPath(iCursor.getString(iCursor.getColumnIndexOrThrow(COLUMN_PATH)));
-        if (iCursor.getColumnIndexOrThrow(COLUMN_ENCLOSING_NAME) != -1)
-            oObject.setEnclosureName(iCursor.getString(iCursor.getColumnIndexOrThrow(COLUMN_ENCLOSING_NAME)));
+        if (iCursor.getColumnIndexOrThrow(COLUMN_REMOTE_PATH) != -1)
+            oObject.setRemotePath(iCursor.getString(iCursor.getColumnIndexOrThrow(COLUMN_REMOTE_PATH)));
+        if (iCursor.getColumnIndexOrThrow(COLUMN_LOCAL_PATH) != -1)
+            oObject.setLocalPath(iCursor.getString(iCursor.getColumnIndexOrThrow(COLUMN_LOCAL_PATH)));
         if (iCursor.getColumnIndexOrThrow(COLUMN_FINISHED) != -1)
             oObject.setFinished(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_FINISHED)) != 0);
         if (iCursor.getColumnIndexOrThrow(COLUMN_PROGRESS) != -1)
