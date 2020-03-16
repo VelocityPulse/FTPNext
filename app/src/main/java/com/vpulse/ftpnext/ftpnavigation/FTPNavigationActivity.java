@@ -1045,7 +1045,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         if (mCurrentAdapter.isInSelectionMode())
             mNavigationTransfer.createDialogDownloadSelection();
         else
-            createDialogError("Select something.").show();
+            mCurrentAdapter.setSelectionMode(true);
     }
 
     public AlertDialog createDialogError(String iMessage) { // TODO : Replace by resources

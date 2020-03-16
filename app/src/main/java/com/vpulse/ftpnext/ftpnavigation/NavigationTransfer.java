@@ -154,6 +154,10 @@ public class NavigationTransfer {
         });
     }
 
+    private void UploadFiles(final PendingFile iPendingFile) {
+
+    }
+
     private void DownloadFiles(final PendingFile[] iPendingFiles) {
         mFTPTransferList = new ArrayList<>();
         mPendingFiles = iPendingFiles;
