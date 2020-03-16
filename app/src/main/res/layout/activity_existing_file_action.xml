@@ -13,7 +13,6 @@
         android:layout_marginEnd="@dimen/existing_file_padding"
         android:layout_marginBottom="@dimen/existing_file_radio_button_space"
         android:text="Choose your default action when a file to download is already present on your local device"
-        android:textColor="@android:color/black"
         android:textSize="@dimen/activity_main_description_text_size" />
 
     <LinearLayout
