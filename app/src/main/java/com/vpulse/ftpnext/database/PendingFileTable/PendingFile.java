@@ -16,7 +16,7 @@ public class PendingFile extends ABaseTable {
     private boolean mStarted;
     private String mName;
     private String mPath;
-    private String mEnclosingName;
+    private String mLocalEnclosingName;
     private boolean mFinished;
     private int mProgress;
     private ExistingFileAction mExistingFileAction;
@@ -32,7 +32,7 @@ public class PendingFile extends ABaseTable {
     }
 
     public PendingFile(int iServerId, LoadDirection iLoadDirection, boolean iStarted,
-                       String iName, String iPath, String iEnclosureName,
+                       String iName, String iPath, String iLocalEnclosureName,
                        ExistingFileAction iExistingFileAction) {
         mServerId = iServerId;
         mLoadDirection = iLoadDirection;
@@ -40,12 +40,12 @@ public class PendingFile extends ABaseTable {
         mName = iName;
         mPath = iPath;
         mExistingFileAction = iExistingFileAction;
-        if (iEnclosureName == null)
-            mEnclosingName = "";
+        if (iLocalEnclosureName == null)
+            mLocalEnclosingName = "";
         else {
-            mEnclosingName = iEnclosureName;
-            if (!mEnclosingName.endsWith("/"))
-                mEnclosingName += "/";
+            mLocalEnclosingName = iLocalEnclosureName;
+            if (!mLocalEnclosingName.endsWith("/"))
+                mLocalEnclosingName += "/";
         }
     }
 
@@ -94,12 +94,12 @@ public class PendingFile extends ABaseTable {
         return this;
     }
 
-    public String getEnclosingName() {
-        return mEnclosingName;
+    public String getLocalEnclosingName() {
+        return mLocalEnclosingName;
     }
 
     public PendingFile setEnclosureName(String iEnclosureName) {
-        mEnclosingName = iEnclosureName;
+        mLocalEnclosingName = iEnclosureName;
         return this;
     }
 
@@ -186,7 +186,7 @@ public class PendingFile extends ABaseTable {
                 "\nLoadDirection: " + mLoadDirection.toString() +
                 "\nStarted: " + mStarted +
                 "\nPath:\t\t\t" + mPath +
-                "\nEnclosureName:\t" + mEnclosingName +
+                "\nEnclosureName:\t" + mLocalEnclosingName +
                 "\nFinished: " + mFinished +
                 "\nmProgress: " + mProgress;
         return oToString;
@@ -204,7 +204,7 @@ public class PendingFile extends ABaseTable {
         mStarted = iPendingFile.mStarted;
         mName = iPendingFile.mName;
         mPath = iPendingFile.mPath;
-        mEnclosingName = iPendingFile.mEnclosingName;
+        mLocalEnclosingName = iPendingFile.mLocalEnclosingName;
         mFinished = iPendingFile.mFinished;
         mProgress = iPendingFile.mProgress;
     }

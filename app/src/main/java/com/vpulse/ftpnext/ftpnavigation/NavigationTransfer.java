@@ -3,6 +3,7 @@ package com.vpulse.ftpnext.ftpnavigation;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.support.v4.text.HtmlCompat;
@@ -19,7 +20,9 @@ import android.widget.TextView;
 
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.adapters.NarrowTransferAdapter;
+import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.ExistingFileAction;
+import com.vpulse.ftpnext.core.LoadDirection;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
@@ -31,6 +34,7 @@ import com.vpulse.ftpnext.ftpservices.FTPTransfer;
 import org.apache.commons.net.ftp.FTPFile;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
@@ -149,13 +153,25 @@ public class NavigationTransfer {
                 }
 
                 DownloadFiles(iPendingFiles);
-
             }
         });
     }
 
-    private void UploadFiles(final PendingFile iPendingFile) {
+    private void UploadFiles(final Uri[] iUris) {
+        List<PendingFile> lPendingFileList = new ArrayList<>();
 
+        for (Uri lItem : iUris) {
+            String lPath = Utils.getRealPathFromURI(mContextActivity, lItem);
+            lPendingFileList.add(new PendingFile(
+                     mContextActivity.mFTPServer.getDataBaseId(),
+                    LoadDirection.UPLOAD,
+                    false,
+                    Utils.getFileNameOfPath(lPath),
+                    lPath,
+                    null,
+                    PreferenceManager.getExistingFileAction()
+            ));
+        }
     }
 
     private void DownloadFiles(final PendingFile[] iPendingFiles) {

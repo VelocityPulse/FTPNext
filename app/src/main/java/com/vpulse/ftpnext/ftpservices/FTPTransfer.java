@@ -215,7 +215,7 @@ public class FTPTransfer extends AFTPConnection {
 
                     // ---------------- INIT NAMES
                     final String lLocalPath = mFTPServer.getAbsolutePath() + "/" +
-                            mCandidate.getEnclosingName() + mCandidate.getName();
+                            mCandidate.getLocalEnclosingName() + mCandidate.getName();
                     final String lRemotePath = mCandidate.getPath();
 
                     LogManager.info(TAG, "\nGoing to write on the local path :\n\t" +
@@ -244,7 +244,7 @@ public class FTPTransfer extends AFTPConnection {
 
                     // ---------------- INIT LOCAL FILE
                     File lLocalFile = new File(mFTPServer.getAbsolutePath() + "/" +
-                            mCandidate.getEnclosingName() + mCandidate.getName());
+                            mCandidate.getLocalEnclosingName() + mCandidate.getName());
                     try {
 //                        if (lLocalFile.exists())
 //                            lLocalFile.delete(); // TODO : Debug, remove this

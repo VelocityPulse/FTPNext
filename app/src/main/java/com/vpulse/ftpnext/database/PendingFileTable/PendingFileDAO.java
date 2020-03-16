@@ -132,7 +132,7 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
         mContentValues.put(COLUMN_STARTED, iObject.isStarted());
         mContentValues.put(COLUMN_NAME, iObject.getName());
         mContentValues.put(COLUMN_PATH, iObject.getPath());
-        mContentValues.put(COLUMN_ENCLOSING_NAME, iObject.getEnclosingName());
+        mContentValues.put(COLUMN_ENCLOSING_NAME, iObject.getLocalEnclosingName());
         mContentValues.put(COLUMN_FINISHED, iObject.isFinished());
         mContentValues.put(COLUMN_PROGRESS, iObject.getProgress());
         mContentValues.put(COLUMN_EXISTING_FILE_ACTION, iObject.getExistingFileAction().getValue());

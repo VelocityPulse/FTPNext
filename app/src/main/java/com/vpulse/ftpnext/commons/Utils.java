@@ -13,6 +13,7 @@ import android.view.inputmethod.InputMethodManager;
 
 import com.vpulse.ftpnext.R;
 
+import java.io.File;
 import java.util.Locale;
 
 public class Utils {
@@ -23,6 +24,10 @@ public class Utils {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String getFileNameOfPath(String lPath) {
+        return lPath.substring(lPath.lastIndexOf(File.separator));
     }
 
     public static String getRealPathFromURI(Context iContext, Uri contentURI) {
