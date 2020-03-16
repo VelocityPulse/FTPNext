@@ -482,5 +482,4 @@ public class FTPNavigationDownload {
         mContextActivity.mIndexingPendingFilesDialog = lBuilder.create();
         mContextActivity.mIndexingPendingFilesDialog.show();
     }
-
 }

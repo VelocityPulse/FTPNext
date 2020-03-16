@@ -326,6 +326,7 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
     }
 
     public void onActivityResult(int iRequestCode, int iResultCode, Intent iResultData) {
+        super.onActivityResult(iRequestCode, iResultCode, iResultData);
         if (iRequestCode == ACTIVITY_REQUEST_CODE_SELECT_FOLDER) {
             if (iResultCode == RESULT_OK) {
                 Uri lTreeUri = iResultData.getData();

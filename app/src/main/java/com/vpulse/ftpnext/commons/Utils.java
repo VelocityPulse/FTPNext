@@ -5,6 +5,9 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
@@ -20,6 +23,20 @@ public class Utils {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String getRealPathFromURI(Context iContext, Uri contentURI) {
+        String oResult;
+        Cursor lCursor = iContext.getContentResolver().query(contentURI, null, null, null, null);
+        if (lCursor == null) {
+            oResult = contentURI.getPath();
+        } else {
+            lCursor.moveToFirst();
+            int idx = lCursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            oResult = lCursor.getString(idx);
+            lCursor.close();
+        }
+        return oResult;
     }
 
     public static void hideKeyboard(Activity iActivity) {

@@ -5,9 +5,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -34,7 +36,6 @@ import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AutoCompleteTextView;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.adapters.NavigationRecyclerViewAdapter;
@@ -51,6 +52,7 @@ import com.vpulse.ftpnext.ftpservices.FTPTransfer;
 import org.apache.commons.net.ftp.FTPFile;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -290,8 +292,22 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    protected void onActivityResult(int iRequestCode, int iResultCode, @Nullable Intent iData) {
+        super.onActivityResult(iRequestCode, iResultCode, iData);
+
+        if (iRequestCode == ACTIVITY_REQUEST_CODE_SELECT_FILES) {
+            if (iResultCode == RESULT_OK) {
+                List<Uri> lUriList = new ArrayList<>();
+                if (iData.getData() == null) {
+                    ClipData lCD = iData.getClipData();
+                    int i = -1;
+                    while (++i < lCD.getItemCount())
+                        lUriList.add(lCD.getItemAt(i).getUri());
+                } else
+                    lUriList.add(iData.getData());
+                // TODO Send data to upload system
+            }
+        }
 
     }
 
