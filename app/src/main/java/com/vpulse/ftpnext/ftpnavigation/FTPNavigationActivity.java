@@ -6,11 +6,13 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
@@ -32,6 +34,7 @@ import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AutoCompleteTextView;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.adapters.NavigationRecyclerViewAdapter;
@@ -74,12 +77,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     protected static final int NAVIGATION_ORDER_DISMISS_DIALOGS = 100;
     protected static final int NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS = 101;
+    protected static final int NAVIGATION_ORDER_FETCH_DIRECTORY = 102;
     protected static final int NAVIGATION_ORDER_REFRESH_DATA = 103;
     protected static final int NAVIGATION_ORDER_SELECTED_MODE_ON = 104;
     protected static final int NAVIGATION_ORDER_SELECTED_MODE_OFF = 105;
 
     private static final String TAG = "FTP NAVIGATION ACTIVITY";
     private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
+    private static final int ACTIVITY_REQUEST_CODE_SELECT_FILES = 2;
 
     protected boolean mIsShowingDownload;
     protected boolean mIsLargeDirectory;
@@ -284,6 +289,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+    }
+
     private void initialize() {
         FTPServerDAO lFTPServerDAO = DataBase.getFTPServerDAO();
 
@@ -346,7 +357,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     public void onResult(boolean iResult) {
                         if (iResult) {
                             if (!mIsShowingDownload)
-                                mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, iIsUpdating);
+                                mHandler.sendMessage(Message.obtain(
+                                        mHandler,
+                                        NAVIGATION_ORDER_FETCH_DIRECTORY,
+                                        iIsUpdating));
                         } else
                             mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
                     }
@@ -436,14 +450,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private void initializeHandler() {
         mHandler = new Handler(Looper.getMainLooper()) {
             @Override
-            public void handleMessage(Message msg) {
+            public void handleMessage(Message iMsg) {
                 AFTPConnection.ErrorCodeDescription lErrorDescription;
                 FTPFile[] lFiles;
 
                 if (!mIsRunning)
                     return;
 
-                switch (msg.what) {
+                switch (iMsg.what) {
 
                     case NAVIGATION_ORDER_DISMISS_DIALOGS:
                         LogManager.info(TAG, "Handle : NAVIGATION_ORDER_DISMISS_DIALOGS");
@@ -456,14 +470,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             mLoadingDialog.dismiss();
                         if (mLargeDirDialog != null)
                             mLargeDirDialog.dismiss();
-                        break;
-
-                    case NAVIGATION_ORDER_REFRESH_DATA:
-                        LogManager.info(TAG, "Handle : NAVIGATION_ORDER_REFRESH_DATA");
-                        if (!mFTPServices.isReconnecting() && mIsDirectoryFetchFinished) {
-                            mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(true);
-                            mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath, false, true);
-                        }
                         break;
 
                     case NAVIGATION_ORDER_SELECTED_MODE_ON:
@@ -482,6 +488,20 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         }
                         break;
 
+                    case NAVIGATION_ORDER_FETCH_DIRECTORY:
+                        LogManager.info(TAG, "Handle : NAVIGATION_ORDER_FETCH_DIRECTORY");
+                        boolean lIsUpdating = (boolean) iMsg.obj;
+                        mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, lIsUpdating);
+                        break;
+
+                    case NAVIGATION_ORDER_REFRESH_DATA:
+                        LogManager.info(TAG, "Handle : NAVIGATION_ORDER_REFRESH_DATA");
+                        if (!mFTPServices.isReconnecting() && mIsDirectoryFetchFinished) {
+                            mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(true);
+                            mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath, false, true);
+                        }
+                        break;
+
                     case NAVIGATION_MESSAGE_RECONNECT_SUCCESS:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_SUCCESS");
                         dismissAllDialogsExcepted(mDownloadingDialog, mChooseExistingFileAction);
@@ -496,8 +516,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_MESSAGE_CONNECTION_FAIL:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CONNECTION_FAIL");
-                        boolean lIsRecovering = msg.arg1 == 1;
-                        lErrorDescription = (AFTPConnection.ErrorCodeDescription) msg.obj;
+                        boolean lIsRecovering = iMsg.arg1 == 1;
+                        lErrorDescription = (AFTPConnection.ErrorCodeDescription) iMsg.obj;
                         new AlertDialog.Builder(FTPNavigationActivity.this)
                                 .setTitle("Error") // TODO string
                                 .setMessage((lIsRecovering ? "Reconnection" : "Connection") + " failed..." +
@@ -552,7 +572,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     case NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS");
                         // TODO : Sort items
-                        FTPFile lNewDirectory = (FTPFile) msg.obj;
+                        FTPFile lNewDirectory = (FTPFile) iMsg.obj;
                         mLoadingDialog.dismiss();
                         mCurrentAdapter.insertItem(lNewDirectory, 0);
                         mCurrentAdapter.getRecyclerView().scrollToPosition(0);
@@ -560,7 +580,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL");
-                        lErrorDescription = (AFTPConnection.ErrorCodeDescription) msg.obj;
+                        lErrorDescription = (AFTPConnection.ErrorCodeDescription) iMsg.obj;
                         mLoadingDialog.dismiss();
                         if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
                             mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
@@ -581,7 +601,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     case NAVIGATION_MESSAGE_RECONNECT_FAIL:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_FAIL");
                         dismissAllDialogs();
-                        lErrorDescription = (AFTPConnection.ErrorCodeDescription) msg.obj;
+                        lErrorDescription = (AFTPConnection.ErrorCodeDescription) iMsg.obj;
                         new AlertDialog.Builder(FTPNavigationActivity.this)
                                 .setTitle("Reconnection denied") // TODO string
                                 .setMessage("Reconnection has failed...\nCode : " + lErrorDescription.name())
@@ -599,7 +619,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE");
-                        lFiles = (FTPFile[]) msg.obj;
+                        lFiles = (FTPFile[]) iMsg.obj;
                         if (mCurrentAdapter == null)
                             inflateNewAdapter(lFiles, mDirectoryPath, true);
                         else {
@@ -611,14 +631,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH");
-                        lFiles = (FTPFile[]) msg.obj;
+                        lFiles = (FTPFile[]) iMsg.obj;
                         inflateNewAdapter(lFiles, mDirectoryPath, false);
                         break;
 
                     case NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH");
                         mIsDirectoryFetchFinished = true;
-                        lErrorDescription = (AFTPConnection.ErrorCodeDescription) msg.obj;
+                        lErrorDescription = (AFTPConnection.ErrorCodeDescription) iMsg.obj;
                         if (mCurrentAdapter != null)
                             mCurrentAdapter.setItemsClickable(true);
                         if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
@@ -998,7 +1018,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
             return;
         }
 
-
+        Intent lIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        lIntent.setType("*/*");
+        lIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        lIntent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+        startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE_SELECT_FILES);
     }
 
     private void onDownloadClicked() {

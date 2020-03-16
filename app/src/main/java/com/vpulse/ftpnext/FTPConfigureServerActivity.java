@@ -33,13 +33,14 @@ import java.io.File;
 
 public class FTPConfigureServerActivity extends AppCompatActivity {
 
-    public static final int ACTIVITY_REQUEST_CODE_SELECT_FOLDER = 10;
     public static final int ACTIVITY_RESULT_ADD_SUCCESS = 0;
     public static final int ACTIVITY_RESULT_ADD_FAIL = 1;
     public static final int ACTIVITY_RESULT_ABORT = 2;
     public static final int ACTIVITY_RESULT_UPDATE_SUCCESS = 3;
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
     public static final int NO_DATABASE_ID = -1;
+
+    private static final int ACTIVITY_REQUEST_CODE_SELECT_FOLDER = 10;
     private static final String TAG = "CONFIGURE FTP SERVER ACTIVITY";
     private View mRootView;
 
