@@ -3,14 +3,12 @@ package com.vpulse.ftpnext.ftpservices;
 import com.vpulse.ftpnext.commons.FTPFileUtils;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
-import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LoadDirection;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 
-import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.jetbrains.annotations.NotNull;
@@ -76,7 +74,7 @@ public class FTPServices extends AFTPConnection {
     public void disconnect() {
         LogManager.info(TAG, "Disconnect");
 
-        if (isConnected()) {
+        if (isLocallyConnected()) {
             if (isFetchingFolders())
                 abortFetchDirectoryContent();
             if (isDeletingFiles() && !isReconnecting())
@@ -89,7 +87,7 @@ public class FTPServices extends AFTPConnection {
 
     public void updateWorkingDirectory(final String iNewWorkingDirectory) {
         LogManager.info(TAG, "Update working directory");
-        if (!isConnected())
+        if (!isLocallyConnected())
             return;
 
         new Thread(new Runnable() {
@@ -106,7 +104,7 @@ public class FTPServices extends AFTPConnection {
                     iE.printStackTrace();
                 }
             }
-        }).start();
+        }, "FTP Working dir").start();
     }
 
     public void abortFetchDirectoryContent() {
@@ -135,7 +133,7 @@ public class FTPServices extends AFTPConnection {
 
     public void fetchDirectoryContent(final String iPath, @NotNull final IOnFetchDirectoryResult iOnFetchDirectoryResult) {
         LogManager.info(TAG, "Fetch directory contents");
-        if (!isConnected()) {
+        if (!isLocallyConnected()) {
             LogManager.error(TAG, "Connection not established");
             return;
         }
@@ -226,6 +224,7 @@ public class FTPServices extends AFTPConnection {
                 }
             }
         });
+        mDirectoryFetchThread.setName("FTP Dir fetch");
         mDirectoryFetchThread.start();
     }
 
@@ -234,7 +233,7 @@ public class FTPServices extends AFTPConnection {
         LogManager.info(TAG, "Directory Path : " + iPath);
         LogManager.info(TAG, "Directory Name : " + iName);
 
-        if (!isConnected()) {
+        if (!isLocallyConnected()) {
             LogManager.error(TAG, "Connection not established");
             return;
         } else if (isCreatingFolder()) {
@@ -272,6 +271,7 @@ public class FTPServices extends AFTPConnection {
                 }
             }
         });
+        mCreateDirectoryThread.setName("Create dir");
         mCreateDirectoryThread.start();
     }
 
@@ -281,7 +281,7 @@ public class FTPServices extends AFTPConnection {
 
     public void deleteFiles(final FTPFile[] iSelection, @NotNull final OnDeleteListener iOnDeleteListener) {
         LogManager.info(TAG, "Delete files");
-        if (!isConnected()) {
+        if (!isLocallyConnected()) {
             LogManager.error(TAG, "Connection not established");
             return;
         } else if (isDeletingFiles()) {
@@ -427,12 +427,13 @@ public class FTPServices extends AFTPConnection {
                 }
             }
         });
+        mDeleteFileThread.setName("FTP Delete dir");
         mDeleteFileThread.start();
     }
 
     public void indexingPendingFilesProcedure(final FTPFile[] iSelectedFiles, OnIndexingPendingFilesListener iOnResult) {
         LogManager.info(TAG, "Create pending files procedure");
-        if (!isConnected()) {
+        if (!isLocallyConnected()) {
             LogManager.error(TAG, "Is not connected");
             if (iOnResult != null)
                 iOnResult.onResult(false, null);
@@ -533,7 +534,7 @@ public class FTPServices extends AFTPConnection {
                         if (mIndexingFilesThread.isInterrupted())
                             return;
                     } catch (Exception iE) {
-                        if (!isConnected() || AppCore.getNetworkManager().isNetworkAvailable()) {
+                        if (!isLocallyConnected() || AppCore.getNetworkManager().isNetworkAvailable()) {
                             mIndexingFilesThread.interrupt();
                             return;
                         }
@@ -572,6 +573,7 @@ public class FTPServices extends AFTPConnection {
                 }
             }
         });
+        mIndexingFilesThread.setName("FTP Index files");
         mIndexingFilesThread.start();
     }
 
@@ -579,16 +581,16 @@ public class FTPServices extends AFTPConnection {
         // Display :
 //        LogManager.info(TAG, "isFetchingFolders : " + isConnected() + " && (" +
 //                (mDirectoryFetchThread != null && mDirectoryFetchThread.isAlive()) + ") || " + mStartingFetchDirectory);
-        return (isConnected() && (mDirectoryFetchThread != null && mDirectoryFetchThread.isAlive())) ||
+        return (isLocallyConnected() && (mDirectoryFetchThread != null && mDirectoryFetchThread.isAlive())) ||
                 mStartingFetchDirectory;
     }
 
     public boolean isCreatingFolder() {
-        return isConnected() && mCreateDirectoryThread != null && mCreateDirectoryThread.isAlive();
+        return isLocallyConnected() && mCreateDirectoryThread != null && mCreateDirectoryThread.isAlive();
     }
 
     public boolean isDeletingFiles() {
-        return isConnected() && mDeleteFileThread != null && mDeleteFileThread.isAlive();
+        return isLocallyConnected() && mDeleteFileThread != null && mDeleteFileThread.isAlive();
     }
 
     public boolean isDeletingPaused() {
@@ -596,7 +598,7 @@ public class FTPServices extends AFTPConnection {
     }
 
     public boolean isCreatingPendingFiles() {
-        return isConnected() && mIndexingFilesThread != null && mIndexingFilesThread.isAlive();
+        return isLocallyConnected() && mIndexingFilesThread != null && mIndexingFilesThread.isAlive();
     }
 
     @Override
@@ -606,6 +608,11 @@ public class FTPServices extends AFTPConnection {
 //                + isCreatingFolder() + " " + isDeletingFiles());
         return isConnecting() || isReconnecting() || isFetchingFolders() || isCreatingFolder() ||
                 isDeletingFiles() || isCreatingPendingFiles();
+    }
+
+    @Override
+    protected int getConnectionType() {
+        return CONNECTION_SERVICES_TYPE;
     }
 
     public void resumeDeleting() {

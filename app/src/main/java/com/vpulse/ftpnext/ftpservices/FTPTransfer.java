@@ -166,6 +166,11 @@ public class FTPTransfer extends AFTPConnection {
         return mTransferThread != null;
     }
 
+    @Override
+    protected int getConnectionType() {
+        return CONNECTION_TRANSFER_TYPE;
+    }
+
     public void downloadFiles(final PendingFile[] iSelection, @NotNull final OnTransferListener iOnTransferListener) {
         LogManager.info(TAG, "Download files");
 
@@ -406,6 +411,7 @@ public class FTPTransfer extends AFTPConnection {
             }
         });
 
+        mTransferThread.setName("FTP Download");
         mTransferThread.start();
     }
 
@@ -430,12 +436,12 @@ public class FTPTransfer extends AFTPConnection {
     }
 
     private void connectionLooper() {
-        if (!isConnected() && !isReconnecting()) {
+        if (!isLocallyConnected() && !isReconnecting()) {
             LogManager.info(TAG, "Not connected");
             connect(null);
         }
 
-        while (!isConnected() || isConnecting() || isReconnecting()) {
+        while (!isLocallyConnected() || isConnecting() || isReconnecting()) {
 //            LogManager.info(TAG, "Download files : Waiting connection");
             Utils.sleep(200);
 
@@ -448,7 +454,7 @@ public class FTPTransfer extends AFTPConnection {
                 break;
             }
         }
-        LogManager.info(TAG, "Download files : Connected : " + isConnected());
+        LogManager.info(TAG, "Download files : Connected : " + isLocallyConnected());
     }
 
     private void existingFileLooper() {

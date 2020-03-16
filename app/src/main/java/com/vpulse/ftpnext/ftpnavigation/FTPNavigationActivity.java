@@ -22,7 +22,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Menu;
@@ -156,8 +155,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
         super.onPause();
     }
 
-    // Orientation is manager in android manifest with android:configChanges
-
     @Override
     protected void onDestroy() {
         LogManager.info(TAG, "On destroy");
@@ -248,12 +245,12 @@ public class FTPNavigationActivity extends AppCompatActivity {
                             new OnPermissionAnswer() {
                                 @Override
                                 public void onAccepted() {
-                                    onClickDownload();
+                                    onDownloadClicked();
                                 }
                             });
 
                 }
-                onClickDownload();
+                onDownloadClicked();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -262,7 +259,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private void requestPermission(Activity iActivity, final String[] iPermissions,
                                    int iRequestCode, OnPermissionAnswer iOnPermissionAnswer) {
-
         mOnPermissionAnswer = iOnPermissionAnswer;
         ActivityCompat.requestPermissions(this,
                 iPermissions,
@@ -325,7 +321,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         initializeDialogs();
     }
 
-    private void retrieveFTPServices(boolean iIsUpdating) {
+    private void retrieveFTPServices(final boolean iIsUpdating) {
         LogManager.info(TAG, "Retrieve FTP Services");
 
         mFTPServices = FTPServices.getFTPServicesInstance(mFTPServer.getDataBaseId());
@@ -342,10 +338,20 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
             if (!AppCore.getNetworkManager().isNetworkAvailable()) {
                 mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
-            } else if (!mFTPServices.isConnected()) {
+            } else if (!mFTPServices.isLocallyConnected()) {
                 mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
-            } else if (!mIsShowingDownload)
-                mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, iIsUpdating);
+            } else {
+                mFTPServices.isRemotelyConnected(new AFTPConnection.OnRemotelyConnectedResult() {
+                    @Override
+                    public void onResult(boolean iResult) {
+                        if (iResult) {
+                            if (!mIsShowingDownload)
+                                mFTPNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, iIsUpdating);
+                        } else
+                            mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
+                    }
+                });
+            }
         }
 
         mFTPServices.setOnConnectionLost(new AFTPConnection.OnConnectionLost() {
@@ -356,7 +362,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
     }
 
-    @SuppressWarnings("SameParameterValue")
     private void buildFTPConnection() {
         LogManager.info(TAG, "Build FTP Connection");
         if (mFTPServer == null) {
@@ -415,7 +420,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mCreateFolderFAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                createDialogFolderClicked();
+                onCreateFolderClicked();
             }
         });
         mUploadFileFAB.setOnClickListener(new View.OnClickListener() {
@@ -638,7 +643,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         };
     }
 
-    private void initializeDialogs() { // TODO : Move it at a better place
+    private void initializeDialogs() {
         // Loading dialog
         mLoadingDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
             @Override
@@ -857,23 +862,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void createDialogFolderClicked() {
-        FTPFile lEnclosingDirectory = mFTPServices.getCurrentDirectory();
-        if (lEnclosingDirectory != null && !lEnclosingDirectory.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
-            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
-                    .setTitle("Error") // TODO string
-                    .setMessage("Creation has failed...\nYou need permissions")
-                    .setCancelable(false)
-                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface iDialog, int iWhich) {
-                            iDialog.dismiss();
-                        }
-                    })
-                    .create();
-            mErrorAlertDialog.show();
-            return;
-        }
-
         final AlertDialog.Builder lBuilder = new AlertDialog.Builder(this);
         lBuilder.setTitle("Create new folder"); // TODO : strings
 
@@ -971,11 +959,49 @@ public class FTPNavigationActivity extends AppCompatActivity {
         });
     }
 
-    private void onUploadFileClicked() {
-        // TODO : upload file
+    private void onCreateFolderClicked() {
+        FTPFile lEnclosingDirectory = mFTPServices.getCurrentDirectory();
+        if (lEnclosingDirectory != null && !lEnclosingDirectory.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
+            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+                    .setTitle("Error") // TODO string
+                    .setMessage("Creation has failed...\nYou don't have the permissions")
+                    .setCancelable(false)
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface iDialog, int iWhich) {
+                            iDialog.dismiss();
+                        }
+                    })
+                    .create();
+            mErrorAlertDialog.show();
+            return;
+        }
+
+        createDialogFolderClicked();
     }
 
-    private void onClickDownload() {
+    private void onUploadFileClicked() {
+        FTPFile lEnclosingDirectory = mFTPServices.getCurrentDirectory();
+        if (lEnclosingDirectory != null && !lEnclosingDirectory.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
+            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+                    .setTitle("Error") // TODO string
+                    .setMessage("Can't upload here\nYou don't have the permissions")
+                    .setCancelable(false)
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface iDialog, int iWhich) {
+                            iDialog.dismiss();
+                        }
+                    })
+                    .create();
+            mErrorAlertDialog.show();
+            return;
+        }
+
+
+    }
+
+    private void onDownloadClicked() {
         if (mCurrentAdapter.isInSelectionMode())
             mFTPNavigationDownload.createDialogDownloadSelection();
         else

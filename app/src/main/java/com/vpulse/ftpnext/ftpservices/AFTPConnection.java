@@ -23,10 +23,13 @@ import java.net.UnknownHostException;
 
 public abstract class AFTPConnection {
 
-    private static final String TAG = "FTP CONNECTION";
+    protected static final int CONNECTION_TRANSFER_TYPE = 1;
+    protected static final int CONNECTION_SERVICES_TYPE = 2;
+    protected static final int TIMEOUT_SERVER_ANSWER = 15000;
 
+    private static final String TAG = "FTP CONNECTION";
     private static final int RECONNECTION_WAITING_TIME = 700;
-    private static final boolean REPLY_THREAD_STATUS_ACTIVATED = true;
+    private static final boolean THREAD_STATUS_ACTIVATED = true;
 
     protected final FTPClient mFTPClient;
     protected FTPServerDAO mFTPServerDAO;
@@ -35,7 +38,7 @@ public abstract class AFTPConnection {
 
     private Thread mConnectionThread;
     private Thread mReconnectThread;
-    private Thread mReplyStatusThread;
+    private Thread mStatusThread;
 
     private NetworkManager.OnNetworkAvailable mOnNetworkAvailableCallback;
     private NetworkManager.OnNetworkLost mOnNetworkLostCallback;
@@ -68,11 +71,11 @@ public abstract class AFTPConnection {
         if (isReconnecting())
             abortReconnection();
 
-        if (isConnected())
+        if (isLocallyConnected())
             disconnect();
 
-        if (mReplyStatusThread != null)
-            mReplyStatusThread.interrupt();
+        if (mStatusThread != null)
+            mStatusThread.interrupt();
     }
 
     private void initializeNetworkMonitoring() {
@@ -137,14 +140,14 @@ public abstract class AFTPConnection {
         mReconnectThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                if (isConnected())
+                if (isLocallyConnected())
                     disconnect();
 
-                while (isConnected()) {
+                while (isLocallyConnected()) {
                     Utils.sleep(RECONNECTION_WAITING_TIME);
                 }
 
-                while (!isConnected() && !mReconnectThread.isInterrupted()) {
+                while (!isLocallyConnected() && !mReconnectThread.isInterrupted()) {
                     if (!isConnecting()) {
 
                         connect(new OnConnectionResult() {
@@ -173,12 +176,13 @@ public abstract class AFTPConnection {
                 }
             }
         });
+        mReconnectThread.setName("FTP Reconnection");
         mReconnectThread.start();
     }
 
     public void disconnect() {
         LogManager.info(TAG, "Disconnect");
-        if (isConnected()) {
+        if (isLocallyConnected()) {
             try {
                 mFTPClient.disconnect();
                 FTPLogManager.pushStatusLog("Disconnection");
@@ -192,7 +196,7 @@ public abstract class AFTPConnection {
 
     public void connect(final OnConnectionResult onConnectionResult) {
         LogManager.info(TAG, "Connect");
-        if (isConnected()) {
+        if (isLocallyConnected()) {
             LogManager.error(TAG, "Trying a connection but is already connected");
             new Exception("already connected").printStackTrace();
             if (onConnectionResult != null)
@@ -234,7 +238,7 @@ public abstract class AFTPConnection {
                     mFTPClient.setControlEncoding("UTF-8");
                     mFTPClient.setDefaultPort(mFTPServer.getPort());
                     mFTPClient.connect(InetAddress.getByName(mFTPServer.getServer()));
-                    mFTPClient.setSoTimeout(15000); // 15s
+                    mFTPClient.setSoTimeout(TIMEOUT_SERVER_ANSWER); // 15s
                     if (Thread.interrupted()) {
                         mFTPClient.disconnect();
                         if (onConnectionResult != null)
@@ -252,7 +256,7 @@ public abstract class AFTPConnection {
                         return;
                     }
 
-                    if (!FTPReply.isPositiveCompletion(mFTPClient.getReplyCode()) || !isConnected()) {
+                    if (!FTPReply.isPositiveCompletion(mFTPClient.getReplyCode()) || !isLocallyConnected()) {
                         FTPLogManager.pushErrorLog("Server \"" + mFTPServer.getName() + "\" refused connection");
                         LogManager.error(TAG, "FTP server refused connection.");
 
@@ -268,7 +272,7 @@ public abstract class AFTPConnection {
                         return;
                     }
 
-                    startReplyStatusThread();
+                    startStatusThread();
                     FTPLogManager.pushSuccessLog("Connection \"" + mFTPServer.getName() + "\"");
                     LogManager.info(TAG, "FTPClient connected");
 
@@ -293,6 +297,25 @@ public abstract class AFTPConnection {
         mConnectionThread.start();
     }
 
+    public void isRemotelyConnected(final OnRemotelyConnectedResult iCallback) {
+        if (iCallback == null) {
+            LogManager.error(TAG, "Asking remotely connected but without callback");
+            return;
+        }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    iCallback.onResult(mFTPClient.sendNoOp());
+                } catch (IOException iE) {
+                    iE.printStackTrace();
+                    iCallback.onResult(false);
+                }
+            }
+        }, "FTP Noop").start();
+    }
+
     public FTPServer getFTPServer() {
         return mFTPServer;
     }
@@ -305,7 +328,7 @@ public abstract class AFTPConnection {
         return mCurrentDirectory;
     }
 
-    public boolean isConnected() {
+    public boolean isLocallyConnected() {
         return mFTPClient.isConnected();
     }
 
@@ -323,9 +346,12 @@ public abstract class AFTPConnection {
         mOnConnectionLost = iOnConnectionLost;
     }
 
-    private void startReplyStatusThread() {
-        if (mReplyStatusThread == null && REPLY_THREAD_STATUS_ACTIVATED) {
-            mReplyStatusThread = new Thread(new Runnable() {
+    protected abstract int getConnectionType();
+
+    private void startStatusThread() {
+        if (mStatusThread == null && THREAD_STATUS_ACTIVATED) {
+
+            mStatusThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -343,7 +369,9 @@ public abstract class AFTPConnection {
                     }
                 }
             });
-            mReplyStatusThread.start();
+
+            mStatusThread.setName("FTP Status");
+            mStatusThread.start();
         }
     }
 
@@ -362,6 +390,10 @@ public abstract class AFTPConnection {
         ERROR_NOT_A_DIRECTORY,
         ERROR_EXECUTE_PERMISSION_MISSED,
         ERROR_READ_PERMISSION_MISSED,
+    }
+
+    public interface OnRemotelyConnectedResult {
+        void onResult(boolean iResult);
     }
 
     public interface OnConnectionResult {
