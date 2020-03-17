@@ -18,10 +18,16 @@ import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_
 
 public class NavigationDelete {
 
-    private final static String TAG = "FTP NAVIGATION DELETE";
+    private final static String TAG = "NAVIGATION DELETE";
 
     private final FTPNavigationActivity mContextActivity;
     private final Handler mHandler;
+
+    private NavigationDelete() throws InstantiationException {
+        mContextActivity = null;
+        mHandler = null;
+        throw new InstantiationException("Constructor not allowed");
+    }
 
     protected NavigationDelete(FTPNavigationActivity iContextActivity, Handler iHandler) {
         mContextActivity = iContextActivity;

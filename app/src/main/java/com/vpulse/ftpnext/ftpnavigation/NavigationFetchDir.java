@@ -22,12 +22,18 @@ public class NavigationFetchDir {
 
     protected static final int LARGE_DIRECTORY_SIZE = 30000;
 
-    private final static String TAG = "FTP NAVIGATION FETCH DIR";
+    private final static String TAG = "NAVIGATION FETCH DIR";
 
     private static final int BAD_CONNECTION_TIME = 50;
 
     private final FTPNavigationActivity mContextActivity;
     private final Handler mHandler;
+
+    private NavigationFetchDir() throws InstantiationException {
+        mContextActivity = null;
+        mHandler = null;
+        throw new InstantiationException("Constructor not allowed");
+    }
 
     protected NavigationFetchDir(FTPNavigationActivity iContextActivity, Handler iHandler) {
         mContextActivity = iContextActivity;
@@ -39,7 +45,7 @@ public class NavigationFetchDir {
     }
 
     protected void runFetchProcedures(final String iDirectoryPath, boolean iIsLargeDirectory,
-                                    final boolean isForAnUpdate) {
+                                      final boolean isForAnUpdate) {
         mContextActivity.dismissAllDialogs();
         mContextActivity.mErrorAlertDialog = null;
         mContextActivity.mIsDirectoryFetchFinished = false;

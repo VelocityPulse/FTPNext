@@ -41,7 +41,7 @@ import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_
 
 public class NavigationTransfer {
 
-    private final static String TAG = "FTP NAVIGATION DOWNLOAD";
+    private final static String TAG = "NAVIGATION DOWNLOAD";
 
     private final ArrayList<FTPTransfer> mFTPTransferList;
     private final FTPNavigationActivity mContextActivity;
@@ -52,6 +52,14 @@ public class NavigationTransfer {
 
     private boolean mCanAutoScrollInLogView;
     private PendingFile[] mPendingFiles;
+
+    private NavigationTransfer() throws InstantiationException {
+        mHandler = null;
+        mContextActivity = null;
+        mFTPTransferList = null;
+        mUniversalTransferListener = null;
+        throw new InstantiationException("Constructor not allowed");
+    }
 
     protected NavigationTransfer(FTPNavigationActivity iContextActivity, Handler iHandler) {
         mHandler = iHandler;
@@ -170,7 +178,8 @@ public class NavigationTransfer {
         List<PendingFile> lPendingFileList = new ArrayList<>();
 
         for (Uri lItem : iUris) {
-            String lLocalAbsolutePath = Utils.getRealPathFromURI(mContextActivity, lItem);;
+            String lLocalAbsolutePath = Utils.getRealPathFromURI(mContextActivity, lItem);
+            ;
 
             String lNameOnly = lLocalAbsolutePath.substring(lLocalAbsolutePath.lastIndexOf("/") + 1);
             String lLocalPathOnly = lLocalAbsolutePath.substring(0, lLocalAbsolutePath.lastIndexOf("/"));

@@ -16,7 +16,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewCompat;
@@ -26,15 +25,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
-import android.widget.AutoCompleteTextView;
 import android.widget.FrameLayout;
 
 import com.vpulse.ftpnext.R;
@@ -120,6 +115,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private NavigationTransfer mNavigationTransfer;
     private NavigationFetchDir mNavigationFetchDir;
     private NavigationDelete mNavigationDelete;
+    private NavigationNewFolder mNavigationNewFolder;
 
     private OnPermissionAnswer mOnPermissionAnswer;
     private FrameLayout mRecyclerSection;
@@ -155,6 +151,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mNavigationDelete.onResume();
         mNavigationFetchDir.onResume();
         mNavigationTransfer.onResume();
+        mNavigationNewFolder.onResume();
     }
 
     @Override
@@ -346,6 +343,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
         // Delete procedures
         mNavigationDelete = new NavigationDelete(this, mHandler);
 
+        // New folder procedures
+        mNavigationNewFolder = new NavigationNewFolder(this, mHandler);
+
         // Bad connection, Large dir, Reconnect dialog
         initializeDialogs();
     }
@@ -453,7 +453,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mCreateFolderFAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onCreateFolderClicked();
+                mNavigationNewFolder.createDialogNewFolder();
             }
         });
         mUploadFileFAB.setOnClickListener(new View.OnClickListener() {
@@ -746,7 +746,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
-    private void closeFABMenu() {
+    protected void closeFABMenu() {
         if (mIsFABOpen) {
             mIsFABOpen = false;
             ViewCompat.animate(mMainFAB)
@@ -771,7 +771,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         }
     }
 
-    private void hideFABMenu() {
+    protected void hideFABMenu() {
         mMainFAB.hide();
         mCreateFolderFAB.hide();
         mUploadFileFAB.hide();
@@ -900,140 +900,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mCurrentAdapter.getOnFirstViewHolderCreation().onCreation();
     }
 
-    private void createDialogFolderClicked() {
-        final AlertDialog.Builder lBuilder = new AlertDialog.Builder(this);
-        lBuilder.setTitle("Create new folder"); // TODO : strings
-
-        View lTextSection = View.inflate(this, R.layout.dialog_create_folder, null);
-        final TextInputLayout lTextInputLayout = lTextSection.findViewById(R.id.name_edit_text_layout);
-        final AutoCompleteTextView lEditTextView = lTextSection.findViewById(R.id.name_edit_text);
-
-        final String[] lNames = mCurrentAdapter.getNames();
-        lEditTextView.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence iS, int iStart, int iCount, int iAfter) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence iS, int iStart, int iBefore, int iCount) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable iEditable) {
-                if (iEditable != null) {
-                    String lString = iEditable.toString();
-
-                    if (!Utils.isNullOrEmpty(lString.trim())) {
-                        for (String lItem : lNames) {
-                            if (lString.equals(lItem)) {
-                                lTextInputLayout.setError("Already used"); // TODO : Strings
-                                mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
-                                return;
-                            }
-                        }
-
-                        lTextInputLayout.setErrorEnabled(false);
-                        mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(true);
-                    } else {
-                        lTextInputLayout.setError("Obligatory"); // TODO : Strings
-                        mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
-                    }
-                }
-            }
-        });
-
-        lBuilder.setView(lTextSection);
-        lBuilder.setCancelable(false);
-        lBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String lName = lTextInputLayout.getEditText().getText().toString().trim();
-                if (!Utils.isNullOrEmpty(lName)) {
-                    dialog.dismiss();
-                    createFolder(lName);
-                }
-            }
-        });
-        lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
-        lBuilder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                closeFABMenu();
-            }
-        });
-
-        mCreateFolderDialog = lBuilder.create();
-        mCreateFolderDialog.show();
-        mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
-        mCreateFolderDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-    }
-
-    private void createFolder(String iName) {
-
-        mFTPServices.createDirectory(mDirectoryPath, iName, new FTPServices.OnCreateDirectoryResult() {
-            @Override
-            public void onSuccess(final FTPFile iNewDirectory) {
-
-                mHandler.sendMessage(Message.obtain(
-                        mHandler,
-                        NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS,
-                        iNewDirectory
-                ));
-            }
-
-            @Override
-            public void onFail(final AFTPConnection.ErrorCodeDescription iErrorEnum, int iErrorCode) {
-                mErrorCode = iErrorCode;
-                mHandler.sendMessage(Message.obtain(
-                        mHandler,
-                        NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS,
-                        iErrorEnum
-                ));
-            }
-        });
-    }
-
-    private void onCreateFolderClicked() {
-        FTPFile lEnclosingDirectory = mFTPServices.getCurrentDirectory();
-        if (lEnclosingDirectory != null && !lEnclosingDirectory.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
-            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
-                    .setTitle("Error") // TODO string
-                    .setMessage("Creation has failed...\nYou don't have the permissions")
-                    .setCancelable(false)
-                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface iDialog, int iWhich) {
-                            iDialog.dismiss();
-                        }
-                    })
-                    .create();
-            mErrorAlertDialog.show();
-            return;
-        }
-
-        createDialogFolderClicked();
-    }
-
     private void onUploadFileClicked() {
         FTPFile lEnclosingDirectory = mFTPServices.getCurrentDirectory();
         if (lEnclosingDirectory != null && !lEnclosingDirectory.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
-            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
-                    .setTitle("Error") // TODO string
-                    .setMessage("Can't upload here\nYou don't have the permissions")
-                    .setCancelable(false)
-                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface iDialog, int iWhich) {
-                            iDialog.dismiss();
-                        }
-                    })
-                    .create();
-            mErrorAlertDialog.show();
+            String lErrorMessage = "Can't upload here\nYou don't have the permissions";
+            createDialogError(lErrorMessage).show();
             return;
         }
 
@@ -1064,7 +935,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mCurrentAdapter.setSelectionMode(true);
     }
 
-    public AlertDialog createDialogError(String iMessage) { // TODO : Replace by resources
+    protected AlertDialog createDialogError(String iMessage) { // TODO : Replace by resources ID
         mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
                 .setTitle("Error") // TODO : string
                 .setMessage(iMessage)
