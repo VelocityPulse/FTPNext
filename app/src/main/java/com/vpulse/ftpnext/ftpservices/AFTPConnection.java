@@ -346,6 +346,14 @@ public abstract class AFTPConnection {
         mOnConnectionLost = iOnConnectionLost;
     }
 
+    public String getCurrentDirectoryPath() {
+        String oCurrentDirectoryPath = mCurrentDirectory.getName();
+        if (!oCurrentDirectoryPath.endsWith("/"))
+            oCurrentDirectoryPath += "/";
+
+        return oCurrentDirectoryPath;
+    }
+
     protected abstract int getConnectionType();
 
     private void startStatusThread() {

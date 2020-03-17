@@ -117,7 +117,7 @@ public class FTPTransfer extends AFTPConnection {
                     @Override
                     public void onConnectionDenied(ErrorCodeDescription iErrorEnum, int iErrorCode) {
                         if (iOnTransferListener != null)
-                            iOnTransferListener.onStop();
+                            iOnTransferListener.onStop(FTPTransfer.this);
                     }
                 });
             }
@@ -146,7 +146,7 @@ public class FTPTransfer extends AFTPConnection {
             mCandidate.setRemainingTimeInMin((int) lRemainingTime);
 
             mCandidate.setProgress((int) iTotalBytesTransferred);
-            mOnTransferListener.onDownloadProgress(mCandidate, iTotalBytesTransferred, iStreamSize);
+            mOnTransferListener.onTransferProgress(mCandidate, iTotalBytesTransferred, iStreamSize);
 
             mBytesTransferred = 0;
             mTimer = lCurrentTimeMillis;
@@ -194,7 +194,7 @@ public class FTPTransfer extends AFTPConnection {
 
                     // Stopping all transfer activities
                     if (mCandidate == null) {
-                        mOnTransferListener.onStop();
+                        mOnTransferListener.onStop(FTPTransfer.this);
                         break;
                     }
 
@@ -286,7 +286,7 @@ public class FTPTransfer extends AFTPConnection {
                                 default:
                                     mCandidate.setProgress((int) lLocalFile.length());
                                     mCandidate.setFinished(true);
-                                    mOnTransferListener.onDownloadSuccess(mCandidate);
+                                    mOnTransferListener.onTransferSuccess(mCandidate);
                                     continue;
 //                                    break;
                             }
@@ -386,9 +386,9 @@ public class FTPTransfer extends AFTPConnection {
 
                             mCandidate.setFinished(true);
                             mCandidate.setProgress(mCandidate.getSize());
-                            mOnTransferListener.onDownloadProgress(mCandidate,
+                            mOnTransferListener.onTransferProgress(mCandidate,
                                     mCandidate.getProgress(), mCandidate.getSize());
-                            mOnTransferListener.onDownloadSuccess(mCandidate);
+                            mOnTransferListener.onTransferSuccess(mCandidate);
                             FTPLogManager.pushSuccessLog("Download of " + mCandidate.getName());
 
                         } catch (Exception iE) {
@@ -513,19 +513,19 @@ public class FTPTransfer extends AFTPConnection {
                 mSpeedAverage5) / 5;
     }
 
-    public abstract class OnTransferListener {
+    public interface OnTransferListener {
 
-        public abstract void onConnected(PendingFile iPendingFile);
+        void onConnected(PendingFile iPendingFile);
 
-        public abstract void onConnectionLost(PendingFile iPendingFile);
+        void onConnectionLost(PendingFile iPendingFile);
 
-        public abstract void onNewFileSelected(PendingFile iPendingFile);
+        void onNewFileSelected(PendingFile iPendingFile);
 
-        public abstract void onDownloadProgress(PendingFile iPendingFile, long iProgress, long iSize);
+        void onTransferProgress(PendingFile iPendingFile, long iProgress, long iSize);
 
-        public abstract void onDownloadSuccess(PendingFile iPendingFile);
+        void onTransferSuccess(PendingFile iPendingFile);
 
-        public abstract void onRightAccessFail(PendingFile iPendingFile);
+        void onRightAccessFail(PendingFile iPendingFile);
 
         /**
          * Called when the file to download is already existing on the local storage.
@@ -533,16 +533,16 @@ public class FTPTransfer extends AFTPConnection {
          *
          * @param iPendingFile Already existing file
          */
-        public abstract void onExistingFile(PendingFile iPendingFile);
+        void onExistingFile(PendingFile iPendingFile);
 
         /**
          * @param iPendingFile File that it's impossible to download for any error
          */
-        public abstract void onFail(PendingFile iPendingFile); // TODO : Maybe add a error status
+        void onFail(PendingFile iPendingFile); // TODO : Maybe add a error status
 
         /**
          * FTPTransfer has nothing to do anymore
          */
-        public abstract void onStop();
+        void onStop(FTPTransfer iFTPTransfer);
     }
 }

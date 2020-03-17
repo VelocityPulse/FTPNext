@@ -43,19 +43,21 @@ public class NavigationTransfer {
 
     private final static String TAG = "FTP NAVIGATION DOWNLOAD";
 
+    private final ArrayList<FTPTransfer> mFTPTransferList;
     private final FTPNavigationActivity mContextActivity;
+    private final FTPTransfer.OnTransferListener mUniversalTransferListener;
     private final Handler mHandler;
 
     private NarrowTransferAdapter mNarrowTransferAdapter;
 
     private boolean mCanAutoScrollInLogView;
-    private ArrayList<FTPTransfer> mFTPTransferList;
     private PendingFile[] mPendingFiles;
 
     protected NavigationTransfer(FTPNavigationActivity iContextActivity, Handler iHandler) {
         mHandler = iHandler;
         mContextActivity = iContextActivity;
         mFTPTransferList = new ArrayList<>();
+        mUniversalTransferListener = initializeUniversalTransferListener();
     }
 
     protected void onResume() {
@@ -164,30 +166,53 @@ public class NavigationTransfer {
     }
 
     private void uploadFiles(final Uri[] iUris) {
+        LogManager.info(TAG, "Upload files");
         List<PendingFile> lPendingFileList = new ArrayList<>();
 
         for (Uri lItem : iUris) {
-            String lPath = Utils.getRealPathFromURI(mContextActivity, lItem);
+            String lLocalAbsolutePath = Utils.getRealPathFromURI(mContextActivity, lItem);;
+
+            String lNameOnly = lLocalAbsolutePath.substring(lLocalAbsolutePath.lastIndexOf("/") + 1);
+            String lLocalPathOnly = lLocalAbsolutePath.substring(0, lLocalAbsolutePath.lastIndexOf("/"));
+            lLocalPathOnly += "/";
+            String lRemotePathOnly = mContextActivity.mFTPServices.getCurrentDirectoryPath();
+
             lPendingFileList.add(new PendingFile(
-                     mContextActivity.mFTPServer.getDataBaseId(),
+                    mContextActivity.mFTPServer.getDataBaseId(),
                     LoadDirection.UPLOAD,
                     false,
-                    Utils.getFileNameFromPath(lPath),
-                    mContextActivity.mFTPServices.getCurrentDirectory().getName(), // TODO : Put remote server localization
-                    Utils.getRealPathFromURI(mContextActivity, lItem),
+                    lNameOnly,
+                    lRemotePathOnly,
+                    lLocalPathOnly,
                     PreferenceManager.getExistingFileAction()
             ));
         }
 
-        for (PendingFile lItem : lPendingFileList) {
-            LogManager.debug(TAG, lItem.toString());
-        }
+        destroyAllTransferConnections();
+        mPendingFiles = lPendingFileList.toArray(new PendingFile[0]);
+
+        createNarrowTransferDialog(mPendingFiles, LoadDirection.UPLOAD);
+
+        int lI = -1;
+        int lMaxSimultaneousDownload = PreferenceManager.getMaxTransfers();
+        while (++lI < lMaxSimultaneousDownload && lI < mPendingFiles.length)
+            createNewFTPTransfer(LoadDirection.UPLOAD);
     }
 
     private void DownloadFiles(final PendingFile[] iPendingFiles) {
-        mFTPTransferList = new ArrayList<>();
+        LogManager.info(TAG, "Download files");
+        destroyAllTransferConnections();
         mPendingFiles = iPendingFiles;
 
+        createNarrowTransferDialog(mPendingFiles, LoadDirection.DOWNLOAD);
+
+        int lI = -1;
+        int lMaxSimultaneousDownload = PreferenceManager.getMaxTransfers();
+        while (++lI < lMaxSimultaneousDownload && lI < mPendingFiles.length)
+            createNewFTPTransfer(LoadDirection.DOWNLOAD);
+    }
+
+    private void createNarrowTransferDialog(final PendingFile[] iPendingFiles, final LoadDirection iLoadDirection) {
         mHandler.post(new Runnable() {
             @SuppressLint("ClickableViewAccessibility")
             @Override
@@ -256,16 +281,14 @@ public class NavigationTransfer {
                     lNarrowTransferRecyclerView.addItemDecoration(lDividerItemDecoration);
                 }
 
-                mNarrowTransferAdapter = new NarrowTransferAdapter(mPendingFiles, mContextActivity);
+                mNarrowTransferAdapter = new NarrowTransferAdapter(iPendingFiles, mContextActivity);
                 lNarrowTransferRecyclerView.setAdapter(mNarrowTransferAdapter);
 
                 lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface iDialog, int iWhich) {
                         iDialog.dismiss();
-                        for (FTPTransfer lItem : mFTPTransferList) {
-                            lItem.destroyConnection();
-                        }
+                        destroyAllTransferConnections();
                     }
                 });
 
@@ -286,112 +309,28 @@ public class NavigationTransfer {
 
                 lBuilder.setCancelable(false);
                 lBuilder.setView(lDownloadingDialogView);
-                lBuilder.setTitle("Downloading ..."); // TODO : strings
+                if (iLoadDirection == LoadDirection.DOWNLOAD)
+                    lBuilder.setTitle("Downloading ..."); // TODO : strings
+                else if (iLoadDirection == LoadDirection.UPLOAD)
+                    lBuilder.setTitle("Uploading ...");
                 mContextActivity.mDownloadingDialog = lBuilder.create();
                 mContextActivity.mDownloadingDialog.show();
                 mContextActivity.mIsShowingDownload = true;
             }
         });
-
-        int lI = -1;
-        int lMaxSimultaneousDownload = PreferenceManager.getMaxTransfers();
-
-        while (++lI < lMaxSimultaneousDownload && lI < mPendingFiles.length)
-            createNewFTPTransfer();
     }
 
-    private void createNewFTPTransfer() {
+    private void createNewFTPTransfer(final LoadDirection iLoadDirection) {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
                 final FTPTransfer lFTPTransfer = new FTPTransfer(mContextActivity.mFTPServer.getDataBaseId());
                 mFTPTransferList.add(lFTPTransfer);
 
-                lFTPTransfer.downloadFiles(mPendingFiles, lFTPTransfer.new OnTransferListener() {
-                    @Override
-                    public void onConnected(PendingFile iPendingFile) {
-
-                    }
-
-                    @Override
-                    public void onConnectionLost(final PendingFile iPendingFile) {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onNewFileSelected(final PendingFile iPendingFile) {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onDownloadProgress(final PendingFile iPendingFile, final long iProgress, final long iSize) {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onDownloadSuccess(final PendingFile iPendingFile) {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                DataBase.getPendingFileDAO().delete(iPendingFile);
-                                mNarrowTransferAdapter.addPendingFileToRemove(iPendingFile);
-                                if (mNarrowTransferAdapter.getItemCount() == 0)
-                                    mContextActivity.mDownloadingDialog.dismiss();
-
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onRightAccessFail(PendingFile iPendingFile) {
-
-                    }
-
-                    @Override
-                    public void onExistingFile(final PendingFile iPendingFile) {
-                        createExistingFileDialog(iPendingFile);
-                    }
-
-                    @Override
-                    public void onFail(final PendingFile iPendingFile) {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                mNarrowTransferAdapter.showError(iPendingFile);
-                                DataBase.getPendingFileDAO().delete(iPendingFile);
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onStop() {
-                        mFTPTransferList.remove(lFTPTransfer);
-                        if (mFTPTransferList.size() == 0) {
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mContextActivity.mDownloadingDialog.dismiss();
-                                    showSuccessDownload();
-                                }
-                            });
-                        }
-                    }
-                });
+                if (iLoadDirection == LoadDirection.DOWNLOAD)
+                    lFTPTransfer.downloadFiles(mPendingFiles, mUniversalTransferListener);
+                else if (iLoadDirection == LoadDirection.UPLOAD)
+                    lFTPTransfer.uploadFiles(mPendingFiles, mUniversalTransferListener);
             }
         });
     }
@@ -427,8 +366,7 @@ public class NavigationTransfer {
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
                 mContextActivity.mDownloadingDialog.dismiss();
 
-                for (FTPTransfer lItem : mFTPTransferList)
-                    lItem.destroyConnection();
+                destroyAllTransferConnections();
             }
         });
 
@@ -480,24 +418,114 @@ public class NavigationTransfer {
         FTPTransfer.notifyExistingFileActionIsDefined();
     }
 
-    private void showSuccessDownload() {
-        AlertDialog.Builder lBuilder = new AlertDialog.Builder(mContextActivity)
-                .setTitle("Success downloading !") // TODO : Strings
-                .setMessage("All files has been downloaded")
-                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+    private FTPTransfer.OnTransferListener initializeUniversalTransferListener() {
+        return new FTPTransfer.OnTransferListener() {
+            @Override
+            public void onConnected(PendingFile iPendingFile) {
+
+            }
+
+            @Override
+            public void onConnectionLost(final PendingFile iPendingFile) {
+                mHandler.post(new Runnable() {
                     @Override
-                    public void onClick(DialogInterface iDialog, int iWhich) {
-                        iDialog.dismiss();
+                    public void run() {
+                        mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
                     }
                 });
+            }
+
+            @Override
+            public void onNewFileSelected(final PendingFile iPendingFile) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
+                    }
+                });
+            }
+
+            @Override
+            public void onTransferProgress(final PendingFile iPendingFile, final long iProgress, final long iSize) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
+                    }
+                });
+            }
+
+            @Override
+            public void onTransferSuccess(final PendingFile iPendingFile) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        DataBase.getPendingFileDAO().delete(iPendingFile);
+                        mNarrowTransferAdapter.addPendingFileToRemove(iPendingFile);
+                        if (mNarrowTransferAdapter.getItemCount() == 0)
+                            mContextActivity.mDownloadingDialog.dismiss();
+
+                    }
+                });
+            }
+
+            @Override
+            public void onRightAccessFail(PendingFile iPendingFile) {
+
+            }
+
+            @Override
+            public void onExistingFile(final PendingFile iPendingFile) {
+                createExistingFileDialog(iPendingFile);
+            }
+
+            @Override
+            public void onFail(final PendingFile iPendingFile) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mNarrowTransferAdapter.showError(iPendingFile);
+                        DataBase.getPendingFileDAO().delete(iPendingFile);
+                    }
+                });
+            }
+
+            @Override
+            public void onStop(FTPTransfer iFTPTransfer) {
+                mFTPTransferList.remove(iFTPTransfer);
+                if (mNarrowTransferAdapter.getItemCount() == 0) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mContextActivity.mDownloadingDialog.dismiss();
+                            showSuccessTransfer();
+                        }
+                    });
+                }
+            }
+        };
+    }
+
+    private void showSuccessTransfer() {
+        AlertDialog.Builder lBuilder = new AlertDialog.Builder(mContextActivity)
+                .setTitle("Success") // TODO : Strings
+                .setMessage("All files has been transferred")
+                .setPositiveButton("Ok", null);
 
         mContextActivity.mDownloadingDialog = lBuilder.create();
         mContextActivity.mDownloadingDialog.show();
     }
 
+    private void destroyAllTransferConnections() {
+        for (FTPTransfer lItem : mFTPTransferList)
+            lItem.destroyConnection();
+        mFTPTransferList.clear();
+    }
+
     private void showUploadConfirmation(final Uri[] iUris) {
+        LogManager.debug(TAG, "Show upload confirmation");
         AlertDialog.Builder lBuilder = new AlertDialog.Builder(mContextActivity)
-                .setTitle("Downloading") // TODO : Strings
+                .setTitle("Uploading") // TODO : Strings
                 .setMessage("Do you confirm the upload of " + iUris.length + " files ?")
                 .setPositiveButton("yes", new DialogInterface.OnClickListener() {
                     @Override

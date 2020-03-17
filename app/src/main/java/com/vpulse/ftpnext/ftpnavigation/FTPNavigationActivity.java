@@ -128,6 +128,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private FloatingActionButton mCreateFolderFAB;
     private FloatingActionButton mUploadFileFAB;
     private boolean mIsFABOpen;
+    private boolean mIsResumeFromActivityResult;
 
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
@@ -139,7 +140,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
         initializeGUI();
         initializeHandler();
         initialize();
-        retrieveFTPServices(false);
+        retrieveFTPServices(false, false);
     }
 
     @Override
@@ -147,9 +148,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
         LogManager.info(TAG, "On resume");
         super.onResume();
 
-        LogManager.info(TAG, "Was on pause :" + mWasOnPause);
+        LogManager.info(TAG, "Was on pause : " + mWasOnPause);
         if (mWasOnPause)
-            retrieveFTPServices(true);
+            retrieveFTPServices(true, mIsResumeFromActivityResult);
+        mIsResumeFromActivityResult = false;
         mNavigationDelete.onResume();
         mNavigationFetchDir.onResume();
         mNavigationTransfer.onResume();
@@ -232,10 +234,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 onBackPressed();
                 return true;
             case R.id.action_delete:
-                if (mCurrentAdapter.isInSelectionMode())
-                    mNavigationDelete.createDialogDeleteSelection();
-                else
-                    mCurrentAdapter.setSelectionMode(true);
+                onDeleteClicked();
                 return true;
             case R.id.action_download:
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
@@ -295,6 +294,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
     protected void onActivityResult(int iRequestCode, int iResultCode, @Nullable Intent iData) {
         super.onActivityResult(iRequestCode, iResultCode, iData);
 
+        // onActivityResult() is called before onResume()
+        mIsResumeFromActivityResult = true;
+
         if (iRequestCode == ACTIVITY_REQUEST_CODE_SELECT_FILES) {
             if (iResultCode == RESULT_OK) {
                 List<Uri> lUriList = new ArrayList<>();
@@ -306,7 +308,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 } else
                     lUriList.add(iData.getData());
                 if (lUriList.size() > 0)
-                    mNavigationTransfer.
+                    mNavigationTransfer.createDialogUploadSelection(lUriList.toArray(new Uri[0]));
             }
         }
     }
@@ -348,7 +350,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
         initializeDialogs();
     }
 
-    private void retrieveFTPServices(final boolean iIsUpdating) {
+    private void retrieveFTPServices(final boolean iIsUpdating,
+                                     final boolean iBlockFetchDirIfSuccessRecovery) {
         LogManager.info(TAG, "Retrieve FTP Services");
 
         mFTPServices = FTPServices.getFTPServicesInstance(mFTPServer.getDataBaseId());
@@ -372,7 +375,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     @Override
                     public void onResult(boolean iResult) {
                         if (iResult) {
-                            if (!mIsShowingDownload)
+                            if (!mIsShowingDownload && !iBlockFetchDirIfSuccessRecovery)
                                 mHandler.sendMessage(Message.obtain(
                                         mHandler,
                                         NAVIGATION_ORDER_FETCH_DIRECTORY,
@@ -1041,10 +1044,23 @@ public class FTPNavigationActivity extends AppCompatActivity {
         startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE_SELECT_FILES);
     }
 
+    private void onDeleteClicked() {
+        if (mCurrentAdapter.isInSelectionMode()) {
+            if (mCurrentAdapter.getSelection().length == 0)
+                mCurrentAdapter.setSelectionMode(false);
+            else
+                mNavigationDelete.createDialogDeleteSelection();
+        } else
+            mCurrentAdapter.setSelectionMode(true);
+    }
+
     private void onDownloadClicked() {
-        if (mCurrentAdapter.isInSelectionMode())
-            mNavigationTransfer.createDialogDownloadSelection();
-        else
+        if (mCurrentAdapter.isInSelectionMode()) {
+            if (mCurrentAdapter.getSelection().length == 0)
+                mCurrentAdapter.setSelectionMode(false);
+            else
+                mNavigationTransfer.createDialogDownloadSelection();
+        } else
             mCurrentAdapter.setSelectionMode(true);
     }
 
@@ -1061,14 +1077,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 })
                 .create();
         return mErrorAlertDialog;
-    }
-
-    protected String getCurrentDirectoryPath() {
-        String oCurrentDirectoryPath = mFTPServices.getCurrentDirectory().getName();
-        if (oCurrentDirectoryPath.endsWith("/"))
-            oCurrentDirectoryPath += "/";
-
-        return oCurrentDirectoryPath;
     }
 
     protected void dismissAllDialogs() {

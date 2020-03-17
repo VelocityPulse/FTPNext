@@ -27,7 +27,7 @@ public class Utils {
     }
 
     public static String getFileNameFromPath(String lPath) {
-        return lPath.substring(lPath.lastIndexOf(File.separator));
+        return lPath.substring(lPath.lastIndexOf(File.separator) + 1);
     }
 
     public static String getRealPathFromURI(Context iContext, Uri contentURI) {
