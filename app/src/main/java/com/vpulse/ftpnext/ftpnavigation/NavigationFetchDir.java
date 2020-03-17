@@ -1,10 +1,13 @@
 package com.vpulse.ftpnext.ftpnavigation;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Handler;
 import android.os.Message;
 
+import com.vpulse.ftpnext.R;
+import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection;
 import com.vpulse.ftpnext.ftpservices.FTPServices;
@@ -38,10 +41,34 @@ public class NavigationFetchDir {
     protected NavigationFetchDir(FTPNavigationActivity iContextActivity, Handler iHandler) {
         mContextActivity = iContextActivity;
         mHandler = iHandler;
+        initializeDialogs();
     }
 
     protected void onResume() {
 
+    }
+
+    private void initializeDialogs() {
+        // Canceling dialog
+        mContextActivity.mCancelingDialog = new ProgressDialog(mContextActivity);
+        mContextActivity.mCancelingDialog.setContentView(R.layout.loading_icon);
+        mContextActivity.mCancelingDialog.setCancelable(false);
+        mContextActivity.mCancelingDialog.setCanceledOnTouchOutside(false);
+        mContextActivity.mCancelingDialog.setTitle("Canceling..."); //TODO : strings
+        mContextActivity.mCancelingDialog.create();
+
+        // Large directory dialog
+        mContextActivity.mLargeDirDialog = Utils.initProgressDialog(mContextActivity, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface iDialog, int iWhich) {
+                iDialog.dismiss();
+                mContextActivity.mCancelingDialog.show();
+                mContextActivity.mFTPServices.abortFetchDirectoryContent();
+            }
+        });
+        mContextActivity.mLargeDirDialog.setCancelable(false);
+        mContextActivity.mLargeDirDialog.setTitle("Large directory"); // TODO : strings
+        mContextActivity.mLargeDirDialog.create();
     }
 
     protected void runFetchProcedures(final String iDirectoryPath, boolean iIsLargeDirectory,

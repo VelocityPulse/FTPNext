@@ -707,26 +707,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mReconnectDialog.setCancelable(false);
         mReconnectDialog.setTitle("Reconnection..."); // TODO : strings
         mReconnectDialog.create();
-
-        // Large directory dialog
-        mLargeDirDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface iDialog, int iWhich) {
-                iDialog.dismiss();
-                mCancelingDialog.show();
-                mFTPServices.abortFetchDirectoryContent();
-            }
-        });
-        mLargeDirDialog.setCancelable(false);
-        mLargeDirDialog.setTitle("Large directory"); // TODO : strings
-        mLargeDirDialog.create();
-
-        mCancelingDialog = new ProgressDialog(this);
-        mCancelingDialog.setContentView(R.layout.loading_icon);
-        mCancelingDialog.setCancelable(false);
-        mCancelingDialog.setCanceledOnTouchOutside(false);
-        mCancelingDialog.setTitle("Canceling..."); //TODO : strings
-        mCancelingDialog.create();
     }
 
     private void openFABMenu() {

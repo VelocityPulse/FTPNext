@@ -111,8 +111,19 @@ public class FTPServices extends AFTPConnection {
         LogManager.info(TAG, "Abort fetch directory contents");
         FTPLogManager.pushStatusLog("Aborting fetch directory");
 
-        if (isFetchingFolders())
+        if (isFetchingFolders()) {
             mDirectoryFetchThread.interrupt();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        mFTPClient.abort();
+                    } catch (IOException iE) {
+                        iE.printStackTrace();
+                    }
+                }
+            }).start();
+        }
     }
 
     public void abortIndexingPendingFiles() {
