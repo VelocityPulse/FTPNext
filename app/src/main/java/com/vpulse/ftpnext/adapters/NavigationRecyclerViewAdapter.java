@@ -135,7 +135,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         if (lFTPItem.isDirectory())
             iCustomItemViewAdapter.mLeftImage.setImageResource(R.drawable.ic_outline_folder);
         else
-            iCustomItemViewAdapter.mLeftImage.setImageResource(R.drawable.ic_outline_file);
+            iCustomItemViewAdapter.mLeftImage.setImageResource(R.drawable.ic_file);
 
         iCustomItemViewAdapter.mMainText.setText(lFTPItem.getName());
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy hh:mm", Locale.FRANCE);
