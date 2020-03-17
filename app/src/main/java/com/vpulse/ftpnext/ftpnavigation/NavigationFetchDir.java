@@ -100,8 +100,12 @@ public class NavigationFetchDir {
             @Override
             public void run() {
                 // in case if dialog has been canceled
-                if (!mContextActivity.mIsDirectoryFetchFinished && (mContextActivity.mLargeDirDialog == null || !mContextActivity.mLargeDirDialog.isShowing())) {
-                    if (mContextActivity.mCurrentAdapter != null && mContextActivity.mCurrentAdapter.getSwipeRefreshLayout().isRefreshing())
+                if (!mContextActivity.mIsDirectoryFetchFinished &&
+                        (mContextActivity.mLargeDirDialog == null ||
+                                !mContextActivity.mLargeDirDialog.isShowing())) {
+
+                    if (mContextActivity.mCurrentAdapter != null &&
+                            mContextActivity.mCurrentAdapter.getSwipeRefreshLayout().isRefreshing())
                         return;
 
                     if (!mContextActivity.mIsDirectoryFetchFinished) {

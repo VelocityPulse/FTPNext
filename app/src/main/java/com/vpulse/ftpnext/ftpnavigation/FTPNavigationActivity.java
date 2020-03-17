@@ -676,6 +676,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                     .create();
                             mErrorAlertDialog.show();
                         }
+                        if (mCurrentAdapter.getSwipeRefreshLayout().isRefreshing())
+                            mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);
                         break;
                 }
             }
