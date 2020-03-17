@@ -179,12 +179,20 @@ public class NavigationTransfer {
 
         for (Uri lItem : iUris) {
             String lLocalAbsolutePath = Utils.getRealPathFromURI(mContextActivity, lItem);
-            ;
+            String lNameOnly;
+            String lLocalPathOnly;
+            String lRemotePathOnly;
 
-            String lNameOnly = lLocalAbsolutePath.substring(lLocalAbsolutePath.lastIndexOf("/") + 1);
-            String lLocalPathOnly = lLocalAbsolutePath.substring(0, lLocalAbsolutePath.lastIndexOf("/"));
-            lLocalPathOnly += "/";
-            String lRemotePathOnly = mContextActivity.mFTPServices.getCurrentDirectoryPath();
+            if (lLocalAbsolutePath.contains("/")) {
+                lNameOnly = lLocalAbsolutePath.substring(lLocalAbsolutePath.lastIndexOf("/") + 1);
+                lLocalPathOnly = lLocalAbsolutePath.substring(0, lLocalAbsolutePath.lastIndexOf("/"));
+                lLocalPathOnly += "/";
+            } else {
+                lNameOnly = lLocalAbsolutePath;
+                lLocalPathOnly = lLocalAbsolutePath;
+            }
+
+            lRemotePathOnly = mContextActivity.mFTPServices.getCurrentDirectoryPath();
 
             lPendingFileList.add(new PendingFile(
                     mContextActivity.mFTPServer.getDataBaseId(),

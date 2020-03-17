@@ -208,7 +208,7 @@ public class FTPServices extends AFTPConnection {
                 } catch (InterruptedException iE) {
                     updateWorkingDirectory(lLeavingDirectory.getName());
                     iOnFetchDirectoryResult.onInterrupt();
-                } catch (IOException iE) {
+                } catch (Exception iE) {
                     iE.printStackTrace();
                     if (!mDirectoryFetchThread.isInterrupted()) {
                         if (mFTPClient.getReplyCode() == 450)

@@ -47,6 +47,13 @@ public class NavigationNewFolder {
     protected void createDialogNewFolder() {
         FTPFile lEnclosingDirectory = mContextActivity.mFTPServices.getCurrentDirectory();
 
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                LogManager.error(TAG, "");
+            }
+        }).start();
+
         if (lEnclosingDirectory == null) {
             LogManager.error(TAG, "Get current directory returns null");
             String lErrorMessage = "An error occurred...";
