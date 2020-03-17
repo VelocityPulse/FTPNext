@@ -1,6 +1,8 @@
 package com.vpulse.ftpnext.ftpservices;
 
 import android.net.Network;
+import android.os.Handler;
+import android.os.HandlerThread;
 
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
@@ -19,8 +21,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-// TODO : Download save when app is killed
-
 public abstract class AFTPConnection {
 
     protected static final int CONNECTION_TRANSFER_TYPE = 1;
@@ -31,14 +31,17 @@ public abstract class AFTPConnection {
     private static final int RECONNECTION_WAITING_TIME = 700;
     private static final boolean THREAD_STATUS_ACTIVATED = true;
 
+    private static int sInstanceNumber = 0;
+
     protected final FTPClient mFTPClient;
     protected FTPServerDAO mFTPServerDAO;
     protected FTPServer mFTPServer;
     protected FTPFile mCurrentDirectory;
 
+    protected Handler mHandlerConnection;
+
     private Thread mConnectionThread;
     private Thread mReconnectThread;
-    private Thread mStatusThread;
 
     private NetworkManager.OnNetworkAvailable mOnNetworkAvailableCallback;
     private NetworkManager.OnNetworkLost mOnNetworkLostCallback;
@@ -50,6 +53,7 @@ public abstract class AFTPConnection {
         mFTPServer = iFTPServer;
         mFTPClient = new FTPClient();
         initializeNetworkMonitoring();
+        sInstanceNumber++;
     }
 
     public AFTPConnection(int iServerId) {
@@ -58,10 +62,12 @@ public abstract class AFTPConnection {
         mFTPServer = mFTPServerDAO.fetchById(iServerId);
         mFTPClient = new FTPClient();
         initializeNetworkMonitoring();
+        sInstanceNumber++;
     }
 
     public void destroyConnection() {
         LogManager.info(TAG, "Destroy connection");
+        sInstanceNumber--;
 
         AppCore.getNetworkManager().unsubscribeOnNetworkAvailable(mOnNetworkAvailableCallback);
         AppCore.getNetworkManager().unsubscribeOnNetworkLost(mOnNetworkLostCallback);
@@ -74,8 +80,8 @@ public abstract class AFTPConnection {
         if (isLocallyConnected())
             disconnect();
 
-        if (mStatusThread != null)
-            mStatusThread.interrupt();
+        if (mHandlerConnection != null)
+            mHandlerConnection.getLooper().quitSafely();
     }
 
     private void initializeNetworkMonitoring() {
@@ -273,6 +279,7 @@ public abstract class AFTPConnection {
                     }
 
                     startStatusThread();
+
                     FTPLogManager.pushSuccessLog("Connection \"" + mFTPServer.getName() + "\"");
                     LogManager.info(TAG, "FTPClient connected");
 
@@ -294,6 +301,7 @@ public abstract class AFTPConnection {
                 }
             }
         });
+        mConnectionThread.setName("FTP Connection");
         mConnectionThread.start();
     }
 
@@ -357,29 +365,28 @@ public abstract class AFTPConnection {
     protected abstract int getConnectionType();
 
     private void startStatusThread() {
-        if (mStatusThread == null && THREAD_STATUS_ACTIVATED) {
+        if (mHandlerConnection == null && THREAD_STATUS_ACTIVATED) {
 
-            mStatusThread = new Thread(new Runnable() {
+            HandlerThread lHandlerThread = new HandlerThread("FTP Handler " + sInstanceNumber);
+            lHandlerThread.start();
+            mHandlerConnection = new Handler(lHandlerThread.getLooper());
+
+            final Runnable lCodeReplyUpdate = new Runnable() {
+                int lLastCode = -1;
+
                 @Override
                 public void run() {
-                    try {
-                        int lLastCode = -1;
-                        while (!Thread.interrupted()) {
-                            if (lLastCode != mFTPClient.getReplyCode()) {
-                                lLastCode = mFTPClient.getReplyCode();
-                                LogManager.debug(TAG, "code reply : " + lLastCode);
-                                FTPLogManager.pushCodeReplyLog(lLastCode);
-                            }
-                            Thread.sleep(100);
-                        }
-                    } catch (InterruptedException iE) {
-                        iE.printStackTrace();
+                    if (lLastCode != mFTPClient.getReplyCode()) {
+                        lLastCode = mFTPClient.getReplyCode();
+                        LogManager.debug(TAG, "code reply : " + lLastCode);
+                        FTPLogManager.pushCodeReplyLog(lLastCode);
                     }
-                }
-            });
 
-            mStatusThread.setName("FTP Status");
-            mStatusThread.start();
+                    mHandlerConnection.postDelayed(this, 100);
+                }
+            };
+
+            mHandlerConnection.post(lCodeReplyUpdate);
         }
     }
 

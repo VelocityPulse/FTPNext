@@ -90,21 +90,22 @@ public class FTPServices extends AFTPConnection {
         if (!isLocallyConnected())
             return;
 
-        new Thread(new Runnable() {
+        mHandlerConnection.post(new Runnable() {
             @Override
             public void run() {
                 try {
                     FTPFile lWorkingDir = mFTPClient.mlistFile(iNewWorkingDirectory);
                     FTPLogManager.pushStatusLog(
                             "Updating current working dir to \"" + iNewWorkingDirectory + "\"");
-                    if (lWorkingDir != null && lWorkingDir.isDirectory()) {
+
+                    if (lWorkingDir != null && lWorkingDir.isDirectory())
                         mCurrentDirectory = lWorkingDir;
-                    }
+
                 } catch (IOException iE) {
                     iE.printStackTrace();
                 }
             }
-        }, "FTP Working dir").start();
+        });
     }
 
     public void abortFetchDirectoryContent() {
@@ -113,7 +114,8 @@ public class FTPServices extends AFTPConnection {
 
         if (isFetchingFolders()) {
             mDirectoryFetchThread.interrupt();
-            new Thread(new Runnable() {
+
+            mHandlerConnection.post(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -122,7 +124,7 @@ public class FTPServices extends AFTPConnection {
                         iE.printStackTrace();
                     }
                 }
-            }).start();
+            });
         }
     }
 
@@ -281,7 +283,7 @@ public class FTPServices extends AFTPConnection {
                 }
             }
         });
-        mCreateDirectoryThread.setName("Create dir");
+        mCreateDirectoryThread.setName("FTP Create dir");
         mCreateDirectoryThread.start();
     }
 
@@ -584,7 +586,7 @@ public class FTPServices extends AFTPConnection {
                 }
             }
         });
-        mIndexingFilesThread.setName("FTP Index files");
+        mIndexingFilesThread.setName("FTP Indexing");
         mIndexingFilesThread.start();
     }
 
