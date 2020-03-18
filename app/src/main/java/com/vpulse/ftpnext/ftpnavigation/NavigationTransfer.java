@@ -91,7 +91,7 @@ public class NavigationTransfer {
             showDownloadConfirmation(lSelectedFiles);
     }
 
-    private void indexesFilesForDownload(final FTPFile[] iSelectedFiles) {
+    private void indexFilesForDownload(final FTPFile[] iSelectedFiles) {
         LogManager.info(TAG, "Download file");
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_SELECTED_MODE_OFF);
 
@@ -175,7 +175,7 @@ public class NavigationTransfer {
         });
     }
 
-    private PendingFile[] indexesFilesForUpload(final Uri[] iUris) {
+    private PendingFile[] indexFilesForUpload(final Uri[] iUris) {
         List<PendingFile> lPendingFileList = new ArrayList<>();
 
         for (Uri lItem : iUris) {
@@ -212,7 +212,7 @@ public class NavigationTransfer {
         LogManager.info(TAG, "Upload files");
 
         destroyAllTransferConnections();
-        mPendingFiles = indexesFilesForUpload(iUris);
+        mPendingFiles = indexFilesForUpload(iUris);
 
         createNarrowTransferDialog(mPendingFiles, LoadDirection.UPLOAD);
 
@@ -570,7 +570,7 @@ public class NavigationTransfer {
                     @Override
                     public void onClick(DialogInterface iDialog, int iWhich) {
                         iDialog.dismiss();
-                        indexesFilesForDownload(iSelectedFiles);
+                        indexFilesForDownload(iSelectedFiles);
                     }
                 })
                 .setNegativeButton("cancel", null);

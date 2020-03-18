@@ -214,19 +214,19 @@ public class FTPTransfer extends AFTPConnection {
                     mOnTransferListener.onConnected(mCandidate);
 
                     // ---------------- INIT NAMES
-                    final String lLocalPath = mCandidate.getLocalPath() + mCandidate.getName();
-                    final String lRemotePath = mCandidate.getRemotePath() + mCandidate.getName();
+                    final String lLocalFullPath = mCandidate.getLocalPath() + mCandidate.getName();
+                    final String lRemoteFullPath = mCandidate.getRemotePath() + mCandidate.getName();
 
                     LogManager.info(TAG, "\nGoing to write on the local path :\n\t" +
-                            lLocalPath +
+                            lLocalFullPath +
                             "\nGoing to fetch from the server path :\n\t" +
-                            lRemotePath);
+                            lRemoteFullPath);
 
                     // ---------------- INIT FTP FILE
                     mFTPClient.enterLocalPassiveMode();
                     FTPFile lFTPFile;
                     try {
-                        lFTPFile = mFTPClient.mlistFile(lRemotePath);
+                        lFTPFile = mFTPClient.mlistFile(lRemoteFullPath);
                     } catch (Exception iE) {
                         iE.printStackTrace();
                         Utils.sleep(USER_WAIT_BREAK); // Break the while true speed
@@ -240,11 +240,8 @@ public class FTPTransfer extends AFTPConnection {
                     }
 
                     // ---------------- INIT LOCAL FILE
-                    File lLocalFile = new File(lLocalPath);
+                    File lLocalFile = new File(lLocalFullPath);
                     try {
-//                        if (lLocalFile.exists())
-//                            lLocalFile.delete(); // TODO : Debug, remove this
-
                         if (!lLocalFile.exists()) {
                             if (lLocalFile.getParentFile().mkdirs()) // TODO : Test with lLocalFile = "/"
                                 LogManager.info(TAG, "mkdir success");
@@ -288,7 +285,6 @@ public class FTPTransfer extends AFTPConnection {
                                     mCandidate.setFinished(true);
                                     mOnTransferListener.onTransferSuccess(mCandidate);
                                     continue;
-//                                    break;
                             }
 
                             mCandidate.setProgress((int) lLocalFile.length());
@@ -315,7 +311,276 @@ public class FTPTransfer extends AFTPConnection {
                             mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
                         } catch (IOException iE) {
                             iE.printStackTrace();
-                            Utils.sleep(USER_WAIT_BREAK); // Break the while true speed
+                            Utils.sleep(USER_WAIT_BREAK); // Break the while speed
+                            continue;
+                        }
+
+                        // Re-enter in local passive mode in case of a disconnection
+                        mFTPClient.enterLocalPassiveMode();
+
+                        OutputStream lLocalStream = null;
+                        InputStream lRemoteStream = null;
+                        try {
+
+                            lLocalStream = new BufferedOutputStream(new FileOutputStream(lLocalFile, true));
+                            byte[] bytesArray = new byte[8192];
+                            int lBytesRead;
+                            int lTotalRead = (int) lLocalFile.length();
+                            int lFinalSize = (int) lFTPFile.getSize();
+                            mCandidate.setSize(lFinalSize);
+                            mCandidate.setProgress((int) lLocalFile.length());
+                            mFTPClient.setRestartOffset(mCandidate.getProgress());
+
+                            lRemoteStream = mFTPClient.retrieveFileStream(lRemoteFullPath);
+                            if (lRemoteStream == null) {
+                                LogManager.error(TAG, "Remote stream null");
+                                mCandidate.setIsAnError(true);
+                                mOnTransferListener.onFail(mCandidate);
+                                mFTPClient.disconnect();
+                                break;
+                            }
+                            mCandidate.setIsAnError(false);
+
+                            FTPLogManager.pushStatusLog(
+                                    "Start download of " + mCandidate.getName());
+
+                            // ---------------- DOWNLAND LOOP
+                            while ((lBytesRead = lRemoteStream.read(bytesArray)) != -1) {
+                                mIsTransferring = true;
+                                lTotalRead += lBytesRead;
+                                lLocalStream.write(bytesArray, 0, lBytesRead);
+
+                                notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize);
+
+                                if (mIsInterrupted)
+                                    break;
+                            }
+                            // ---------------- DOWNLAND LOOP
+
+                            notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize, true);
+                            mIsTransferring = false;
+                            lFinished = true;
+
+                            if (mIsInterrupted)
+                                break;
+
+                            // Closing streams necessary before complete pending command
+                            closeStreams(lLocalStream, lRemoteStream);
+
+                            try {
+                                mFTPClient.completePendingCommand();
+                            } catch (IOException iE) {
+                                iE.printStackTrace();
+                                mCandidate.setIsAnError(true);
+                                mOnTransferListener.onFail(mCandidate);
+                                mFTPClient.disconnect();
+                                break;
+                            }
+                            mFTPClient.enterLocalActiveMode();
+
+                            mCandidate.setSpeedInKo(0);
+                            mCandidate.setRemainingTimeInMin(0);
+
+                            mCandidate.setFinished(true);
+                            mCandidate.setProgress(mCandidate.getSize());
+                            mOnTransferListener.onTransferProgress(mCandidate,
+                                    mCandidate.getProgress(), mCandidate.getSize());
+                            mOnTransferListener.onTransferSuccess(mCandidate);
+                            FTPLogManager.pushSuccessLog("Download of " + mCandidate.getName());
+
+                        } catch (Exception iE) {
+                            iE.printStackTrace();
+                            mIsTransferring = false;
+                        } finally {
+                            closeStreams(lLocalStream, lRemoteStream);
+                            Utils.sleep(USER_WAIT_BREAK); // Wait the connexion update status
+                        }
+                    }
+
+                    Utils.sleep(TRANSFER_FINISH_BREAK);
+                    // While end
+                }
+                mTransferThread = null;
+            }
+        });
+
+        mTransferThread.setName("FTP Download");
+        mTransferThread.start();
+    }
+
+    public void uploadFiles(final PendingFile[] iSelection, @NotNull final OnTransferListener iOnTransferListener) {
+        LogManager.info(TAG, "Upload files");
+
+        if (isTransferring()) {
+            LogManager.error(TAG, "Transfer not finished");
+            return;
+        }
+
+        mIsInterrupted = false;
+        mTransferThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                mOnTransferListener = iOnTransferListener;
+                initializeListeners(mOnTransferListener);
+
+                while (!mIsInterrupted) {
+
+                    // ---------------- INIT PENDING FILE
+                    mCandidate = selectAvailableCandidate(iSelection);
+
+                    // Stopping all transfer activities
+                    if (mCandidate == null) {
+                        mOnTransferListener.onStop(FTPTransfer.this);
+                        break;
+                    }
+
+                    LogManager.info(TAG, "CANDIDATE : \n" + mCandidate.toString());
+                    DataBase.getPendingFileDAO().update(mCandidate);
+                    mOnTransferListener.onNewFileSelected(mCandidate);
+
+                    if (mIsInterrupted)
+                        break;
+
+                    // ---------------- INIT CONNECTION
+                    connectionLooper();
+
+                    if (mIsInterrupted)
+                        break;
+
+                    mOnTransferListener.onConnected(mCandidate);
+
+                    // ---------------- INIT NAMES
+                    final String lLocalPath = mCandidate.getLocalPath() + mCandidate.getName();
+                    final String lRemotePath = mCandidate.getRemotePath() + mCandidate.getName();
+
+                    LogManager.info(TAG, "\nGoing to write on the remote path :\n\t" +
+                            lRemotePath +
+                            "\nGoing to read from the local path :\n\t" +
+                            lLocalPath);
+
+
+                    mFTPClient.enterLocalPassiveMode();
+
+                    // ---------------- INIT REMOTE FILE
+
+
+                    FTPFile lFTPFile;
+                    try {
+                        lFTPFile = mFTPClient.mlistFile(lRemotePath);
+                    } catch (Exception iE) {
+                        iE.printStackTrace();
+                        Utils.sleep(USER_WAIT_BREAK); // Break the while true speed
+                        continue;
+                    }
+
+                    if (lFTPFile == null) {
+                        try {
+                            if (createRecursiveDirectories(mCandidate.getRemotePath()))
+                                LogManager.info(TAG, "Success creating folders");
+                            else {
+                                LogManager.error(TAG, "Impossible to create new file");
+                                mCandidate.setIsAnError(true);
+                                mOnTransferListener.onFail(mCandidate);
+
+                                if (mIsInterrupted)
+                                    break;
+                                continue;
+                            }
+
+                        } catch (IOException iE) {
+                            iE.printStackTrace();
+                            LogManager.error(TAG, "Impossible to create new file");
+                            mCandidate.setIsAnError(true);
+                            mOnTransferListener.onFail(mCandidate);
+
+                            if (mIsInterrupted)
+                                break;
+                            continue;
+                        }
+                    } else {
+                        LogManager.info(TAG, lFTPFile.getRawListing());
+                    }
+
+
+
+
+                    if (true)
+                        break;
+
+
+                    File lLocalFile = new File(lLocalPath);
+                    try {
+                        if (!lLocalFile.exists()) {
+                            if (lLocalFile.getParentFile().mkdirs()) // TODO : Test with lLocalFile = "/"
+                                LogManager.info(TAG, "mkdir success");
+
+                            if (lLocalFile.createNewFile())
+                                LogManager.info(TAG, "Local creation success");
+                            else {
+                                LogManager.error(TAG, "Impossible to create new file");
+                                mCandidate.setIsAnError(true);
+                                mOnTransferListener.onFail(mCandidate);
+                                if (mIsInterrupted)
+                                    break;
+                                continue;
+                            }
+
+                        } else {
+
+                            while (mCandidate.getExistingFileAction() == ExistingFileAction.NOT_DEFINED &&
+                                    !mIsInterrupted) {
+                                existingFileLooper();
+                            }
+
+                            if (mIsInterrupted)
+                                break;
+
+                            switch (mCandidate.getExistingFileAction()) {
+                                case REPLACE_FILE:
+                                    lLocalFile.delete();
+                                    break;
+                                case RESUME_FILE_TRANSFER:
+                                    break;
+                                case REPLACE_IF_SIZE_IS_DIFFERENT:
+                                    if (lLocalFile.length() != lFTPFile.getSize())
+                                        lLocalFile.delete();
+                                    break;
+                                case REPLACE_IF_FILE_IS_MORE_RECENT:
+                                case REPLACE_IF_SIZE_IS_DIFFERENT_OR_FILE_IS_MORE_RECENT:
+                                case IGNORE:
+                                default:
+                                    mCandidate.setProgress((int) lLocalFile.length());
+                                    mCandidate.setFinished(true);
+                                    mOnTransferListener.onTransferSuccess(mCandidate);
+                                    continue;
+                            }
+
+                            mCandidate.setProgress((int) lLocalFile.length());
+                        }
+
+                    } catch (Exception iE) {
+                        iE.printStackTrace();
+                        mCandidate.setIsAnError(true);
+                        mOnTransferListener.onFail(mCandidate);
+                        continue;
+                    }
+
+                    // ---------------- DOWNLOAD
+                    boolean lFinished = false;
+
+                    while (!lFinished) {
+
+                        if (mIsInterrupted)
+                            break;
+
+                        connectionLooper();
+
+                        try {
+                            mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
+                        } catch (IOException iE) {
+                            iE.printStackTrace();
+                            Utils.sleep(USER_WAIT_BREAK); // Break the while speed
                             continue;
                         }
 
@@ -407,12 +672,8 @@ public class FTPTransfer extends AFTPConnection {
             }
         });
 
-        mTransferThread.setName("FTP Download");
+        mTransferThread.setName("FTP Upload");
         mTransferThread.start();
-    }
-
-    public void uploadFiles(final PendingFile[] iSelection, @NotNull final OnTransferListener iOnTransferListener) {
-        // TODO : Guard of if it's not already downloading
     }
 
     private PendingFile selectAvailableCandidate(PendingFile[] iSelection) {
@@ -474,6 +735,32 @@ public class FTPTransfer extends AFTPConnection {
                     Utils.sleep(USER_WAIT_BREAK);
             }
         }
+    }
+
+    private boolean createRecursiveDirectories(String iFullPath) throws IOException {
+        final String lOriginalWorkingDir = mFTPClient.printWorkingDirectory();
+
+        if (iFullPath.startsWith("/"))
+            iFullPath = iFullPath.substring(1);
+        String[] lPathElements = iFullPath.split("/");
+
+        if (lPathElements == null || lPathElements.length <= 0)
+            return true;
+
+        for (String lDir : lPathElements) {
+            boolean lExists = mFTPClient.changeWorkingDirectory(lDir);
+
+            if (!lExists) {
+                if (mFTPClient.makeDirectory(lDir))
+                    mFTPClient.changeWorkingDirectory(lDir);
+                else {
+                    mFTPClient.changeWorkingDirectory(lOriginalWorkingDir);
+                    return false;
+                }
+            }
+        }
+        mFTPClient.changeWorkingDirectory(lOriginalWorkingDir);
+        return true;
     }
 
     private void closeStreams(OutputStream iLocalStream, InputStream iRemoteStream) {
