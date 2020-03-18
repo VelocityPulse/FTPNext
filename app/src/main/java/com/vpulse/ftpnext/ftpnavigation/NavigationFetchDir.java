@@ -17,8 +17,8 @@ import org.apache.commons.net.ftp.FTPFile;
 import java.util.Arrays;
 
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH;
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH;
+import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS;
 
 public class NavigationFetchDir {
@@ -73,6 +73,8 @@ public class NavigationFetchDir {
 
     protected void runFetchProcedures(final String iDirectoryPath, boolean iIsLargeDirectory,
                                       final boolean isForAnUpdate) {
+        LogManager.info(TAG, "Run fetch procedures for : \"" + iDirectoryPath + "\"");
+
         mContextActivity.dismissAllDialogs();
         mContextActivity.mErrorADialog = null;
         mContextActivity.mIsDirectoryFetchFinished = false;

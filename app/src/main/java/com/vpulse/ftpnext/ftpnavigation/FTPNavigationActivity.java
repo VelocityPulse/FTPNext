@@ -796,13 +796,13 @@ public class FTPNavigationActivity extends AppCompatActivity {
         mDirectoryPath = mCurrentAdapter.getDirectoryPath();
     }
 
-    private void inflateNewAdapter(FTPFile[] iFTPFiles, String iDirectoryPath, final boolean iForceVerticalAppear) {
+    private void inflateNewAdapter(FTPFile[] iFTPFiles, final String iDirectoryPath, final boolean iForceVerticalAppear) {
         LogManager.info(TAG, "Inflate new adapter");
+
         SwipeRefreshLayout lSwipeRefreshLayout = (SwipeRefreshLayout) View.inflate(this, R.layout.navigation_recycler_layout, null);
         lSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                LogManager.error(TAG, "On refresh");
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
             }
         });
@@ -824,8 +824,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 false);
 
         DividerItemDecoration lDividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
-
         lNewRecyclerView.addItemDecoration(lDividerItemDecoration);
+
         lNewRecyclerView.setAdapter(lNewAdapter);
         lNewAdapter.setOnClickListener(new NavigationRecyclerViewAdapter.OnClickListener() {
             @Override
@@ -835,14 +835,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 } else {
 
                     if (iFTPFile.isDirectory()) {
-//                        if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
-//                                || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
                         lNewAdapter.setItemsClickable(false);
                         mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
                         mNavigationFetchDir.runFetchProcedures(
-                                mDirectoryPath + "/" + iFTPFile.getName(), mIsLargeDirectory, false);
-//                        } else
-//                            Utils.createErrorAlertDialog(FTPNavigationActivity.this, "You don't have enough permission");
+                                iDirectoryPath + iFTPFile.getName() + "/", mIsLargeDirectory, false);
                     } else {
                         // If it is a file
                         lNewAdapter.setItemsClickable(true);
@@ -862,7 +858,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 }
             }
         });
-
 
         final NavigationRecyclerViewAdapter lCurrentAdapterSavedStatus = mCurrentAdapter;
         final boolean lIsTheFirstAdapter = mCurrentAdapter == null;
