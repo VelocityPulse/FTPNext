@@ -204,10 +204,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             return;
         }
 
-        if (mIsFABOpen) {
+        if (mIsFABOpen)
             closeFABMenu();
-            return;
-        }
 
         if (mCurrentAdapter.isInSelectionMode()) {
             mCurrentAdapter.setSelectionMode(false);
@@ -835,14 +833,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 if (lNewAdapter.isInSelectionMode()) {
                     lNewAdapter.switchCheckBox(iFTPFile);
                 } else {
-                    closeFABMenu();
 
                     if (iFTPFile.isDirectory()) {
 //                        if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
 //                                || iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
                         lNewAdapter.setItemsClickable(false);
                         mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
-                        mNavigationFetchDir.runFetchProcedures(mDirectoryPath + "/" + iFTPFile.getName(), mIsLargeDirectory, false);
+                        mNavigationFetchDir.runFetchProcedures(
+                                mDirectoryPath + "/" + iFTPFile.getName(), mIsLargeDirectory, false);
 //                        } else
 //                            Utils.createErrorAlertDialog(FTPNavigationActivity.this, "You don't have enough permission");
                     } else {
@@ -874,6 +872,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
+                        closeFABMenu();
+
                         // if it's not the first list
                         if (!lIsTheFirstAdapter) {
                             lNewAdapter.setPreviousAdapter(lCurrentAdapterSavedStatus);
