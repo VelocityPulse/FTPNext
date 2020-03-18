@@ -12,6 +12,7 @@ import com.vpulse.ftpnext.R;
 
 import org.apache.commons.net.ftp.FTPFile;
 
+import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_DELETE_FINISHED;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_REFRESH_DATA;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
@@ -163,8 +164,7 @@ public class NavigationDelete {
 
             @Override
             public void onFinish() {
-                mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
-                mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
+                successDelete();
             }
 
             @Override
@@ -217,10 +217,17 @@ public class NavigationDelete {
         });
     }
 
+    private void successDelete() {
+        mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
+        mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
+        mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DELETE_FINISHED);
+    }
+
     private void stopDeleting() {
         mContextActivity.mCurrentAdapter.setSelectionMode(false);
         mContextActivity.mFTPServices.abortDeleting();
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
+        mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DELETE_FINISHED);
     }
 }

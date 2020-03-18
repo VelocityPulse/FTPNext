@@ -43,6 +43,9 @@ public abstract class AFTPConnection {
     private Thread mConnectionThread;
     private Thread mReconnectThread;
 
+    private boolean mConnectionInterrupted;
+    private boolean mReconnectInterrupted;
+
     private NetworkManager.OnNetworkAvailable mOnNetworkAvailableCallback;
     private NetworkManager.OnNetworkLost mOnNetworkLostCallback;
     private OnConnectionLost mOnConnectionLost;
@@ -124,7 +127,7 @@ public abstract class AFTPConnection {
         FTPLogManager.pushStatusLog("Aborting reconnection");
 
         if (isReconnecting())
-            mReconnectThread.interrupt();
+            mReconnectInterrupted = true;
     }
 
     public void abortConnection() {
@@ -136,13 +139,24 @@ public abstract class AFTPConnection {
             return;
         }
         if (isConnecting()) {
-            mConnectionThread.interrupt();
+            mConnectionInterrupted = true;
+            mHandlerConnection.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        mFTPClient.abort();
+                    } catch (IOException iE) {
+                        iE.printStackTrace();
+                    }
+                }
+            });
         }
     }
 
     public void reconnect(final OnConnectionRecover onConnectionRecover) {
         LogManager.info(TAG, "Reconnect");
 
+        mReconnectInterrupted = false;
         mReconnectThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -153,7 +167,7 @@ public abstract class AFTPConnection {
                     Utils.sleep(RECONNECTION_WAITING_TIME);
                 }
 
-                while (!isLocallyConnected() && !mReconnectThread.isInterrupted()) {
+                while (!isLocallyConnected() && !mReconnectInterrupted) {
                     if (!isConnecting()) {
 
                         connect(new OnConnectionResult() {
@@ -171,7 +185,7 @@ public abstract class AFTPConnection {
                                 if (iErrorEnum == ErrorCodeDescription.ERROR_FAILED_LOGIN) {
                                     onConnectionRecover.onConnectionDenied(iErrorEnum,
                                             iErrorCode);
-                                    mConnectionThread.interrupt();
+                                    mConnectionInterrupted = true;
                                 }
                             }
                         });
@@ -234,6 +248,7 @@ public abstract class AFTPConnection {
             return;
         }
 
+        mConnectionInterrupted = false;
         mConnectionThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -245,7 +260,7 @@ public abstract class AFTPConnection {
                     mFTPClient.setDefaultPort(mFTPServer.getPort());
                     mFTPClient.connect(InetAddress.getByName(mFTPServer.getServer()));
                     mFTPClient.setSoTimeout(TIMEOUT_SERVER_ANSWER); // 15s
-                    if (Thread.interrupted()) {
+                    if (mConnectionInterrupted) {
                         mFTPClient.disconnect();
                         if (onConnectionResult != null)
                             onConnectionResult.onFail(ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED,
@@ -254,7 +269,7 @@ public abstract class AFTPConnection {
                     }
 
                     mFTPClient.login(mFTPServer.getUser(), mFTPServer.getPass());
-                    if (Thread.interrupted()) {
+                    if (mConnectionInterrupted) {
                         mFTPClient.disconnect();
                         if (onConnectionResult != null)
                             onConnectionResult.onFail(ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED,

@@ -63,14 +63,20 @@ public class FTPNavigationActivity extends AppCompatActivity {
     protected static final int NAVIGATION_MESSAGE_CONNECTION_SUCCESS = 10;
     protected static final int NAVIGATION_MESSAGE_CONNECTION_FAIL = 11;
     protected static final int NAVIGATION_MESSAGE_CONNECTION_LOST = 12;
+
     protected static final int NAVIGATION_MESSAGE_RECONNECT_SUCCESS = 13;
     protected static final int NAVIGATION_MESSAGE_RECONNECT_FAIL = 14;
+
     protected static final int NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS = 15;
     protected static final int NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL = 16;
-    protected static final int NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH = 17;
-    protected static final int NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE = 18;
-    protected static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH = 19;
+
+    protected static final int NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE = 17;
+    protected static final int NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH = 18;
     protected static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_UPDATE = 20;
+    protected static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH = 19;
+
+    protected static final int NAVIGATION_MESSAGE_DOWNLOAD_FINISHED = 21;
+    protected static final int NAVIGATION_MESSAGE_DELETE_FINISHED = 23;
 
     protected static final int NAVIGATION_ORDER_DISMISS_DIALOGS = 100;
     protected static final int NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS = 101;
@@ -83,9 +89,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
     private static final int ACTIVITY_REQUEST_CODE_SELECT_FILES = 2;
 
-    protected boolean mIsShowingDownload;
-    protected boolean mIsLargeDirectory;
-
     protected NavigationRecyclerViewAdapter mCurrentAdapter;
 
     protected ProgressDialog mLoadingDialog;
@@ -93,7 +96,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
     protected ProgressDialog mLargeDirDialog;
     protected ProgressDialog mReconnectDialog;
 
-    protected AlertDialog mErrorAlertDialog;
+    protected AlertDialog mErrorADialog;
+    protected AlertDialog mSuccessDialog;
     protected AlertDialog mCreateFolderDialog;
     protected AlertDialog mIndexingPendingFilesDialog;
     protected AlertDialog mDownloadingDialog;
@@ -104,6 +108,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
     protected Handler mHandler;
     protected boolean mWasOnPause;
     protected boolean mIsDirectoryFetchFinished;
+    protected boolean mIsShowingDownload;
+    protected boolean mIsLargeDirectory;
 
     protected FTPServer mFTPServer;
     protected FTPServices mFTPServices;
@@ -192,13 +198,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         LogManager.info(TAG, "On back pressed");
-        if (mIsFABOpen) {
-            closeFABMenu();
-            return;
-        }
 
         if (mFTPServices.isBusy()) {
             LogManager.debug(TAG, "Canceling onBackPressed");
+            return;
+        }
+
+        if (mIsFABOpen) {
+            closeFABMenu();
             return;
         }
 
@@ -588,6 +595,13 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         });
                         break;
 
+                    case NAVIGATION_MESSAGE_DOWNLOAD_FINISHED:
+                    case NAVIGATION_MESSAGE_DELETE_FINISHED:
+                        LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DOWNLOAD_FINISHED or " +
+                                "NAVIGATION_MESSAGE_DELETE_FINISHED");
+                        showFABMenu();
+                        break;
+
                     case NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS");
                         // TODO : Sort items
@@ -602,7 +616,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         lErrorDescription = (AFTPConnection.ErrorCodeDescription) iMsg.obj;
                         mLoadingDialog.dismiss();
                         if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
-                            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+                            mErrorADialog = new AlertDialog.Builder(FTPNavigationActivity.this)
                                     .setTitle("Error") // TODO string
                                     .setMessage("Creation has failed...\nCode : " + lErrorDescription.name())
                                     .setCancelable(false)
@@ -613,7 +627,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                         }
                                     })
                                     .create();
-                            mErrorAlertDialog.show();
+                            mErrorADialog.show();
                         }
                         break;
 
@@ -648,7 +662,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         }
                         break;
 
-                    case NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH:
+                    case NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH");
                         lFiles = (FTPFile[]) iMsg.obj;
                         inflateNewAdapter(lFiles, mDirectoryPath, false);
@@ -661,7 +675,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         if (mCurrentAdapter != null)
                             mCurrentAdapter.setItemsClickable(true);
                         if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
-                            mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+                            mErrorADialog = new AlertDialog.Builder(FTPNavigationActivity.this)
                                     .setTitle("Error") // TODO string
                                     .setMessage("Connection has failed...\nCode : " + lErrorDescription.name())
                                     .setCancelable(false)
@@ -674,7 +688,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                                         }
                                     })
                                     .create();
-                            mErrorAlertDialog.show();
+                            mErrorADialog.show();
                         }
                         if (mCurrentAdapter.getSwipeRefreshLayout().isRefreshing())
                             mCurrentAdapter.getSwipeRefreshLayout().setRefreshing(false);
@@ -685,6 +699,9 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     private void initializeDialogs() {
+        mErrorADialog = Utils.createErrorAlertDialog(this, "");
+        mSuccessDialog = Utils.createSuccessAlertDialog(this, "");
+
         // Loading dialog
         mLoadingDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
             @Override
@@ -899,26 +916,32 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     private void onDeleteClicked() {
         if (mCurrentAdapter.isInSelectionMode()) {
-            if (mCurrentAdapter.getSelection().length == 0)
+            if (mCurrentAdapter.getSelection().length == 0) {
+                showFABMenu();
                 mCurrentAdapter.setSelectionMode(false);
-            else
+            } else
                 mNavigationDelete.createDialogDeleteSelection();
-        } else
+        } else {
+            hideFABMenu();
             mCurrentAdapter.setSelectionMode(true);
+        }
     }
 
     private void onDownloadClicked() {
         if (mCurrentAdapter.isInSelectionMode()) {
-            if (mCurrentAdapter.getSelection().length == 0)
+            if (mCurrentAdapter.getSelection().length == 0) {
+                showFABMenu();
                 mCurrentAdapter.setSelectionMode(false);
-            else
+            } else
                 mNavigationTransfer.createDialogDownloadSelection();
-        } else
+        } else {
+            hideFABMenu();
             mCurrentAdapter.setSelectionMode(true);
+        }
     }
 
     protected AlertDialog createDialogError(String iMessage) { // TODO : Replace by resources ID
-        mErrorAlertDialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+        mErrorADialog = new AlertDialog.Builder(FTPNavigationActivity.this)
                 .setTitle("Error") // TODO : string
                 .setMessage(iMessage)
                 .setCancelable(false)
@@ -929,10 +952,14 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     }
                 })
                 .create();
-        return mErrorAlertDialog;
+        return mErrorADialog;
     }
 
     protected void dismissAllDialogs() {
+        if (mErrorADialog != null)
+            mErrorADialog.cancel();
+        if (mSuccessDialog != null)
+            mSuccessDialog.cancel();
         if (mLoadingDialog != null)
             mLoadingDialog.cancel();
         if (mIndexingPendingFilesDialog != null)
@@ -941,8 +968,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mReconnectDialog.cancel();
         if (mLargeDirDialog != null)
             mLargeDirDialog.cancel();
-        if (mErrorAlertDialog != null)
-            mErrorAlertDialog.cancel();
         if (mDownloadingDialog != null)
             mDownloadingDialog.cancel();
         if (mChooseExistingFileAction != null)
@@ -956,6 +981,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
     protected void dismissAllDialogsExcepted(Dialog... iToNotDismiss) {
         List lDialogList = Arrays.asList(iToNotDismiss);
 
+        if (mErrorADialog != null && !lDialogList.contains(mErrorADialog))
+            mErrorADialog.cancel();
+        if (mSuccessDialog != null && !lDialogList.contains(mSuccessDialog))
+            mSuccessDialog.cancel();
         if (mLoadingDialog != null && lDialogList.contains(mLoadingDialog))
             mLoadingDialog.cancel();
         if (mIndexingPendingFilesDialog != null && !lDialogList.contains(mIndexingPendingFilesDialog))
@@ -964,8 +993,6 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mReconnectDialog.cancel();
         if (mLargeDirDialog != null && !lDialogList.contains(mLargeDirDialog))
             mLargeDirDialog.cancel();
-        if (mErrorAlertDialog != null && !lDialogList.contains(mErrorAlertDialog))
-            mErrorAlertDialog.cancel();
         if (mDownloadingDialog != null && !lDialogList.contains(mDownloadingDialog))
             mDownloadingDialog.cancel();
         if (mChooseExistingFileAction != null && !lDialogList.contains(mChooseExistingFileAction))

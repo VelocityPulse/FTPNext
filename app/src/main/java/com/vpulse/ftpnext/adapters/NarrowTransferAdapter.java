@@ -79,7 +79,8 @@ public class NarrowTransferAdapter
 
         mRecyclerView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
-            public void onViewAttachedToWindow(View v) {}
+            public void onViewAttachedToWindow(View v) {
+            }
 
             @Override
             public void onViewDetachedFromWindow(View v) {
@@ -196,15 +197,32 @@ public class NarrowTransferAdapter
         }
     }
 
-    @Override
-    public void onViewRecycled(@NonNull CustomItemViewHolder holder) {
-
-        super.onViewRecycled(holder);
-    }
-
+    /**
+     * This function shouldn't be used to check if the Adapter is empty because it
+     * doesn't take care about the items in the delete pending queue
+     *
+     * @return The direct number of item in the list.
+     */
     @Override
     public int getItemCount() {
         return mPendingFileItemList.size();
+    }
+
+    /**
+     * @return The number of item after the freeing of the remove pending file
+     */
+    public int getItemCountOmitPendingFile() {
+        int oItemCount = 0;
+
+        synchronized (mToRemovePendingFileItemList) {
+            // No need to add a condition avoiding useless for loop because
+            // mPendingFileItemList should always stay little in this situation
+            for (PendingFileItem lItem : mPendingFileItemList) {
+                if (!mPendingFileItemList.contains(lItem))
+                    oItemCount++;
+            }
+        }
+        return oItemCount;
     }
 
     public void updatePendingFileData(PendingFile iPendingFile) {

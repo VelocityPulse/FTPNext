@@ -33,6 +33,11 @@ public class FTPServices extends AFTPConnection {
     private Thread mCreateDirectoryThread;
     private Thread mIndexingFilesThread;
 
+    private boolean mDirectoryFetchInterrupted;
+    private boolean mDeleteFileInterrupted;
+    private boolean mCreateDirectoryInterrupted;
+    private boolean mIndexingFilesInterrupted;
+
     private boolean mPauseDeleting;
     private boolean mByPassDeletingRightErrors;
     private boolean mByPassDeletingFailErrors;
@@ -79,7 +84,7 @@ public class FTPServices extends AFTPConnection {
                 abortFetchDirectoryContent();
             if (isDeletingFiles() && !isReconnecting())
                 abortDeleting();
-            if (isCreatingPendingFiles())
+            if (isIndexingPendingFiles())
                 abortIndexingPendingFiles();
             super.disconnect();
         }
@@ -113,7 +118,7 @@ public class FTPServices extends AFTPConnection {
         FTPLogManager.pushStatusLog("Aborting fetch directory");
 
         if (isFetchingFolders()) {
-            mDirectoryFetchThread.interrupt();
+            mDirectoryFetchInterrupted = true;
 
             mHandlerConnection.post(new Runnable() {
                 @Override
@@ -132,8 +137,8 @@ public class FTPServices extends AFTPConnection {
         LogManager.info(TAG, "Abort indexing pending files");
         FTPLogManager.pushStatusLog("Aborting indexing");
 
-        if (isCreatingPendingFiles())
-            mIndexingFilesThread.interrupt();
+        if (isIndexingPendingFiles())
+            mIndexingFilesInterrupted = true;
     }
 
     public void abortDeleting() {
@@ -141,7 +146,7 @@ public class FTPServices extends AFTPConnection {
         FTPLogManager.pushStatusLog("Aborting deleting");
 
         if (isDeletingFiles())
-            mDeleteFileThread.interrupt();
+            mDeleteFileInterrupted = true;
     }
 
     public void fetchDirectoryContent(final String iPath, @NotNull final IOnFetchDirectoryResult iOnFetchDirectoryResult) {
@@ -156,6 +161,7 @@ public class FTPServices extends AFTPConnection {
             return;
         }
 
+        mDirectoryFetchInterrupted = false;
         mDirectoryFetchThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -192,7 +198,7 @@ public class FTPServices extends AFTPConnection {
                         return;
                     }
 
-                    if (mDirectoryFetchThread.isInterrupted()) {
+                    if (mDirectoryFetchInterrupted) {
                         iOnFetchDirectoryResult.onInterrupt();
                         return;
                     }
@@ -201,19 +207,19 @@ public class FTPServices extends AFTPConnection {
                     mFTPClient.changeWorkingDirectory(iPath);
                     FTPFile[] lFiles = mFTPClient.listFiles();
 
-                    if (mDirectoryFetchThread.isInterrupted())
+                    if (mDirectoryFetchInterrupted)
                         throw new InterruptedException();
 
                     updateWorkingDirectory(lTargetDirectory.getName());
                     mFTPClient.enterLocalActiveMode();
 
-                    if (mDirectoryFetchThread.isInterrupted())
+                    if (mDirectoryFetchInterrupted)
                         throw new InterruptedException();
 
                     if (!FTPReply.isPositiveCompletion(mFTPClient.getReplyCode()))
                         throw new IOException(mFTPClient.getReplyString());
 
-                    if (mDirectoryFetchThread.isInterrupted())
+                    if (mDirectoryFetchInterrupted)
                         throw new InterruptedException();
 
                     FTPLogManager.pushSuccessLog("Fetching \"" + iPath + "\"");
@@ -223,7 +229,7 @@ public class FTPServices extends AFTPConnection {
                     iOnFetchDirectoryResult.onInterrupt();
                 } catch (Exception iE) {
                     iE.printStackTrace();
-                    if (!mDirectoryFetchThread.isInterrupted()) {
+                    if (!mDirectoryFetchInterrupted) {
                         if (mFTPClient.getReplyCode() == 450)
                             iOnFetchDirectoryResult.onFail(ErrorCodeDescription.ERROR_NOT_REACHABLE,
                                     mFTPClient.getReplyCode());
@@ -253,6 +259,7 @@ public class FTPServices extends AFTPConnection {
             return;
         }
 
+        mCreateDirectoryInterrupted = false;
         mCreateDirectoryThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -304,13 +311,14 @@ public class FTPServices extends AFTPConnection {
         mPauseDeleting = false;
         mByPassDeletingRightErrors = false;
         mByPassDeletingFailErrors = false;
+        mDeleteFileInterrupted = false;
         mDeleteFileThread = new Thread(new Runnable() {
 
             private void recursiveDeletion(FTPFile iFTPFile, int iProgress, int iTotal) throws IOException, InterruptedException {
 
-                while (mPauseDeleting && !mDeleteFileThread.isInterrupted())
+                while (mPauseDeleting && !mDeleteFileInterrupted)
                     Thread.sleep(DELETE_THREAD_SLEEP_TIME);
-                if (mDeleteFileThread.isInterrupted())
+                if (mDeleteFileInterrupted)
                     return;
 
                 LogManager.info(TAG, "Recursive deletion : " + iFTPFile.getName() + " " + iFTPFile.isDirectory());
@@ -336,9 +344,9 @@ public class FTPServices extends AFTPConnection {
                             lFile.setName(iFTPFile.getName() + "/" + lFile.getName());
                             recursiveDeletion(lFile, lProgress++, lFiles.length);
 
-                            while (mPauseDeleting && !mDeleteFileThread.isInterrupted())
+                            while (mPauseDeleting && !mDeleteFileInterrupted)
                                 Thread.sleep(DELETE_THREAD_SLEEP_TIME);
-                            if (mDeleteFileThread.isInterrupted())
+                            if (mDeleteFileInterrupted)
                                 return;
                         }
 
@@ -352,9 +360,9 @@ public class FTPServices extends AFTPConnection {
                                 0,
                                 "");
 
-                        while (mPauseDeleting && !mDeleteFileThread.isInterrupted())
+                        while (mPauseDeleting && !mDeleteFileInterrupted)
                             Thread.sleep(DELETE_THREAD_SLEEP_TIME);
-                        if (mDeleteFileThread.isInterrupted())
+                        if (mDeleteFileInterrupted)
                             return;
 
                         if (iFTPFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)) {
@@ -426,9 +434,9 @@ public class FTPServices extends AFTPConnection {
                                 lFTPFile.getName());
                     }
 
-                    while (mPauseDeleting && !mDeleteFileThread.isInterrupted())
+                    while (mPauseDeleting && !mDeleteFileInterrupted)
                         Thread.sleep(DELETE_THREAD_SLEEP_TIME);
-                    if (mDeleteFileThread.isInterrupted())
+                    if (mDeleteFileInterrupted)
                         return;
 
                     mFTPClient.enterLocalActiveMode(); // ACTIVE MODE
@@ -451,7 +459,7 @@ public class FTPServices extends AFTPConnection {
             return;
         }
 
-        if (isCreatingPendingFiles()) {
+        if (isIndexingPendingFiles()) {
             LogManager.error(TAG, "Is already creating pending files");
             if (iOnResult != null)
                 iOnResult.onResult(false, null);
@@ -477,6 +485,7 @@ public class FTPServices extends AFTPConnection {
             mTmp += "/";
         final String mCurrentLocation = mTmp;
 
+        mIndexingFilesInterrupted = false;
         mIndexingFilesThread = new Thread(new Runnable() {
 
             @Override
@@ -485,7 +494,7 @@ public class FTPServices extends AFTPConnection {
 
                 // While on the selected files visible by the user
                 for (FTPFile lItem : iSelectedFiles) {
-                    if (mIndexingFilesThread.isInterrupted()) {
+                    if (mIndexingFilesInterrupted) {
                         iIndexingListener.onResult(false, null);
                         return;
                     }
@@ -496,7 +505,7 @@ public class FTPServices extends AFTPConnection {
                         // Because iRelativePathToDirectory is used to move in the hierarchy
                         recursiveFolder(lItem.getName());
 
-                        if (mIndexingFilesThread.isInterrupted()) {
+                        if (mIndexingFilesInterrupted) {
                             iIndexingListener.onResult(false, null);
                             return;
                         }
@@ -516,7 +525,7 @@ public class FTPServices extends AFTPConnection {
                     }
                 }
 
-                if (mIndexingFilesThread.isInterrupted()) {
+                if (mIndexingFilesInterrupted) {
                     iIndexingListener.onResult(false, null);
                     return;
                 }
@@ -529,15 +538,19 @@ public class FTPServices extends AFTPConnection {
 
                 FTPFile[] lFilesOfFolder = null;
 
-                if (mIndexingFilesThread.isInterrupted())
+                if (mIndexingFilesInterrupted) {
+                    iIndexingListener.onResult(false, null);
                     return;
+                }
 
                 iIndexingListener.onFetchingFolder(mCurrentLocation + iRelativePathToDirectory + "/");
 
                 mFTPClient.enterLocalPassiveMode();
                 while (lFilesOfFolder == null) {
-                    if (mIndexingFilesThread.isInterrupted())
+                    if (mIndexingFilesInterrupted) {
+                        iIndexingListener.onResult(false, null);
                         return;
+                    }
 
                     try {
                         // Necessary to use iRelativePathToDirectory because iDirectory always represents
@@ -545,8 +558,10 @@ public class FTPServices extends AFTPConnection {
 
                         lFilesOfFolder = mFTPClient.mlistDir(mCurrentLocation + iRelativePathToDirectory);
 
-                        if (mIndexingFilesThread.isInterrupted())
+                        if (mIndexingFilesInterrupted) {
+                            iIndexingListener.onResult(false, null);
                             return;
+                        }
                     } catch (Exception iE) {
                         iE.printStackTrace();
                         if (!isLocallyConnected() || AppCore.getNetworkManager().isNetworkAvailable()) {
@@ -563,8 +578,10 @@ public class FTPServices extends AFTPConnection {
                         // Adding a directory to the relative path to directory
                         recursiveFolder(iRelativePathToDirectory + "/" + lItem.getName());
 
-                        if (mIndexingFilesThread.isInterrupted())
+                        if (mIndexingFilesInterrupted) {
+                            iIndexingListener.onResult(false, null);
                             return;
+                        }
 
                     } else {
                         PendingFile lPendingFile = new PendingFile(
@@ -582,6 +599,11 @@ public class FTPServices extends AFTPConnection {
                         // Sleep for nicer view in the dialog
                         Utils.sleep(1);
                         iIndexingListener.onNewIndexedFile(lPendingFile);
+
+                        if (mIndexingFilesInterrupted) {
+                            iIndexingListener.onResult(false, null);
+                            return;
+                        }
                     }
                 }
             }
@@ -610,7 +632,7 @@ public class FTPServices extends AFTPConnection {
         return mPauseDeleting;
     }
 
-    public boolean isCreatingPendingFiles() {
+    public boolean isIndexingPendingFiles() {
         return isLocallyConnected() && mIndexingFilesThread != null && mIndexingFilesThread.isAlive();
     }
 
@@ -620,7 +642,7 @@ public class FTPServices extends AFTPConnection {
 //        LogManager.debug(TAG, " " + isConnecting() + " " + isReconnecting() + " " + isFetchingFolders() + " "
 //                + isCreatingFolder() + " " + isDeletingFiles());
         return isConnecting() || isReconnecting() || isFetchingFolders() || isCreatingFolder() ||
-                isDeletingFiles() || isCreatingPendingFiles();
+                isDeletingFiles() || isIndexingPendingFiles();
     }
 
     @Override

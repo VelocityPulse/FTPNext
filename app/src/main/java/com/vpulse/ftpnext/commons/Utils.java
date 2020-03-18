@@ -21,8 +21,8 @@ public class Utils {
     public static void sleep(long iMillis) {
         try {
             Thread.sleep(iMillis);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException iE) {
+            iE.printStackTrace();
         }
     }
 
@@ -67,11 +67,57 @@ public class Utils {
     }
 
     public static AlertDialog createErrorAlertDialog(Context iContext, String iMessage) {
-        return new AlertDialog.Builder(iContext)
-                .setTitle("Error") // TODO string
-                .setMessage(iMessage)
-                .setPositiveButton("Ok", null)
-                .create();
+        return createAlertDialog(iContext, "Error", iMessage,
+                "Ok", null);
+    }
+
+    public static AlertDialog createErrorAlertDialog(
+            Context iContext, String iMessage,
+            String iPositiveButton, AlertDialog.OnClickListener iPositiveListener) {
+
+        return createAlertDialog(iContext, "Error", iMessage,
+                iPositiveButton, iPositiveListener);
+    }
+
+    public static AlertDialog createSuccessAlertDialog(Context iContext, String iMessage) {
+        return createAlertDialog(iContext, "Success", iMessage,
+                "Ok", null);
+    }
+
+    public static AlertDialog createSuccessAlertDialog(
+            Context iContext, String iMessage,
+            String iPositiveButton, AlertDialog.OnClickListener iPositiveListener) {
+
+        return createAlertDialog(iContext, "Success", iMessage,
+                iPositiveButton, iPositiveListener);
+    }
+
+    public static AlertDialog createAlertDialog(
+            Context iContext,
+            String iTitle, String iMessage,
+            String iPositiveButton, AlertDialog.OnClickListener iPositiveListener,
+            String iNegativeButton, AlertDialog.OnClickListener iNegativeListener) {
+
+        AlertDialog.Builder lBuilder = new AlertDialog.Builder(iContext);
+        lBuilder.setTitle(iTitle);
+        lBuilder.setMessage(iMessage);
+        lBuilder.setPositiveButton(iPositiveButton, iPositiveListener);
+        lBuilder.setNegativeButton(iNegativeButton, iNegativeListener);
+
+        return lBuilder.create();
+    }
+
+    public static AlertDialog createAlertDialog(
+            Context iContext,
+            String iTitle, String iMessage,
+            String iPositiveButton, AlertDialog.OnClickListener iPositiveListener) {
+
+        AlertDialog.Builder lBuilder = new AlertDialog.Builder(iContext);
+        lBuilder.setTitle(iTitle);
+        lBuilder.setMessage(iMessage);
+        lBuilder.setPositiveButton(iPositiveButton, iPositiveListener);
+
+        return lBuilder.create();
     }
 
     public static void dismissAlertDialogOnUIThread(Activity iActivity, final AlertDialog iAlertDialog) {
