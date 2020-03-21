@@ -179,8 +179,8 @@ public class PendingFile extends ABaseTable {
                 "\nServerId: " + mServerId +
                 "\nLoadDirection: " + mLoadDirection.toString() +
                 "\nStarted: " + mStarted +
-                "\nRemote path:\t\t\t" + mRemotePath +
-                "\nLocal path:\t" + mLocalPath +
+                "\nRemote path:\t\t" + mRemotePath +
+                "\nLocal path:\t\t" + mLocalPath +
                 "\nFinished: " + mFinished +
                 "\nmProgress: " + mProgress;
         return oToString;

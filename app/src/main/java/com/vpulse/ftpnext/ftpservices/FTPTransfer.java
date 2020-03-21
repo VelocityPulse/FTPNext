@@ -583,24 +583,29 @@ public class FTPTransfer extends AFTPConnection {
                         try {
 
                             lLocalStream = new FileInputStream(lLocalFile);
-                            byte[] bytesArray = new byte[2048];
+//                            byte[] bytesArray = new byte[2048];
+                            byte[] bytesArray = new byte[16384];
+
                             int lBytesRead;
                             int lTotalRead = lFTPFile == null ? 0 : (int) lFTPFile.getSize();
                             int lFinalSize = (int) lLocalFile.length();
                             mCandidate.setSize(lFinalSize);
                             mCandidate.setProgress((int) lLocalFile.length());
+                            lLocalStream.skip(lTotalRead);
 //                            mFTPClient.setRestartOffset(mCandidate.getProgress());
 
-                            lRemoteStream = mFTPClient.storeFileStream(lFullRemotePath);
+                            lRemoteStream = mFTPClient.appendFileStream(lFullRemotePath);
                             if (lRemoteStream == null)
                                 LogManager.error(TAG, "lRemoteStream == null");
 
+                            int lTotalReallyRead = 0;
                             while ((lBytesRead = lLocalStream.read(bytesArray)) != -1) {
                                 mIsTransferring = true;
                                 lTotalRead += lBytesRead;
+                                lTotalReallyRead += lBytesRead;
+                                LogManager.info(TAG, "Writing... " + lTotalReallyRead);
 
                                 lRemoteStream.write(bytesArray, 0, lBytesRead);
-                                LogManager.info(TAG, "Writing...");
                                 notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize, true);
 
                                 if (mIsInterrupted)
