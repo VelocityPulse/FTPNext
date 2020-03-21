@@ -33,6 +33,7 @@ public class FTPTransfer extends AFTPConnection {
 
     private static boolean mIsAskingActionForExistingFile;
 
+    private OnStreamClosed mOnStreamClosed;
     private OnTransferListener mOnTransferListener;
     private PendingFile mCandidate;
 
@@ -89,9 +90,20 @@ public class FTPTransfer extends AFTPConnection {
         LogManager.info(TAG, "Destroy connection");
         abortTransfer();
 
-        super.destroyConnection();
-        sFTPTransferInstances.remove(this);
-
+        mOnStreamClosed = new OnStreamClosed() {
+            @Override
+            public void onStreamClosed() {
+                try {
+                    boolean lResult = mFTPClient.completePendingCommand();
+                    LogManager.info(TAG, "Complete pending command : " + lResult);
+                } catch (IOException iE) {
+                    LogManager.info(TAG, "Complete pending command : " + false);
+                    iE.printStackTrace();
+                }
+                FTPTransfer.super.destroyConnection();
+                sFTPTransferInstances.remove(FTPTransfer.this);
+            }
+        };
     }
 
     private void initializeListeners(final OnTransferListener iOnTransferListener) {
@@ -366,7 +378,7 @@ public class FTPTransfer extends AFTPConnection {
                                 break;
 
                             // Closing streams necessary before complete pending command
-                            closeStreams(lLocalStream, lRemoteStream);
+                            closeDownloadStreams(lLocalStream, lRemoteStream);
 
                             try {
                                 mFTPClient.completePendingCommand();
@@ -393,7 +405,7 @@ public class FTPTransfer extends AFTPConnection {
                             iE.printStackTrace();
                             mIsTransferring = false;
                         } finally {
-                            closeStreams(lLocalStream, lRemoteStream);
+                            closeDownloadStreams(lLocalStream, lRemoteStream);
                             Utils.sleep(USER_WAIT_BREAK); // Wait the connexion update status
                         }
                     }
@@ -579,8 +591,6 @@ public class FTPTransfer extends AFTPConnection {
                             mCandidate.setProgress((int) lLocalFile.length());
 //                            mFTPClient.setRestartOffset(mCandidate.getProgress());
 
-//                            mFTPClient.changeWorkingDirectory(mCandidate.getRemotePath());
-//                            lRemoteStream = mFTPClient.appendFileStream(mCandidate.getName());
                             lRemoteStream = mFTPClient.storeFileStream(lFullRemotePath);
                             if (lRemoteStream == null)
                                 LogManager.error(TAG, "lRemoteStream == null");
@@ -592,13 +602,13 @@ public class FTPTransfer extends AFTPConnection {
                                 lRemoteStream.write(bytesArray, 0, lBytesRead);
                                 LogManager.info(TAG, "Writing...");
                                 notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize, true);
+
+                                if (mIsInterrupted)
+                                    break;
                             }
 
                             // Closing streams necessary before complete pending command
-//                            closeStreams(lLocalStream, lRemoteStream);
-                            lLocalStream.close();
-                            lRemoteStream.close();
-
+                            closeUploadStreams(lLocalStream, lRemoteStream);
 
                             mIsTransferring = false;
                             lFinished = true;
@@ -735,7 +745,8 @@ public class FTPTransfer extends AFTPConnection {
         return true;
     }
 
-    private void closeStreams(OutputStream iLocalStream, InputStream iRemoteStream) {
+    private void closeDownloadStreams(OutputStream iLocalStream, InputStream iRemoteStream) {
+        LogManager.info(TAG, "Closing download streams");
         try {
             if (iLocalStream != null)
                 iLocalStream.close();
@@ -744,6 +755,25 @@ public class FTPTransfer extends AFTPConnection {
         } catch (IOException iEx) {
             LogManager.error(TAG, "Closing streams not working");
             iEx.printStackTrace();
+        } finally {
+            if (mOnStreamClosed != null)
+                mOnStreamClosed.onStreamClosed();
+        }
+    }
+
+    private void closeUploadStreams(FileInputStream iFileInputStream, OutputStream iOutputStream) {
+        LogManager.info(TAG, "Closing upload streams");
+        try {
+            if (iFileInputStream != null)
+                iFileInputStream.close();
+            if (iOutputStream != null)
+                iOutputStream.close();
+        } catch (IOException iEx) {
+            LogManager.error(TAG, "Closing streams not working");
+            iEx.printStackTrace();
+        } finally {
+            if (mOnStreamClosed != null)
+                mOnStreamClosed.onStreamClosed();
         }
     }
 
@@ -803,5 +833,11 @@ public class FTPTransfer extends AFTPConnection {
          * FTPTransfer has nothing to do anymore
          */
         void onStop(FTPTransfer iFTPTransfer);
+    }
+
+    private interface OnStreamClosed {
+
+        void onStreamClosed();
+
     }
 }
