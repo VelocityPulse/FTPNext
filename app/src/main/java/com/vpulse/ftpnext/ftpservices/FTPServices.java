@@ -591,7 +591,7 @@ public class FTPServices extends AFTPConnection {
                                 false,
                                 lItem.getName(),
                                 mCurrentLocation + iRelativePathToDirectory + "/",
-                                mFTPServer.getAbsolutePath() + iRelativePathToDirectory,
+                                mFTPServer.getAbsolutePath() + iRelativePathToDirectory + "/",
                                 PreferenceManager.getExistingFileAction()
                         );
                         FTPLogManager.pushSuccessLog("Indexing \"" + lItem.getName() + "\"");
