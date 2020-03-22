@@ -511,16 +511,18 @@ public class NavigationTransfer {
             public void onStop(FTPTransfer iFTPTransfer) {
                 mFTPTransferList.remove(iFTPTransfer);
 
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (!mContextActivity.mSuccessDialog.isShowing() &&
-                                mNarrowTransferAdapter.getItemCountOmitPendingFile() == 0) {
-                            mContextActivity.mDownloadingDialog.dismiss();
-                            showSuccessTransfer();
+                if (mFTPTransferList.size() == 0) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!mContextActivity.mSuccessDialog.isShowing() &&
+                                    mNarrowTransferAdapter.getItemCountOmitPendingFile() == 0) {
+                                mContextActivity.mDownloadingDialog.dismiss();
+                                showSuccessTransfer();
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
         };
     }

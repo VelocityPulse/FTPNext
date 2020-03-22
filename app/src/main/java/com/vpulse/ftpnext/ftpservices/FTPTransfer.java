@@ -88,11 +88,11 @@ public class FTPTransfer extends AFTPConnection {
     @Override
     public void destroyConnection() {
         LogManager.info(TAG, "Destroy connection");
-        abortTransfer();
 
         mOnStreamClosed = new OnStreamClosed() {
             @Override
             public void onStreamClosed() {
+                mOnStreamClosed = null;
                 try {
                     boolean lResult = mFTPClient.completePendingCommand();
                     LogManager.info(TAG, "Complete pending command : " + lResult);
@@ -104,6 +104,8 @@ public class FTPTransfer extends AFTPConnection {
                 sFTPTransferInstances.remove(FTPTransfer.this);
             }
         };
+
+        abortTransfer();
     }
 
     private void initializeListeners(final OnTransferListener iOnTransferListener) {
