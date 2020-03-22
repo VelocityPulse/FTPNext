@@ -237,16 +237,16 @@ public class FTPTransfer extends AFTPConnection {
 
                     // ---------------- INIT FTP FILE
                     mFTPClient.enterLocalPassiveMode();
-                    FTPFile lFTPFile;
+                    FTPFile lRemoteFile;
                     try {
-                        lFTPFile = mFTPClient.mlistFile(lRemoteFullPath);
+                        lRemoteFile = mFTPClient.mlistFile(lRemoteFullPath);
                     } catch (Exception iE) {
                         iE.printStackTrace();
                         Utils.sleep(USER_WAIT_BREAK); // Break the while true speed
                         continue;
                     }
 
-                    if (lFTPFile == null) {
+                    if (lRemoteFile == null) {
                         mCandidate.setIsAnError(true);
                         mOnTransferListener.onFail(mCandidate);
                         continue;
@@ -280,25 +280,8 @@ public class FTPTransfer extends AFTPConnection {
                             if (mIsInterrupted)
                                 break;
 
-                            switch (mCandidate.getExistingFileAction()) {
-                                case REPLACE_FILE:
-                                    lLocalFile.delete();
-                                    break;
-                                case RESUME_FILE_TRANSFER:
-                                    break;
-                                case REPLACE_IF_SIZE_IS_DIFFERENT:
-                                    if (lLocalFile.length() != lFTPFile.getSize())
-                                        lLocalFile.delete();
-                                    break;
-                                case REPLACE_IF_FILE_IS_MORE_RECENT:
-                                case REPLACE_IF_SIZE_IS_DIFFERENT_OR_FILE_IS_MORE_RECENT:
-                                case IGNORE:
-                                default:
-                                    mCandidate.setProgress((int) lLocalFile.length());
-                                    mCandidate.setFinished(true);
-                                    mOnTransferListener.onTransferSuccess(mCandidate);
-                                    continue;
-                            }
+                            if (!manageDownloadExistingAction(lRemoteFile, lLocalFile))
+                                continue;
 
                             mCandidate.setProgress((int) lLocalFile.length());
                         }
@@ -320,10 +303,7 @@ public class FTPTransfer extends AFTPConnection {
 
                         connectionLooper();
 
-                        try {
-                            mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
-                        } catch (IOException iE) {
-                            iE.printStackTrace();
+                        if (!setBinaryFileType()) {
                             Utils.sleep(USER_WAIT_BREAK); // Break the while speed
                             continue;
                         }
@@ -339,7 +319,7 @@ public class FTPTransfer extends AFTPConnection {
                             byte[] bytesArray = new byte[8192];
                             int lBytesRead;
                             int lTotalRead = (int) lLocalFile.length();
-                            int lFinalSize = (int) lFTPFile.getSize();
+                            int lFinalSize = (int) lRemoteFile.getSize();
                             mCandidate.setSize(lFinalSize);
                             mCandidate.setProgress((int) lLocalFile.length());
                             mFTPClient.setRestartOffset(mCandidate.getProgress());
@@ -391,15 +371,7 @@ public class FTPTransfer extends AFTPConnection {
                             }
                             mFTPClient.enterLocalActiveMode();
 
-                            mCandidate.setSpeedInKo(0);
-                            mCandidate.setRemainingTimeInMin(0);
-
-                            mCandidate.setFinished(true);
-                            mCandidate.setProgress(mCandidate.getSize());
-                            mOnTransferListener.onTransferProgress(mCandidate,
-                                    mCandidate.getProgress(), mCandidate.getSize());
-                            mOnTransferListener.onTransferSuccess(mCandidate);
-                            FTPLogManager.pushSuccessLog("Download of " + mCandidate.getName());
+                            finishCandidateSuccessfully();
 
                         } catch (Exception iE) {
                             iE.printStackTrace();
@@ -472,11 +444,7 @@ public class FTPTransfer extends AFTPConnection {
                             "\nGoing to read from the local path :\n\t" +
                             lFullLocalPath);
 
-
-                    mFTPClient.enterLocalPassiveMode();
-
                     // ---------------- INIT REMOTE FILE
-
                     File lLocalFile = new File(lFullLocalPath);
 
                     if (!lLocalFile.exists()) {
@@ -486,26 +454,23 @@ public class FTPTransfer extends AFTPConnection {
                         continue;
                     }
 
-
-                    FTPFile lFTPFile;
+                    mFTPClient.enterLocalPassiveMode();
+                    FTPFile lRemoteFile;
                     try {
-                        lFTPFile = mFTPClient.mlistFile(lFullRemotePath);
+                        lRemoteFile = mFTPClient.mlistFile(lFullRemotePath);
                     } catch (Exception iE) {
                         iE.printStackTrace();
+                        // Possibly socket error, retry another time.
                         continue;
                     }
 
                     // IF REMOTE FILE DOESN'T EXISTS
-                    if (lFTPFile == null) {
+                    if (lRemoteFile == null) {
                         try {
                             if (createRecursiveDirectories(mCandidate.getRemotePath()))
                                 LogManager.info(TAG, "Success creating folders");
-                            else {
-                                LogManager.error(TAG, "Impossible to create new file");
-                                mCandidate.setIsAnError(true);
-                                mOnTransferListener.onFail(mCandidate);
-                                continue;
-                            }
+                            else
+                                throw new IOException("Impossible to create new file");
 
                         } catch (IOException iE) {
                             iE.printStackTrace();
@@ -517,8 +482,6 @@ public class FTPTransfer extends AFTPConnection {
                     }
                     // ELSE IF REMOTE FILE EXISTS
                     else {
-                        LogManager.info(TAG, lFTPFile.getRawListing());
-
                         while (mCandidate.getExistingFileAction() == ExistingFileAction.NOT_DEFINED &&
                                 !mIsInterrupted) {
                             existingFileLooper();
@@ -527,34 +490,8 @@ public class FTPTransfer extends AFTPConnection {
                         if (mIsInterrupted)
                             break;
 
-                        switch (mCandidate.getExistingFileAction()) {
-                            case REPLACE_FILE:
-                                try {
-                                    mFTPClient.deleteFile(lFTPFile.getName());
-                                } catch (IOException iE) {
-                                    iE.printStackTrace();
-                                }
-                                break;
-                            case RESUME_FILE_TRANSFER:
-                                break;
-                            case REPLACE_IF_SIZE_IS_DIFFERENT:
-                                if (lFTPFile.getSize() != lLocalFile.length()) {
-                                    try {
-                                        mFTPClient.deleteFile(lFTPFile.getName());
-                                    } catch (IOException iE) {
-                                        iE.printStackTrace();
-                                    }
-                                }
-                                break;
-                            case REPLACE_IF_FILE_IS_MORE_RECENT:
-                            case REPLACE_IF_SIZE_IS_DIFFERENT_OR_FILE_IS_MORE_RECENT:
-                            case IGNORE:
-                            default:
-                                mCandidate.setProgress((int) lLocalFile.length());
-                                mCandidate.setFinished(true);
-                                mOnTransferListener.onTransferSuccess(mCandidate);
-                                continue;
-                        }
+                        if (!manageUploadExistingAction(lRemoteFile, lLocalFile))
+                            continue;
                     }
 
                     // ---------------- UPLOAD
@@ -567,10 +504,7 @@ public class FTPTransfer extends AFTPConnection {
 
                         connectionLooper();
 
-                        try {
-                            mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
-                        } catch (IOException iE) {
-                            iE.printStackTrace();
+                        if (!setBinaryFileType()) {
                             Utils.sleep(USER_WAIT_BREAK); // Break the while speed
                             continue;
                         }
@@ -578,32 +512,31 @@ public class FTPTransfer extends AFTPConnection {
                         // Re-enter in local passive mode in case of a disconnection
                         mFTPClient.enterLocalPassiveMode();
 
-                        FileInputStream lLocalStream;
-                        OutputStream lRemoteStream;
+                        FileInputStream lLocalStream = null;
+                        OutputStream lRemoteStream = null;
                         try {
-
                             lLocalStream = new FileInputStream(lLocalFile);
-//                            byte[] bytesArray = new byte[2048];
-                            byte[] bytesArray = new byte[16384];
-
+                            byte[] bytesArray = new byte[2048];
                             int lBytesRead;
-                            int lTotalRead = lFTPFile == null ? 0 : (int) lFTPFile.getSize();
+                            int lTotalRead = lRemoteFile == null ? 0 : (int) lRemoteFile.getSize();
                             int lFinalSize = (int) lLocalFile.length();
                             mCandidate.setSize(lFinalSize);
                             mCandidate.setProgress((int) lLocalFile.length());
-                            lLocalStream.skip(lTotalRead);
-//                            mFTPClient.setRestartOffset(mCandidate.getProgress());
 
                             lRemoteStream = mFTPClient.appendFileStream(lFullRemotePath);
-                            if (lRemoteStream == null)
+                            if (lRemoteStream == null) {
                                 LogManager.error(TAG, "lRemoteStream == null");
+                                mCandidate.setIsAnError(true);
+                                mOnTransferListener.onFail(mCandidate);
+                                mFTPClient.disconnect();
+                                break;
+                            }
 
-                            int lTotalReallyRead = 0;
+                            lLocalStream.skip(lTotalRead);
+                            // ---------------- UPLOAD LOOP
                             while ((lBytesRead = lLocalStream.read(bytesArray)) != -1) {
                                 mIsTransferring = true;
                                 lTotalRead += lBytesRead;
-                                lTotalReallyRead += lBytesRead;
-                                LogManager.info(TAG, "Writing... " + lTotalReallyRead);
 
                                 lRemoteStream.write(bytesArray, 0, lBytesRead);
                                 notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize, true);
@@ -611,6 +544,7 @@ public class FTPTransfer extends AFTPConnection {
                                 if (mIsInterrupted)
                                     break;
                             }
+                            // ---------------- UPLOAD LOOP
 
                             // Closing streams necessary before complete pending command
                             closeUploadStreams(lLocalStream, lRemoteStream);
@@ -620,7 +554,6 @@ public class FTPTransfer extends AFTPConnection {
 
                             if (mIsInterrupted)
                                 break;
-
 
                             try {
                                 mFTPClient.completePendingCommand();
@@ -633,21 +566,13 @@ public class FTPTransfer extends AFTPConnection {
                             }
                             mFTPClient.enterLocalActiveMode();
 
-                            mCandidate.setSpeedInKo(0);
-                            mCandidate.setRemainingTimeInMin(0);
-
-                            mCandidate.setFinished(true);
-                            mCandidate.setProgress(mCandidate.getSize());
-                            mOnTransferListener.onTransferProgress(mCandidate,
-                                    mCandidate.getProgress(), mCandidate.getSize());
-                            mOnTransferListener.onTransferSuccess(mCandidate);
-                            FTPLogManager.pushSuccessLog("Download of " + mCandidate.getName());
+                            finishCandidateSuccessfully();
 
                         } catch (Exception iE) {
                             iE.printStackTrace();
                             mIsTransferring = false;
                         } finally {
-//                            closeStreams(lLocalStream, lRemoteStream); // TODO : Close ?
+                            closeUploadStreams(lLocalStream, lRemoteStream);
                             Utils.sleep(USER_WAIT_BREAK); // Wait the connexion update status
                         }
                     }
@@ -677,6 +602,17 @@ public class FTPTransfer extends AFTPConnection {
         }
 
         return null;
+    }
+
+    private void finishCandidateSuccessfully() {
+        mCandidate.setSpeedInKo(0);
+        mCandidate.setRemainingTimeInMin(0);
+        mCandidate.setFinished(true);
+        mCandidate.setProgress(mCandidate.getSize());
+        mOnTransferListener.onTransferProgress(mCandidate,
+                mCandidate.getProgress(), mCandidate.getSize());
+        mOnTransferListener.onTransferSuccess(mCandidate);
+        FTPLogManager.pushSuccessLog("Download of " + mCandidate.getName());
     }
 
     private void connectionLooper() {
@@ -722,6 +658,72 @@ public class FTPTransfer extends AFTPConnection {
                     Utils.sleep(USER_WAIT_BREAK);
             }
         }
+    }
+    /**
+     * @param iRemoteFile the remote FTPFile
+     * @param iLocalFile the local File
+     * @return false if it should pass continue (pass to the next candidate). True if
+     * it should pass to the upload
+     */
+    private boolean manageDownloadExistingAction(FTPFile iRemoteFile, File iLocalFile) {
+        switch (mCandidate.getExistingFileAction()) {
+            case REPLACE_FILE:
+                iLocalFile.delete();
+                break;
+            case RESUME_FILE_TRANSFER:
+                break;
+            case REPLACE_IF_SIZE_IS_DIFFERENT:
+                if (iLocalFile.length() != iRemoteFile.getSize())
+                    iLocalFile.delete();
+                break;
+            case REPLACE_IF_FILE_IS_MORE_RECENT:
+            case REPLACE_IF_SIZE_IS_DIFFERENT_OR_FILE_IS_MORE_RECENT:
+            case IGNORE:
+            default:
+                mCandidate.setProgress((int) iLocalFile.length());
+                mCandidate.setFinished(true);
+                mOnTransferListener.onTransferSuccess(mCandidate);
+                return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param iRemoteFile the remote FTPFile
+     * @param iLocalFile the local File
+     * @return false if it should pass continue (pass to the next candidate). True if
+     * it should pass to the upload
+     */
+    private boolean manageUploadExistingAction(FTPFile iRemoteFile, File iLocalFile) {
+        switch (mCandidate.getExistingFileAction()) {
+            case RESUME_FILE_TRANSFER:
+                break;
+            case REPLACE_FILE:
+                try {
+                    mFTPClient.deleteFile(iRemoteFile.getName());
+                } catch (IOException iE) {
+                    iE.printStackTrace();
+                }
+                break;
+            case REPLACE_IF_SIZE_IS_DIFFERENT:
+                if (iRemoteFile.getSize() != iLocalFile.length()) {
+                    try {
+                        mFTPClient.deleteFile(iRemoteFile.getName());
+                    } catch (IOException iE) {
+                        iE.printStackTrace();
+                    }
+                }
+                break;
+            case REPLACE_IF_FILE_IS_MORE_RECENT:
+            case REPLACE_IF_SIZE_IS_DIFFERENT_OR_FILE_IS_MORE_RECENT:
+            case IGNORE:
+            default:
+                mCandidate.setProgress((int) iLocalFile.length());
+                mCandidate.setFinished(true);
+                mOnTransferListener.onTransferSuccess(mCandidate);
+                return false;
+        }
+        return true;
     }
 
     private boolean createRecursiveDirectories(String iFullPath) throws IOException {
@@ -779,6 +781,16 @@ public class FTPTransfer extends AFTPConnection {
         } finally {
             if (mOnStreamClosed != null)
                 mOnStreamClosed.onStreamClosed();
+        }
+    }
+
+    private boolean setBinaryFileType() {
+        try {
+            mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
+            return true;
+        } catch (IOException iE) {
+            iE.printStackTrace();
+            return false;
         }
     }
 
