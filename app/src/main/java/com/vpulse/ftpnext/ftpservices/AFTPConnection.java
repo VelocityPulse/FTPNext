@@ -339,6 +339,7 @@ public abstract class AFTPConnection {
             return false;
 
         try {
+            LogManager.info(TAG, "Sending noop");
             return mFTPClient.sendNoOp();
         } catch (IOException iE) {
             LogManager.error(TAG, "Send noop exception : " + iE.getMessage());
@@ -405,7 +406,8 @@ public abstract class AFTPConnection {
                         FTPLogManager.pushCodeReplyLog(lLastCode);
                     }
 
-                    mHandlerConnection.postDelayed(this, 100);
+                    if (mHandlerConnection.getLooper().getThread().isAlive())
+                        mHandlerConnection.postDelayed(this, 100);
                 }
             };
 

@@ -634,8 +634,8 @@ public class FTPTransfer extends AFTPConnection {
             connect(null);
         }
 
-//        while (!isLocallyConnected() || isConnecting() || isReconnecting()) {
-        while (!isRemotelyConnected()) {
+        while (!isLocallyConnected() || isConnecting() || isReconnecting()) {
+//        while (!isRemotelyConnected()) {
 //            LogManager.info(TAG, "Download files : Waiting connection");
             Utils.sleep(200);
 
@@ -644,11 +644,15 @@ public class FTPTransfer extends AFTPConnection {
                     // TODO : Update database on each returns
                     DataBase.getPendingFileDAO().update(mCandidate.setStarted(false));
                 }
-                mTransferThread = null;
                 break;
             }
         }
-        LogManager.info(TAG, "Download files : Connected : " + isLocallyConnected());
+        while (!isRemotelyConnected()) {
+            if (mIsInterrupted)
+                break;
+            Utils.sleep(200);
+        }
+        LogManager.info(TAG, "Is connected : true");
     }
 
     private void existingFileLooper() {
