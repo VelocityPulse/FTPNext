@@ -506,6 +506,15 @@ public class FTPTransfer extends AFTPConnection {
 
                         connectionLooper();
 
+
+                        try {
+                            lRemoteFile = mFTPClient.mlistFile(lFullRemotePath);
+                        } catch (Exception iE) {
+                            iE.printStackTrace();
+                            // Possibly socket error, retry another time.
+                            continue;
+                        }
+
                         if (!setBinaryFileType()) {
                             Utils.sleep(USER_WAIT_BREAK); // Break the while speed
                             continue;
@@ -513,6 +522,7 @@ public class FTPTransfer extends AFTPConnection {
 
                         // Re-enter in local passive mode in case of a disconnection
                         mFTPClient.enterLocalPassiveMode();
+
 
                         FileInputStream lLocalStream = null;
                         OutputStream lRemoteStream = null;
@@ -580,9 +590,10 @@ public class FTPTransfer extends AFTPConnection {
                     }
 
                     Utils.sleep(TRANSFER_FINISH_BREAK);
-                    // While end
+                    // While upload end
                 }
                 mTransferThread = null;
+                // While candidate end
             }
         });
 
@@ -623,7 +634,8 @@ public class FTPTransfer extends AFTPConnection {
             connect(null);
         }
 
-        while (!isLocallyConnected() || isConnecting() || isReconnecting()) {
+//        while (!isLocallyConnected() || isConnecting() || isReconnecting()) {
+        while (!isRemotelyConnected()) {
 //            LogManager.info(TAG, "Download files : Waiting connection");
             Utils.sleep(200);
 
@@ -770,13 +782,13 @@ public class FTPTransfer extends AFTPConnection {
         }
     }
 
-    private void closeUploadStreams(FileInputStream iFileInputStream, OutputStream iOutputStream) {
+    private void closeUploadStreams(FileInputStream iLocalStream, OutputStream iRemoteStream) {
         LogManager.info(TAG, "Closing upload streams");
         try {
-            if (iFileInputStream != null)
-                iFileInputStream.close();
-            if (iOutputStream != null)
-                iOutputStream.close();
+            if (iLocalStream != null)
+                iLocalStream.close();
+            if (iRemoteStream != null)
+                iRemoteStream.close();
         } catch (IOException iEx) {
             LogManager.error(TAG, "Closing streams not working");
             iEx.printStackTrace();

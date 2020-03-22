@@ -320,23 +320,36 @@ public abstract class AFTPConnection {
         mConnectionThread.start();
     }
 
-    public void isRemotelyConnected(final OnRemotelyConnectedResult iCallback) {
+    public void isRemotelyConnectedAsync(final OnRemotelyConnectedResult iCallback) {
         if (iCallback == null) {
             LogManager.error(TAG, "Asking remotely connected but without callback");
             return;
         }
 
+        // New Thread necessary to don't block mHandlerConnection
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    iCallback.onResult(mFTPClient.sendNoOp());
-                } catch (IOException iE) {
-                    iE.printStackTrace();
-                    iCallback.onResult(false);
-                }
+                iCallback.onResult(isRemotelyConnected());
             }
         }, "FTP Noop").start();
+    }
+
+    protected boolean isRemotelyConnected() {
+        if (mFTPClient == null)
+            return false;
+
+        try {
+            return mFTPClient.sendNoOp();
+        } catch (IOException iE) {
+            LogManager.error(TAG, "Send noop exception");
+//            iE.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean isLocallyConnected() {
+        return mFTPClient.isConnected();
     }
 
     public FTPServer getFTPServer() {
@@ -351,9 +364,6 @@ public abstract class AFTPConnection {
         return mCurrentDirectory;
     }
 
-    public boolean isLocallyConnected() {
-        return mFTPClient.isConnected();
-    }
 
     public boolean isConnecting() {
         return mConnectionThread != null && mConnectionThread.isAlive();

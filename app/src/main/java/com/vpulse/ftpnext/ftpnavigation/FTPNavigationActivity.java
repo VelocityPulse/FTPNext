@@ -376,7 +376,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             } else if (!mFTPServices.isLocallyConnected()) {
                 mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_CONNECTION_LOST);
             } else {
-                mFTPServices.isRemotelyConnected(new AFTPConnection.OnRemotelyConnectedResult() {
+                mFTPServices.isRemotelyConnectedAsync(new AFTPConnection.OnRemotelyConnectedResult() {
                     @Override
                     public void onResult(boolean iResult) {
                         if (iResult) {
