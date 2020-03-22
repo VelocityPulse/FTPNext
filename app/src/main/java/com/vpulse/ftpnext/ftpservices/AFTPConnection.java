@@ -93,7 +93,6 @@ public abstract class AFTPConnection {
             @Override
             public void onNetworkAvailable(boolean iIsWifi, Network iNewNetwork) {
                 LogManager.info(TAG, "On network available");
-                mFTPClient.setSocketFactory(iNewNetwork.getSocketFactory());
 
                 if (isReconnecting()) {
                     LogManager.info(TAG, "Already reconnecting");
@@ -342,8 +341,7 @@ public abstract class AFTPConnection {
         try {
             return mFTPClient.sendNoOp();
         } catch (IOException iE) {
-            LogManager.error(TAG, "Send noop exception");
-//            iE.printStackTrace();
+            LogManager.error(TAG, "Send noop exception : " + iE.getMessage());
         }
         return false;
     }
