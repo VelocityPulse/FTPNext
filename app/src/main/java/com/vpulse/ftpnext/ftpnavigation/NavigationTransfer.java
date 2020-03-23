@@ -353,6 +353,7 @@ public class NavigationTransfer {
                     lFTPTransfer.uploadFiles(mPendingFiles, mUniversalTransferListener);
             }
         });
+//        mContextActivity.mFTPServices.destroyConnection(); // TODO lol =====================================================================================================
     }
 
     private void createExistingFileDialog(final PendingFile iPendingFile) {

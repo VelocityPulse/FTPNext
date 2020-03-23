@@ -589,6 +589,11 @@ public class FTPTransfer extends AFTPConnection {
                         }
                     }
 
+                    // Issue : The remote file was removed after a fast wifi re connexion
+                    // Or when we killed the app
+                    // Fix : It appears that it is a FTP server problem and absolutely not a
+                    // ftp client problem
+
                     Utils.sleep(TRANSFER_FINISH_BREAK);
                     // While upload end
                 }
@@ -777,6 +782,7 @@ public class FTPTransfer extends AFTPConnection {
                 iLocalStream.close();
             if (iRemoteStream != null)
                 iRemoteStream.close();
+            LogManager.info(TAG, "Closing streams success");
         } catch (IOException iEx) {
             LogManager.error(TAG, "Closing streams not working");
             iEx.printStackTrace();
@@ -793,6 +799,7 @@ public class FTPTransfer extends AFTPConnection {
                 iLocalStream.close();
             if (iRemoteStream != null)
                 iRemoteStream.close();
+            LogManager.info(TAG, "Closing streams success");
         } catch (IOException iEx) {
             LogManager.error(TAG, "Closing streams not working");
             iEx.printStackTrace();
