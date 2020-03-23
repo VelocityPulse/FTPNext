@@ -3,20 +3,24 @@ package com.vpulse.ftpnext;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
+import android.renderscript.ScriptGroup;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.TextWatcher;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.widget.RadioGroup;
+
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.documentfile.provider.DocumentFile;
 
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.RadioGroup;
-
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.vpulse.ftpnext.commons.FileUtils;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppInfo;
@@ -57,7 +61,6 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
 
     private FTPServerDAO mFTPServerDAO;
     private FTPServer mEditedFTPServer;
-
 
 
     @Override
@@ -189,6 +192,24 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
                     else
                         ((TextInputLayout) mServerEditText.getTag()).setErrorEnabled(false);
                 }
+            }
+        });
+
+        mPasswordEditText.setTypeface(Typeface.DEFAULT);
+        ((TextInputLayout) mPasswordEditText.getTag()).setEndIconOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View iV) {
+                int lCursorStart = mPasswordEditText.getSelectionStart();
+                int lCursorEnd = mPasswordEditText.getSelectionEnd();
+
+                if (mPasswordEditText.getInputType() != InputType.TYPE_CLASS_TEXT)
+                    mPasswordEditText.setInputType(InputType.TYPE_CLASS_TEXT);
+                else
+                    mPasswordEditText.setInputType(
+                            InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+
+                mPasswordEditText.setSelection(lCursorStart, lCursorEnd);
+                mPasswordEditText.setTypeface(Typeface.DEFAULT);
             }
         });
     }
