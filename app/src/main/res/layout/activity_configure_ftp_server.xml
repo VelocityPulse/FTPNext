@@ -19,7 +19,7 @@
         android:layout_marginRight="7dp"
         android:orientation="vertical">
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/name_edit_text_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -27,7 +27,7 @@
             android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
             android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
 
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/name_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -35,9 +35,9 @@
                 android:hint="Name"
                 android:inputType="text" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/server_host_edit_text_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -45,7 +45,7 @@
             android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
             android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
 
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/server_host_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -53,10 +53,10 @@
                 android:hint="Server Host"
                 android:inputType="text" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/user_name_edit_text_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -64,8 +64,7 @@
             android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
             android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
 
-            <!--                TODO : Migrate to AndroidX-->
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/username_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -73,9 +72,9 @@
                 android:hint="Username"
                 android:inputType="text" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/password_edit_text_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -85,14 +84,14 @@
             android:layout_weight="1"
             app:passwordToggleEnabled="true">
 
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/password_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Password"
                 android:inputType="textPassword" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
         <RadioGroup
             android:id="@+id/type_radio_group"
@@ -129,7 +128,7 @@
 
         </RadioGroup>
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/port_edit_text_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -137,7 +136,7 @@
             android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
             android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
 
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/port_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -145,9 +144,9 @@
                 android:hint="Port (Default: 21)"
                 android:inputType="number" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/local_folder_edit_text_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -155,7 +154,7 @@
             android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
             android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
 
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/local_folder_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -165,7 +164,7 @@
                 android:inputType="text"
                 android:onClick="OnClickLocalFolder" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
         <Button
             android:layout_width="100dp"

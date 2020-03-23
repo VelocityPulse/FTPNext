@@ -1,6 +1,6 @@
 package com.vpulse.ftpnext.database.PendingFileTable;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LoadDirection;
