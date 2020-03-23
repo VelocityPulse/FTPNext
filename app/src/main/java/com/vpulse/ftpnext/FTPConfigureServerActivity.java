@@ -58,6 +58,8 @@ public class FTPConfigureServerActivity extends AppCompatActivity {
     private FTPServerDAO mFTPServerDAO;
     private FTPServer mEditedFTPServer;
 
+
+
     @Override
     public void onCreate(Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);

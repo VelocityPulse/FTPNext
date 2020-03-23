@@ -82,7 +82,8 @@
             android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
             android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
             android:layout_weight="1"
-            app:passwordToggleEnabled="true">
+            app:endIconMode="password_toggle">
+            <!--            app:passwordToggleEnabled="true">-->
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/password_edit_text"

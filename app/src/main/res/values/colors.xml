@@ -4,8 +4,11 @@
     <color name="primaryLight">#5eb8ff</color>
     <color name="primary">#0288d1</color>
     <color name="primaryDark">#005b9f</color>
-    <color name="secondary">#DE4255</color>
-    <color name="secondaryLight">#ff7681</color>
+
+    <color name="secondary">#053e96</color>
+    <color name="secondaryLight">#4f68c7</color>
+    <color name="secondaryDark">#001967</color>
+
     <color name="background">@color/white</color>
 
     <color name="white">@android:color/white</color>
