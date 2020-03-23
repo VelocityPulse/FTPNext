@@ -1,186 +1,180 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/activity_configure_ftp_server_scrollview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background"
     android:fitsSystemWindows="true"
-    android:orientation="vertical">
+    android:focusable="true"
+    android:focusableInTouchMode="true">
 
-    <ScrollView
-        android:id="@+id/activity_configure_ftp_server_scrollview"
+    <!-- FORM -->
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/background"
-        android:focusable="true"
-        android:focusableInTouchMode="true">
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="7dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="7dp"
+        android:orientation="vertical">
 
-        <!-- FORM -->
-
-        <LinearLayout
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/name_edit_text_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="7dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginRight="7dp"
-            android:orientation="vertical">
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
 
-            <android.support.design.widget.TextInputLayout
-                android:id="@+id/name_edit_text_layout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
-
-                <android.support.design.widget.TextInputEditText
-                    android:id="@+id/name_edit_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawableEnd="@drawable/baseline_bookmark"
-                    android:hint="Name"
-                    android:inputType="text" />
-
-            </android.support.design.widget.TextInputLayout>
-
-            <android.support.design.widget.TextInputLayout
-                android:id="@+id/server_host_edit_text_layout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
-
-                <android.support.design.widget.TextInputEditText
-                    android:id="@+id/server_host_edit_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawableEnd="@drawable/baseline_device_hub"
-                    android:hint="Server Host"
-                    android:inputType="text" />
-
-            </android.support.design.widget.TextInputLayout>
-
-
-            <android.support.design.widget.TextInputLayout
-                android:id="@+id/user_name_edit_text_layout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
-
-                <!--                TODO : Migrate to AndroidX-->
-                <android.support.design.widget.TextInputEditText
-                    android:id="@+id/username_edit_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawableEnd="@drawable/baseline_account_circle"
-                    android:hint="Username"
-                    android:inputType="text" />
-
-            </android.support.design.widget.TextInputLayout>
-
-            <android.support.design.widget.TextInputLayout
-                android:id="@+id/password_edit_text_layout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/name_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
+                android:drawableEnd="@drawable/baseline_bookmark"
+                android:hint="Name"
+                android:inputType="text" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/server_host_edit_text_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/server_host_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableEnd="@drawable/baseline_device_hub"
+                android:hint="Server Host"
+                android:inputType="text" />
+
+        </android.support.design.widget.TextInputLayout>
+
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/user_name_edit_text_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
+
+            <!--                TODO : Migrate to AndroidX-->
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/username_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableEnd="@drawable/baseline_account_circle"
+                android:hint="Username"
+                android:inputType="text" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/password_edit_text_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
+            android:layout_weight="1"
+            app:passwordToggleEnabled="true">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/password_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Password"
+                android:inputType="textPassword" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <RadioGroup
+            android:id="@+id/type_radio_group"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/radio_button_ftp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="27dp"
                 android:layout_weight="1"
-                app:passwordToggleEnabled="true">
+                android:checked="true"
+                android:onClick="OnClickRadioButtonFTP"
+                android:scaleX="1.15"
+                android:scaleY="1.15"
+                android:text="FTP" />
 
-                <android.support.design.widget.TextInputEditText
-                    android:id="@+id/password_edit_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Password"
-                    android:inputType="textPassword" />
-
-            </android.support.design.widget.TextInputLayout>
-
-            <RadioGroup
-                android:id="@+id/type_radio_group"
+            <RadioButton
+                android:id="@+id/radio_button_sftp"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
-                android:orientation="horizontal">
+                android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
+                android:layout_weight="1"
+                android:enabled="false"
+                android:onClick="OnClickRadioButtonSFTP"
+                android:scaleX="1.15"
+                android:scaleY="1.15"
+                android:text="SFTP" />
 
-                <RadioButton
-                    android:id="@+id/radio_button_ftp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="27dp"
-                    android:layout_weight="1"
-                    android:checked="true"
-                    android:onClick="OnClickRadioButtonFTP"
-                    android:scaleX="1.15"
-                    android:scaleY="1.15"
-                    android:text="FTP" />
+        </RadioGroup>
 
-                <RadioButton
-                    android:id="@+id/radio_button_sftp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="30dp"
-                    android:layout_weight="1"
-                    android:enabled="false"
-                    android:onClick="OnClickRadioButtonSFTP"
-                    android:scaleX="1.15"
-                    android:scaleY="1.15"
-                    android:text="SFTP" />
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/port_edit_text_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
 
-            </RadioGroup>
-
-            <android.support.design.widget.TextInputLayout
-                android:id="@+id/port_edit_text_layout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/port_edit_text"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
+                android:layout_height="wrap_content"
+                android:drawableEnd="@drawable/baseline_lock"
+                android:hint="Port (Default: 21)"
+                android:inputType="number" />
 
-                <android.support.design.widget.TextInputEditText
-                    android:id="@+id/port_edit_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawableEnd="@drawable/baseline_lock"
-                    android:hint="Port (Default: 21)"
-                    android:inputType="number" />
+        </android.support.design.widget.TextInputLayout>
 
-            </android.support.design.widget.TextInputLayout>
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/local_folder_edit_text_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
 
-            <android.support.design.widget.TextInputLayout
-                android:id="@+id/local_folder_edit_text_layout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/local_folder_edit_text"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin">
+                android:layout_height="wrap_content"
+                android:cursorVisible="false"
+                android:drawableEnd="@drawable/icon_folder_filled"
+                android:hint="Local Folder"
+                android:inputType="text"
+                android:onClick="OnClickLocalFolder" />
 
-                <android.support.design.widget.TextInputEditText
-                    android:id="@+id/local_folder_edit_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:cursorVisible="false"
-                    android:drawableEnd="@drawable/icon_folder_filled"
-                    android:hint="Local Folder"
-                    android:inputType="text"
-                    android:onClick="OnClickLocalFolder" />
+        </android.support.design.widget.TextInputLayout>
 
-            </android.support.design.widget.TextInputLayout>
+        <Button
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"
+            android:onClick="OnClickSaveButton"
+            android:text="Save" />
 
-            <Button
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="end"
-                android:layout_marginEnd="20dp"
-                android:layout_marginBottom="20dp"
-                android:onClick="OnClickSaveButton"
-                android:text="Save" />
-
-        </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>
