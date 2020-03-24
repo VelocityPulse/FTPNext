@@ -99,7 +99,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     protected AlertDialog mSuccessDialog;
     protected AlertDialog mCreateFolderDialog;
     protected AlertDialog mIndexingPendingFilesDialog;
-    protected AlertDialog mDownloadingDialog;
+    protected AlertDialog mTrensferDialog;
     protected AlertDialog mChooseExistingFileAction;
     protected AlertDialog mDeletingInfoDialog;
     protected AlertDialog mDeletingErrorDialog;
@@ -107,7 +107,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     protected Handler mHandler;
     protected boolean mWasOnPause;
     protected boolean mIsDirectoryFetchFinished;
-    protected boolean mIsShowingDownload;
+    protected boolean mIsShowingTrensfer;
     protected boolean mIsLargeDirectory;
 
     protected FTPServer mFTPServer;
@@ -184,7 +184,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private void terminateNavigation() {
         mFTPServices.destroyConnection();
 
-        if (mIsShowingDownload) {
+        if (mIsShowingTrensfer) {
             FTPTransfer[] lFTPTransfers = FTPTransfer.getFTPTransferInstance(mFTPServer.getDataBaseId());
 
             for (FTPTransfer lItem : lFTPTransfers) {
@@ -379,7 +379,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                     @Override
                     public void onResult(boolean iResult) {
                         if (iResult) {
-                            if (!mIsShowingDownload && !iBlockFetchDirIfSuccessRecovery)
+                            if (!mIsShowingTrensfer && !iBlockFetchDirIfSuccessRecovery)
                                 mHandler.sendMessage(Message.obtain(
                                         mHandler,
                                         NAVIGATION_ORDER_FETCH_DIRECTORY,
@@ -527,8 +527,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_MESSAGE_RECONNECT_SUCCESS:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_SUCCESS");
-                        dismissAllDialogsExcepted(mDownloadingDialog, mChooseExistingFileAction);
-                        if (!mIsShowingDownload)
+                        dismissAllDialogsExcepted(mTrensferDialog, mChooseExistingFileAction);
+                        if (!mIsShowingTrensfer)
                             mNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
                         break;
 
@@ -565,7 +565,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         mFTPServices.abortFetchDirectoryContent();
                         mFTPServices.abortDeleting();
                         dismissAllDialogsExcepted(
-                                mDownloadingDialog,
+                                mTrensferDialog,
                                 mChooseExistingFileAction,
                                 mReconnectDialog);
 
@@ -963,8 +963,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mReconnectDialog.cancel();
         if (mLargeDirDialog != null)
             mLargeDirDialog.cancel();
-        if (mDownloadingDialog != null)
-            mDownloadingDialog.cancel();
+        if (mTrensferDialog != null)
+            mTrensferDialog.cancel();
         if (mChooseExistingFileAction != null)
             mChooseExistingFileAction.cancel();
         if (mDeletingInfoDialog != null)
@@ -988,8 +988,8 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mReconnectDialog.cancel();
         if (mLargeDirDialog != null && !lDialogList.contains(mLargeDirDialog))
             mLargeDirDialog.cancel();
-        if (mDownloadingDialog != null && !lDialogList.contains(mDownloadingDialog))
-            mDownloadingDialog.cancel();
+        if (mTrensferDialog != null && !lDialogList.contains(mTrensferDialog))
+            mTrensferDialog.cancel();
         if (mChooseExistingFileAction != null && !lDialogList.contains(mChooseExistingFileAction))
             mChooseExistingFileAction.cancel();
         if (mDeletingInfoDialog != null && !lDialogList.contains(mDeletingInfoDialog))

@@ -26,9 +26,9 @@ public abstract class AFTPConnection {
     protected static final int CONNECTION_TRANSFER_TYPE = 1;
     protected static final int CONNECTION_SERVICES_TYPE = 2;
     protected static final int TIMEOUT_SERVER_ANSWER = 15000;
+    protected static final int RECONNECTION_WAITING_TIME = 1200;
 
     private static final String TAG = "FTP CONNECTION";
-    private static final int RECONNECTION_WAITING_TIME = 700;
     private static final boolean THREAD_STATUS_ACTIVATED = true;
 
     private static int sInstanceNumber = 0;
@@ -44,7 +44,7 @@ public abstract class AFTPConnection {
     private Thread mReconnectThread;
 
     private boolean mConnectionInterrupted;
-    private boolean mReconnectInterrupted;
+    private boolean mReconnectionInterrupted;
 
     private NetworkManager.OnNetworkAvailable mOnNetworkAvailableCallback;
     private NetworkManager.OnNetworkLost mOnNetworkLostCallback;
@@ -126,7 +126,7 @@ public abstract class AFTPConnection {
         FTPLogManager.pushStatusLog("Aborting reconnection");
 
         if (isReconnecting())
-            mReconnectInterrupted = true;
+            mReconnectionInterrupted = true;
     }
 
     public void abortConnection() {
@@ -155,19 +155,24 @@ public abstract class AFTPConnection {
     public void reconnect(final OnConnectionRecover onConnectionRecover) {
         LogManager.info(TAG, "Reconnect");
 
-        mReconnectInterrupted = false;
+        mReconnectionInterrupted = false;
         mReconnectThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 if (isLocallyConnected())
                     disconnect();
-
                 while (isLocallyConnected()) {
                     Utils.sleep(RECONNECTION_WAITING_TIME);
                 }
 
-                while (!isLocallyConnected() && !mReconnectInterrupted) {
+                while (!isLocallyConnected() && !mReconnectionInterrupted) {
+
                     if (!isConnecting()) {
+                        if (isLocallyConnected())
+                            disconnect();
+                        while (isLocallyConnected()) {
+                            Utils.sleep(RECONNECTION_WAITING_TIME);
+                        }
 
                         connect(new OnConnectionResult() {
                             @Override
@@ -181,18 +186,24 @@ public abstract class AFTPConnection {
                             @Override
                             public void onFail(ErrorCodeDescription iErrorEnum, int iErrorCode) {
                                 LogManager.error(TAG, "Reconnect fail");
-                                if (iErrorEnum == ErrorCodeDescription.ERROR_FAILED_LOGIN) {
-                                    onConnectionRecover.onConnectionDenied(iErrorEnum,
-                                            iErrorCode);
-                                    mConnectionInterrupted = true;
+                                if (onConnectionRecover != null) {
+
+                                    if (iErrorEnum == ErrorCodeDescription.ERROR_FAILED_LOGIN) {
+                                        onConnectionRecover.onConnectionDenied(iErrorEnum,
+                                                iErrorCode);
+                                        mConnectionInterrupted = true;
+                                    } else if (iErrorEnum == ErrorCodeDescription.ERROR_ALREADY_CONNECTED) {
+                                        onConnectionRecover.onConnectionRecover();
+                                        mConnectionInterrupted = true;
+                                    }
                                 }
                             }
                         });
-
-                        LogManager.info(TAG, "Reconnection waiting...");
-                        Utils.sleep(RECONNECTION_WAITING_TIME);
                     }
+                    LogManager.info(TAG, "Reconnection waiting...");
+                    Utils.sleep(RECONNECTION_WAITING_TIME);
                 }
+                LogManager.info(TAG, "Reconnection leaving");
             }
         });
         mReconnectThread.setName("FTP Reconnection");
@@ -213,7 +224,7 @@ public abstract class AFTPConnection {
         }
     }
 
-    public void connect(final OnConnectionResult onConnectionResult) {
+    public synchronized void connect(final OnConnectionResult onConnectionResult) {
         LogManager.info(TAG, "Connect");
         if (isLocallyConnected()) {
             LogManager.error(TAG, "Trying a connection but is already connected");
@@ -324,6 +335,7 @@ public abstract class AFTPConnection {
             LogManager.error(TAG, "Asking remotely connected but without callback");
             return;
         }
+        LogManager.debug(TAG, "Is remotely connected async");
 
         // New Thread necessary to don't block mHandlerConnection
         new Thread(new Runnable() {
@@ -338,13 +350,14 @@ public abstract class AFTPConnection {
         if (mFTPClient == null)
             return false;
 
+        boolean lNoopResult = false;
         try {
-            LogManager.info(TAG, "Sending noop");
-            return mFTPClient.sendNoOp();
+            lNoopResult = mFTPClient.sendNoOp();
+            LogManager.info(TAG, "Send noop success");
         } catch (IOException iE) {
             LogManager.error(TAG, "Send noop exception : " + iE.getMessage());
         }
-        return false;
+        return lNoopResult;
     }
 
     public boolean isLocallyConnected() {

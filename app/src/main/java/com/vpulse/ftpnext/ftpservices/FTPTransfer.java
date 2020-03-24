@@ -93,13 +93,6 @@ public class FTPTransfer extends AFTPConnection {
             @Override
             public void onStreamClosed() {
                 mOnStreamClosed = null;
-                try {
-                    boolean lResult = mFTPClient.completePendingCommand();
-                    LogManager.info(TAG, "Complete pending command : " + lResult);
-                } catch (IOException iE) {
-                    LogManager.info(TAG, "Complete pending command : " + false);
-                    iE.printStackTrace();
-                }
                 FTPTransfer.super.destroyConnection();
                 sFTPTransferInstances.remove(FTPTransfer.this);
             }
@@ -506,7 +499,6 @@ public class FTPTransfer extends AFTPConnection {
 
                         connectionLooper();
 
-
                         try {
                             lRemoteFile = mFTPClient.mlistFile(lFullRemotePath);
                         } catch (Exception iE) {
@@ -634,28 +626,34 @@ public class FTPTransfer extends AFTPConnection {
     }
 
     private void connectionLooper() {
-        if (!isLocallyConnected() && !isReconnecting()) {
-            LogManager.info(TAG, "Not connected");
-            connect(null);
-        }
-
-        while (!isLocallyConnected() || isConnecting() || isReconnecting()) {
-//        while (!isRemotelyConnected()) {
-//            LogManager.info(TAG, "Download files : Waiting connection");
-            Utils.sleep(200);
-
-            if (mIsInterrupted) {
-                if (mCandidate != null && mCandidate.isStarted()) {
-                    // TODO : Update database on each returns
-                    DataBase.getPendingFileDAO().update(mCandidate.setStarted(false));
-                }
-                break;
-            }
-        }
         while (!isRemotelyConnected()) {
             if (mIsInterrupted)
                 break;
-            Utils.sleep(200);
+
+            if (!isReconnecting()) {
+                if (isLocallyConnected())
+                    disconnect();
+                while (isLocallyConnected()) {
+                    Utils.sleep(RECONNECTION_WAITING_TIME);
+                }
+
+                connect(null);
+            }
+
+            while (!isLocallyConnected() || isConnecting() || isReconnecting()) {
+//        while (!isRemotelyConnected()) {
+//            LogManager.info(TAG, "Download files : Waiting connection");
+                Utils.sleep(200);
+
+                if (mIsInterrupted) {
+                    if (mCandidate != null && mCandidate.isStarted()) {
+                        // TODO : Update database on each returns
+                        DataBase.getPendingFileDAO().update(mCandidate.setStarted(false));
+                    }
+                    break;
+                }
+            }
+            Utils.sleep(1000);
         }
         LogManager.info(TAG, "Is connected : true");
     }
@@ -682,9 +680,10 @@ public class FTPTransfer extends AFTPConnection {
             }
         }
     }
+
     /**
      * @param iRemoteFile the remote FTPFile
-     * @param iLocalFile the local File
+     * @param iLocalFile  the local File
      * @return false if it should pass continue (pass to the next candidate). True if
      * it should pass to the upload
      */
@@ -713,7 +712,7 @@ public class FTPTransfer extends AFTPConnection {
 
     /**
      * @param iRemoteFile the remote FTPFile
-     * @param iLocalFile the local File
+     * @param iLocalFile  the local File
      * @return false if it should pass continue (pass to the next candidate). True if
      * it should pass to the upload
      */

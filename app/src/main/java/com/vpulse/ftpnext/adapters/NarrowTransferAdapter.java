@@ -260,7 +260,6 @@ public class NarrowTransferAdapter
     }
 
     public void showError(PendingFile iPendingFile) {
-        // Guard
         PendingFileItem lPendingFileItem = null;
         for (PendingFileItem lItem : mPendingFileItemList) {
             if (lItem.mPendingFile == iPendingFile)

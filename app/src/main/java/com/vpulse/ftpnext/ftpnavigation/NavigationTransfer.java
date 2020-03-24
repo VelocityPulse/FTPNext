@@ -41,6 +41,7 @@ import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
 
+// TODO : BEFORE RELEASE : Upload in "/" shows success
 public class NavigationTransfer {
 
     private final static String TAG = "NAVIGATION DOWNLOAD";
@@ -54,6 +55,7 @@ public class NavigationTransfer {
 
     private boolean mCanAutoScrollInLogView;
     private PendingFile[] mPendingFiles;
+    private int mPendingFileErrors;
 
     private NavigationTransfer() throws InstantiationException {
         mHandler = null;
@@ -71,7 +73,7 @@ public class NavigationTransfer {
     }
 
     protected void onResume() {
-        if (mFTPTransferList.size() > 0 && mContextActivity.mIsShowingDownload) {
+        if (mFTPTransferList.size() > 0 && mContextActivity.mIsShowingTrensfer) {
             mNarrowTransferAdapter.notifyDataSetChanged();
         }
     }
@@ -171,7 +173,7 @@ public class NavigationTransfer {
                     });
                 }
 
-                DownloadFiles(iPendingFiles);
+                downloadFiles(iPendingFiles);
             }
         });
     }
@@ -214,6 +216,7 @@ public class NavigationTransfer {
 
         destroyAllTransferConnections();
         mPendingFiles = indexFilesForUpload(iUris);
+        mPendingFileErrors = 0;
 
         createNarrowTransferDialog(mPendingFiles, LoadDirection.UPLOAD);
 
@@ -223,11 +226,12 @@ public class NavigationTransfer {
             createNewFTPTransfer(LoadDirection.UPLOAD);
     }
 
-    private void DownloadFiles(final PendingFile[] iPendingFiles) {
+    private void downloadFiles(final PendingFile[] iPendingFiles) {
         LogManager.info(TAG, "Download files");
 
         destroyAllTransferConnections();
         mPendingFiles = iPendingFiles;
+        mPendingFileErrors = 0;
 
         createNarrowTransferDialog(mPendingFiles, LoadDirection.DOWNLOAD);
 
@@ -322,7 +326,7 @@ public class NavigationTransfer {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         destroyAllTransferConnections();
-                        mContextActivity.mIsShowingDownload = false;
+                        mContextActivity.mIsShowingTrensfer = false;
                         FTPLogManager.unsubscribeOnNewFTPLogColored(lOnNewFTPLogColored);
                         mContextActivity.mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DOWNLOAD_FINISHED);
                     }
@@ -334,9 +338,9 @@ public class NavigationTransfer {
                     lBuilder.setTitle("Downloading ..."); // TODO : strings
                 else if (iLoadDirection == LoadDirection.UPLOAD)
                     lBuilder.setTitle("Uploading ...");
-                mContextActivity.mDownloadingDialog = lBuilder.create();
-                mContextActivity.mDownloadingDialog.show();
-                mContextActivity.mIsShowingDownload = true;
+                mContextActivity.mTrensferDialog = lBuilder.create();
+                mContextActivity.mTrensferDialog.show();
+                mContextActivity.mIsShowingTrensfer = true;
             }
         });
     }
@@ -385,7 +389,7 @@ public class NavigationTransfer {
             @Override
             public void onClick(DialogInterface iDialog, int iWhich) {
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
-                mContextActivity.mDownloadingDialog.dismiss();
+                mContextActivity.mTrensferDialog.dismiss();
 
                 destroyAllTransferConnections();
             }
@@ -503,6 +507,7 @@ public class NavigationTransfer {
                     @Override
                     public void run() {
                         mNarrowTransferAdapter.showError(iPendingFile);
+                        mPendingFileErrors++;
                         DataBase.getPendingFileDAO().delete(iPendingFile);
                     }
                 });
@@ -513,22 +518,37 @@ public class NavigationTransfer {
                 mFTPTransferList.remove(iFTPTransfer);
 
                 if (mFTPTransferList.size() == 0) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (!mContextActivity.mSuccessDialog.isShowing() &&
-                                    mNarrowTransferAdapter.getItemCountOmitPendingFile() == 0) {
-                                mContextActivity.mDownloadingDialog.dismiss();
-                                showSuccessTransfer();
+
+                    if (mPendingFileErrors == 0) {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (!mContextActivity.mSuccessDialog.isShowing() &&
+                                        mNarrowTransferAdapter.getItemCountOmitPendingFile() == 0) {
+                                    mContextActivity.mTrensferDialog.dismiss();
+                                    showSuccessTransfer();
+                                }
                             }
-                        }
-                    });
+                        });
+                    } else {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                mContextActivity.mTrensferDialog
+                                        .getButton(DialogInterface.BUTTON_NEGATIVE)
+                                        .setText("Finish"); // TODO : Strings
+                            }
+                        });
+                    }
                 }
             }
         };
     }
 
     private void showSuccessTransfer() {
+        // Uncomment this line if we dont find the reason
+//        if (mContextActivity.isFinishing())
+//            return;
         String lMessage = "All files has been transferred"; // TODO : Strings
 
         mContextActivity.mSuccessDialog = Utils.createSuccessAlertDialog(mContextActivity, lMessage);
@@ -561,6 +581,7 @@ public class NavigationTransfer {
                 })
                 .setNegativeButton("cancel", null);
 
+        // TODO : BEFORE RELEASE : Set cancelable
         mContextActivity.mIndexingPendingFilesDialog = lBuilder.create();
         mContextActivity.mIndexingPendingFilesDialog.show();
     }
