@@ -1,15 +1,10 @@
 package com.vpulse.ftpnext.ftpnavigation;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
-import androidx.core.text.HtmlCompat;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.text.Spanned;
 import android.view.MotionEvent;
 import android.view.View;
@@ -17,6 +12,12 @@ import android.widget.CheckBox;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.text.HtmlCompat;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.adapters.NarrowTransferAdapter;

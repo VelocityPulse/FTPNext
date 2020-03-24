@@ -2,9 +2,6 @@ package com.vpulse.ftpnext.ftpnavigation;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -14,18 +11,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import androidx.annotation.Nullable;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.view.ViewCompat;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,6 +18,19 @@ import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.vpulse.ftpnext.commons.Utils;
@@ -92,10 +90,10 @@ public class FTPNavigationActivity extends AppCompatActivity {
 
     protected NavigationRecyclerViewAdapter mCurrentAdapter;
 
-    protected ProgressDialog mLoadingDialog;
-    protected ProgressDialog mCancelingDialog;
-    protected ProgressDialog mLargeDirDialog;
-    protected ProgressDialog mReconnectDialog;
+    protected AlertDialog mLoadingDialog;
+    protected AlertDialog mCancelingDialog;
+    protected AlertDialog mLargeDirDialog;
+    protected AlertDialog mReconnectDialog;
 
     protected AlertDialog mErrorADialog;
     protected AlertDialog mSuccessDialog;
@@ -975,7 +973,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
             mDeletingErrorDialog.cancel();
     }
 
-    protected void dismissAllDialogsExcepted(Dialog... iToNotDismiss) {
+    protected void dismissAllDialogsExcepted(DialogInterface... iToNotDismiss) {
         List lDialogList = Arrays.asList(iToNotDismiss);
 
         if (mErrorADialog != null && !lDialogList.contains(mErrorADialog))

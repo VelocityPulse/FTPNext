@@ -15,12 +15,7 @@
         <item name="android:itemBackground">@color/primary</item>
     </style>
 
-    <!-- interesting to add in CustomActionBar if we want to remove the background
-        <style name="StyleActionBar" parent="Widget.AppCompat.Light.ActionBar.Solid">
-            <item name="android:background">@color/primary</item>
-            <item name="background">@color/primary</item>
-        </style>
-        -->
+<!--    Action bar ============================================== -->
 
     <style name="ThemeActionBar" parent="@style/ThemeOverlay.AppCompat.ActionBar">
         <item name="colorControlNormal">@android:color/white</item>

@@ -1,25 +1,25 @@
 package com.vpulse.ftpnext;
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import androidx.core.app.ActivityCompat;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.vpulse.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
@@ -252,6 +252,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onActivityResult(int iRequestCode, int iResultCode, Intent iResultData) {
+        super.onActivityResult(iRequestCode, iResultCode, iResultData);
+
         if (iRequestCode == ACTIVITY_REQUEST_CODE_CONFIGURE_SERVER) {
             overridePendingTransition(R.anim.no_animation, R.anim.activity_fade_out_centered);
 
@@ -284,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
 //        }
 
         final FTPServer lFTPServer = mFTPServerDAO.fetchById(iServerID);
-        final ProgressDialog lLoadingAlertDialog;
+        final AlertDialog lLoadingAlertDialog;
         mIsBusy = true;
 
         if (lFTPServer == null) {
@@ -297,7 +299,6 @@ public class MainActivity extends AppCompatActivity {
 //        }
 
         lLoadingAlertDialog = Utils.initProgressDialog(this, null);
-        lLoadingAlertDialog.setContentView(R.layout.loading_icon);
         lLoadingAlertDialog.setTitle("Connection..."); // TODO : strings
         lLoadingAlertDialog.create();
         lLoadingAlertDialog.show();

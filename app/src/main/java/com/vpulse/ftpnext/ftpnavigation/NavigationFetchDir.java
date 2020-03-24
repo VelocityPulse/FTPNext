@@ -1,12 +1,11 @@
 package com.vpulse.ftpnext.ftpnavigation;
 
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Handler;
 import android.os.Message;
 
-import com.vpulse.ftpnext.R;
+import androidx.appcompat.app.AlertDialog;
+
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection;
@@ -50,12 +49,9 @@ public class NavigationFetchDir {
 
     private void initializeDialogs() {
         // Canceling dialog
-        mContextActivity.mCancelingDialog = new ProgressDialog(mContextActivity);
-        mContextActivity.mCancelingDialog.setContentView(R.layout.loading_icon);
-        mContextActivity.mCancelingDialog.setCancelable(false);
-        mContextActivity.mCancelingDialog.setCanceledOnTouchOutside(false);
+        mContextActivity.mCancelingDialog = Utils.initProgressDialogNoButton(mContextActivity);
         mContextActivity.mCancelingDialog.setTitle("Canceling..."); //TODO : strings
-        mContextActivity.mCancelingDialog.create();
+        mContextActivity.mCancelingDialog.create(); // TODO test if necessary
 
         // Large directory dialog
         mContextActivity.mLargeDirDialog = Utils.initProgressDialog(mContextActivity, new DialogInterface.OnClickListener() {

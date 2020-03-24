@@ -1,7 +1,6 @@
 package com.vpulse.ftpnext.commons;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -10,6 +9,8 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+
+import androidx.appcompat.app.AlertDialog;
 
 import com.vpulse.ftpnext.R;
 
@@ -120,7 +121,7 @@ public class Utils {
         return lBuilder.create();
     }
 
-    public static void dismissAlertDialogOnUIThread(Activity iActivity, final AlertDialog iAlertDialog) {
+    public static void dismissAlertDialogOnUIThread(Activity iActivity, final DialogInterface iAlertDialog) {
         iActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -129,7 +130,7 @@ public class Utils {
         });
     }
 
-    public static void cancelAlertDialogOnUIThread(Activity iActivity, final AlertDialog iAlertDialog) {
+    public static void cancelAlertDialogOnUIThread(Activity iActivity, final DialogInterface iAlertDialog) {
         iActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -164,13 +165,21 @@ public class Utils {
         return String.format(Locale.FRANCE, "%.1f %sB", iBytes / Math.pow(lUnit, lExp), lPre);
     }
 
-    public static ProgressDialog initProgressDialog(Context iContext, final ProgressDialog.OnClickListener iOnClickCancelListener) {
-        final ProgressDialog lProgressDialog;
-        lProgressDialog = new ProgressDialog(iContext);
-        lProgressDialog.setContentView(R.layout.loading_icon);
+    public static AlertDialog initProgressDialog(Context iContext, final AlertDialog.OnClickListener iOnClickCancelListener) {
+        final AlertDialog.Builder lProgressDialog;
+        lProgressDialog = new AlertDialog.Builder(iContext);
+        lProgressDialog.setView(R.layout.loading_icon);
+        lProgressDialog.setCancelable(false);
+        lProgressDialog.setNegativeButton("Cancel", iOnClickCancelListener);
+        return lProgressDialog.create();
+    }
+
+    public static AlertDialog initProgressDialogNoButton(Context iContext) {
+        final AlertDialog.Builder lProgressDialog;
+        lProgressDialog = new AlertDialog.Builder(iContext);
+        lProgressDialog.setView(R.layout.loading_icon);
         lProgressDialog.setCancelable(true);
-        lProgressDialog.setCanceledOnTouchOutside(false);
-        lProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", iOnClickCancelListener);
-        return lProgressDialog;
+        lProgressDialog.setCancelable(false);
+        return lProgressDialog.create();
     }
 }

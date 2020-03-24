@@ -1,12 +1,13 @@
 package com.vpulse.ftpnext.ftpnavigation;
 
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Handler;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AlertDialog;
 
 import com.vpulse.ftpnext.R;
 
