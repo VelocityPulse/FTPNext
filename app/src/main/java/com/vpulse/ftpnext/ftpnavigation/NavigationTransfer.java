@@ -41,7 +41,6 @@ import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
 import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
 
-// TODO : BEFORE RELEASE : Upload in "/" shows success
 public class NavigationTransfer {
 
     private final static String TAG = "NAVIGATION DOWNLOAD";
@@ -503,11 +502,12 @@ public class NavigationTransfer {
 
             @Override
             public void onFail(final PendingFile iPendingFile) {
+                mPendingFileErrors++;
+
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         mNarrowTransferAdapter.showError(iPendingFile);
-                        mPendingFileErrors++;
                         DataBase.getPendingFileDAO().delete(iPendingFile);
                     }
                 });
@@ -546,9 +546,6 @@ public class NavigationTransfer {
     }
 
     private void showSuccessTransfer() {
-        // Uncomment this line if we dont find the reason
-//        if (mContextActivity.isFinishing())
-//            return;
         String lMessage = "All files has been transferred"; // TODO : Strings
 
         mContextActivity.mSuccessDialog = Utils.createSuccessAlertDialog(mContextActivity, lMessage);
@@ -569,37 +566,40 @@ public class NavigationTransfer {
 
     private void showUploadConfirmation(final Uri[] iUris) {
         LogManager.debug(TAG, "Show upload confirmation");
-        AlertDialog.Builder lBuilder = new AlertDialog.Builder(mContextActivity)
-                .setTitle("Uploading") // TODO : Strings
-                .setMessage("Do you confirm the upload of " + iUris.length + " files ?")
-                .setPositiveButton("yes", new DialogInterface.OnClickListener() {
+        mContextActivity.mIndexingPendingFilesDialog = Utils.createAlertDialog(
+                mContextActivity,
+                "Uploading", // TODO : Strings
+                "Do you confirm the upload of " + iUris.length + " files ?",
+                "yes",
+                new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface iDialog, int iWhich) {
                         iDialog.dismiss();
                         uploadFiles(iUris);
                     }
-                })
-                .setNegativeButton("cancel", null);
+                },
+                "cancel",
+                null);
 
-        // TODO : BEFORE RELEASE : Set cancelable
-        mContextActivity.mIndexingPendingFilesDialog = lBuilder.create();
         mContextActivity.mIndexingPendingFilesDialog.show();
     }
 
     private void showDownloadConfirmation(final FTPFile[] iSelectedFiles) {
-        AlertDialog.Builder lBuilder = new AlertDialog.Builder(mContextActivity)
-                .setTitle("Downloading") // TODO : Strings
-                .setMessage("Do you confirm the download of " + iSelectedFiles.length + " files ?")
-                .setPositiveButton("yes", new DialogInterface.OnClickListener() {
+        mContextActivity.mIndexingPendingFilesDialog = Utils.createAlertDialog(
+                mContextActivity,
+                "Downloading", // TODO : Strings
+                "Do you confirm the download of " + iSelectedFiles.length + " files ?",
+                "yes",
+                new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface iDialog, int iWhich) {
                         iDialog.dismiss();
                         indexFilesForDownload(iSelectedFiles);
                     }
-                })
-                .setNegativeButton("cancel", null);
+                },
+                "cancel",
+                null);
 
-        mContextActivity.mIndexingPendingFilesDialog = lBuilder.create();
         mContextActivity.mIndexingPendingFilesDialog.show();
     }
 }

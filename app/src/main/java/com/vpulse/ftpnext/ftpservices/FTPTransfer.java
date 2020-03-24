@@ -470,6 +470,7 @@ public class FTPTransfer extends AFTPConnection {
                         } catch (IOException iE) {
                             iE.printStackTrace();
                             LogManager.error(TAG, "Impossible to create new file");
+                            FTPLogManager.pushErrorLog("Impossible to create path or new file");
                             mCandidate.setIsAnError(true);
                             mOnTransferListener.onFail(mCandidate);
                             continue;
