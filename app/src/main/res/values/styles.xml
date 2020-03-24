@@ -6,7 +6,7 @@
         <item name="colorAccent">@color/primaryLight</item>
         <item name="colorPrimaryDark">@color/primaryDark</item>
 
-        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondary">@color/primaryLight</item>
         <item name="colorOnSecondary">@color/white</item>
 
         <item name="colorError">#F44336</item>

@@ -42,6 +42,7 @@
     <ImageView
         android:layout_width="48dp"
         android:layout_height="48dp"
+        android:tint="@color/primary"
         android:src="@drawable/ic_outline_storage" />
 
 </LinearLayout>

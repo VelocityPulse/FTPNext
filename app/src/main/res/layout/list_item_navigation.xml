@@ -37,6 +37,7 @@
             android:id="@+id/navigation_recycler_item_left_draw"
             android:layout_width="36dp"
             android:layout_height="36dp"
+            android:tint="@color/primary"
             android:src="@drawable/ic_outline_file"
             tools:ignore="ContentDescription" />
 
