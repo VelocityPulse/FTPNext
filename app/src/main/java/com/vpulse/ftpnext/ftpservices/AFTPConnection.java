@@ -14,6 +14,7 @@ import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
 
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPConnectionClosedException;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
@@ -195,6 +196,10 @@ public abstract class AFTPConnection {
                                     } else if (iErrorEnum == ErrorCodeDescription.ERROR_ALREADY_CONNECTED) {
                                         onConnectionRecover.onConnectionRecover();
                                         mConnectionInterrupted = true;
+                                    } else if (iErrorEnum == ErrorCodeDescription.ERROR_SERVER_DENIED_CONNECTION) {
+                                        onConnectionRecover.onConnectionDenied(iErrorEnum,
+                                                iErrorCode);
+                                        mConnectionInterrupted = true;
                                     }
                                 }
                             }
@@ -317,6 +322,10 @@ public abstract class AFTPConnection {
                         onConnectionResult.onFail(ErrorCodeDescription.ERROR_UNKNOWN_HOST,
                                 mFTPClient.getReplyCode());
 //                      onConnectionResult.onFail(ErrorCodeDescription.ERROR_UNKNOWN_HOST, 434);
+                } catch (FTPConnectionClosedException iE) {
+                    if (onConnectionResult != null)
+                        onConnectionResult.onFail(ErrorCodeDescription.ERROR_SERVER_DENIED_CONNECTION,
+                                mFTPClient.getReplyCode());
                 } catch (Exception iE) {
                     iE.printStackTrace();
                     if (onConnectionResult != null)
@@ -357,6 +366,7 @@ public abstract class AFTPConnection {
         } catch (IOException iE) {
             LogManager.error(TAG, "Send noop exception : " + iE.getMessage());
         }
+        LogManager.debug(TAG, "noop returns : " + lNoopResult);
         return lNoopResult;
     }
 
@@ -443,6 +453,7 @@ public abstract class AFTPConnection {
         ERROR_NOT_A_DIRECTORY,
         ERROR_EXECUTE_PERMISSION_MISSED,
         ERROR_READ_PERMISSION_MISSED,
+        ERROR_SERVER_DENIED_CONNECTION,
     }
 
     public interface OnRemotelyConnectedResult {

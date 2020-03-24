@@ -470,6 +470,17 @@ public class NavigationTransfer {
             }
 
             @Override
+            public void onFileUnselected(final PendingFile iPendingFile) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // TODO : BEFORE RELEASE : Sort items to put loading on the top
+                        mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
+                    }
+                });
+            }
+
+            @Override
             public void onTransferProgress(final PendingFile iPendingFile, final long iProgress, final long iSize) {
                 mHandler.post(new Runnable() {
                     @Override

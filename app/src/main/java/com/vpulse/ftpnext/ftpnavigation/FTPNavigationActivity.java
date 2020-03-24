@@ -52,6 +52,8 @@ import java.util.List;
 
 import static com.vpulse.ftpnext.ftpnavigation.NavigationFetchDir.LARGE_DIRECTORY_SIZE;
 
+// TODO : BEFORE RELEASE : Cancel during connection or loading dont work
+// TODO : BEFORE RELEASE : Connection canceled while active download are still displaying...
 public class FTPNavigationActivity extends AppCompatActivity {
 
     public static final int NO_DATABASE_ID = -1;
@@ -473,11 +475,11 @@ public class FTPNavigationActivity extends AppCompatActivity {
     private void initializeHandler() {
         mHandler = new Handler(Looper.getMainLooper()) {
             @Override
-            public void handleMessage(Message iMsg) {
+            public void handleMessage(@NotNull Message iMsg) {
                 AFTPConnection.ErrorCodeDescription lErrorDescription;
                 FTPFile[] lFiles;
 
-                if (!mIsRunning)
+                if (!mIsRunning || isFinishing())
                     return;
 
                 switch (iMsg.what) {

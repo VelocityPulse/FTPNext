@@ -102,6 +102,7 @@ public class Utils {
         AlertDialog.Builder lBuilder = new AlertDialog.Builder(iContext);
         lBuilder.setTitle(iTitle);
         lBuilder.setMessage(iMessage);
+        lBuilder.setCancelable(false);
         lBuilder.setPositiveButton(iPositiveButton, iPositiveListener);
         lBuilder.setNegativeButton(iNegativeButton, iNegativeListener);
 
@@ -116,6 +117,7 @@ public class Utils {
         AlertDialog.Builder lBuilder = new AlertDialog.Builder(iContext);
         lBuilder.setTitle(iTitle);
         lBuilder.setMessage(iMessage);
+        lBuilder.setCancelable(false);
         lBuilder.setPositiveButton(iPositiveButton, iPositiveListener);
 
         return lBuilder.create();
@@ -178,7 +180,6 @@ public class Utils {
         final AlertDialog.Builder lProgressDialog;
         lProgressDialog = new AlertDialog.Builder(iContext);
         lProgressDialog.setView(R.layout.loading_icon);
-        lProgressDialog.setCancelable(true);
         lProgressDialog.setCancelable(false);
         return lProgressDialog.create();
     }

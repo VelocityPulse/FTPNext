@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO : BEFORE RELEASE : New speed update system
 public class FTPTransfer extends AFTPConnection {
 
     private static final String TAG = "FTP TRANSFER";
@@ -126,6 +127,11 @@ public class FTPTransfer extends AFTPConnection {
                     public void onConnectionDenied(ErrorCodeDescription iErrorEnum, int iErrorCode) {
                         if (iOnTransferListener != null)
                             iOnTransferListener.onStop(FTPTransfer.this);
+                        if (!mCandidate.isFinished() && mCandidate.isStarted()) {
+                            mCandidate.setStarted(false);
+                            mOnTransferListener.onFileUnselected(mCandidate);
+                        }
+                        destroyConnection();
                     }
                 });
             }
@@ -203,6 +209,7 @@ public class FTPTransfer extends AFTPConnection {
                     // Stopping all transfer activities
                     if (mCandidate == null) {
                         mOnTransferListener.onStop(FTPTransfer.this);
+                        destroyConnection();
                         break;
                     }
 
@@ -375,10 +382,16 @@ public class FTPTransfer extends AFTPConnection {
                             closeDownloadStreams(lLocalStream, lRemoteStream);
                             Utils.sleep(USER_WAIT_BREAK); // Wait the connexion update status
                         }
+                        // While upload end
+                    }
+
+                    if (mIsInterrupted && !mCandidate.isFinished()) {
+                        mCandidate.setStarted(false);
+                        iOnTransferListener.onFileUnselected(mCandidate);
                     }
 
                     Utils.sleep(TRANSFER_FINISH_BREAK);
-                    // While end
+                    // While candidate end
                 }
                 mTransferThread = null;
             }
@@ -412,6 +425,7 @@ public class FTPTransfer extends AFTPConnection {
                     // Stopping all transfer activities
                     if (mCandidate == null) {
                         mOnTransferListener.onStop(FTPTransfer.this);
+                        destroyConnection();
                         break;
                     }
 
@@ -638,12 +652,28 @@ public class FTPTransfer extends AFTPConnection {
                     Utils.sleep(RECONNECTION_WAITING_TIME);
                 }
 
-                connect(null);
+                connect(new OnConnectionResult() {
+                    @Override
+                    public void onSuccess() {
+                    }
+
+                    @Override
+                    public void onFail(ErrorCodeDescription iErrorEnum, int iErrorCode) {
+                        if (iErrorEnum == ErrorCodeDescription.ERROR_SERVER_DENIED_CONNECTION) {
+                            FTPLogManager.pushErrorLog("Server denied the connection ...");
+                            if (mOnTransferListener != null)
+                                mOnTransferListener.onStop(FTPTransfer.this);
+                            if (!mCandidate.isFinished() && mCandidate.isStarted()) {
+                                mCandidate.setStarted(false);
+                                mOnTransferListener.onFileUnselected(mCandidate);
+                            }
+                            destroyConnection();
+                        }
+                    }
+                });
             }
 
             while (!isLocallyConnected() || isConnecting() || isReconnecting()) {
-//        while (!isRemotelyConnected()) {
-//            LogManager.info(TAG, "Download files : Waiting connection");
                 Utils.sleep(200);
 
                 if (mIsInterrupted) {
@@ -851,6 +881,8 @@ public class FTPTransfer extends AFTPConnection {
         void onConnectionLost(PendingFile iPendingFile);
 
         void onNewFileSelected(PendingFile iPendingFile);
+
+        void onFileUnselected(PendingFile iPendingFile);
 
         void onTransferProgress(PendingFile iPendingFile, long iProgress, long iSize);
 
