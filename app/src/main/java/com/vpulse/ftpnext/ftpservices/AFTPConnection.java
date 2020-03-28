@@ -58,6 +58,8 @@ public abstract class AFTPConnection {
         mFTPClient = new FTPClient();
         initializeNetworkMonitoring();
         sInstanceNumber++;
+
+        startHandlerThread();
     }
 
     public AFTPConnection(int iServerId) {
@@ -67,6 +69,8 @@ public abstract class AFTPConnection {
         mFTPClient = new FTPClient();
         initializeNetworkMonitoring();
         sInstanceNumber++;
+
+        startHandlerThread();
     }
 
     public void destroyConnection() {
@@ -124,27 +128,28 @@ public abstract class AFTPConnection {
 
     public void abortReconnection() {
         LogManager.info(TAG, "Abort reconnect");
-        FTPLogManager.pushStatusLog("Aborting reconnection");
 
-        if (isReconnecting())
+        if (isReconnecting()) {
+            FTPLogManager.pushStatusLog("Aborting reconnection");
             mReconnectionInterrupted = true;
+        }
     }
 
     public void abortConnection() {
         LogManager.info(TAG, "Abort connection");
-        FTPLogManager.pushStatusLog("Aborting connection");
 
         if (mFTPClient.isConnected()) {
             disconnect();
             return;
         }
         if (isConnecting()) {
+            FTPLogManager.pushStatusLog("Aborting connection");
             mConnectionInterrupted = true;
             mHandlerConnection.post(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        mFTPClient.abort();
+                        mFTPClient.disconnect();
                     } catch (IOException iE) {
                         iE.printStackTrace();
                     }
@@ -308,8 +313,6 @@ public abstract class AFTPConnection {
                         return;
                     }
 
-                    startStatusThread();
-
                     FTPLogManager.pushSuccessLog("Connection \"" + mFTPServer.getName() + "\"");
                     LogManager.info(TAG, "FTPClient connected");
 
@@ -318,20 +321,35 @@ public abstract class AFTPConnection {
 
                 } catch (UnknownHostException iE) {
                     iE.printStackTrace();
-                    if (onConnectionResult != null)
-                        onConnectionResult.onFail(ErrorCodeDescription.ERROR_UNKNOWN_HOST,
-                                mFTPClient.getReplyCode());
-//                      onConnectionResult.onFail(ErrorCodeDescription.ERROR_UNKNOWN_HOST, 434);
+                    if (onConnectionResult != null) {
+                        if (mConnectionInterrupted)
+                            onConnectionResult.onFail(ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED,
+                                    mFTPClient.getReplyCode());
+                        else
+                            onConnectionResult.onFail(ErrorCodeDescription.ERROR_UNKNOWN_HOST,
+                                    mFTPClient.getReplyCode());
+                    }
+//                  onConnectionResult.onFail(ErrorCodeDescription.ERROR_UNKNOWN_HOST, 434);
                 } catch (FTPConnectionClosedException iE) {
-                    if (onConnectionResult != null)
-                        onConnectionResult.onFail(ErrorCodeDescription.ERROR_SERVER_DENIED_CONNECTION,
-                                mFTPClient.getReplyCode());
+                    if (onConnectionResult != null) {
+                        if (mConnectionInterrupted)
+                            onConnectionResult.onFail(ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED,
+                                    mFTPClient.getReplyCode());
+                        else
+                            onConnectionResult.onFail(ErrorCodeDescription.ERROR_SERVER_DENIED_CONNECTION,
+                                    mFTPClient.getReplyCode());
+                    }
                 } catch (Exception iE) {
                     iE.printStackTrace();
-                    if (onConnectionResult != null)
-                        onConnectionResult.onFail(ErrorCodeDescription.ERROR,
-                                mFTPClient.getReplyCode());
-//                      onConnectionResult.onFail(ErrorCodeDescription.ERROR, FTPReply.UNRECOGNIZED_COMMAND);
+                    if (onConnectionResult != null) {
+                        if (mConnectionInterrupted)
+                            onConnectionResult.onFail(ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED,
+                                    mFTPClient.getReplyCode());
+                        else
+                            onConnectionResult.onFail(ErrorCodeDescription.ERROR,
+                                    mFTPClient.getReplyCode());
+                    }
+//                  onConnectionResult.onFail(ErrorCodeDescription.ERROR, FTPReply.UNRECOGNIZED_COMMAND);
                 }
             }
         });
@@ -411,7 +429,7 @@ public abstract class AFTPConnection {
 
     protected abstract int getConnectionType();
 
-    private void startStatusThread() {
+    private void startHandlerThread() {
         if (mHandlerConnection == null && THREAD_STATUS_ACTIVATED) {
 
             HandlerThread lHandlerThread = new HandlerThread("FTP Handler " + sInstanceNumber);

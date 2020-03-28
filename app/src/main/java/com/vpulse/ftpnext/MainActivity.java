@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -98,9 +97,6 @@ public class MainActivity extends AppCompatActivity {
         initialize();
         initializePermissions();
 
-        LayoutInflater inflater = this.getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.loading_icon, null);
-
         runTests();
     }
 
@@ -112,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // TODO save the form for change orientation of phone
     }
 
     @Override
@@ -275,6 +270,7 @@ public class MainActivity extends AppCompatActivity {
             LogManager.error(TAG, "Already trying a connection");
             return;
         }
+        mIsBusy = true;
 
 //        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) !=
 //                PackageManager.PERMISSION_GRANTED) {
@@ -287,7 +283,6 @@ public class MainActivity extends AppCompatActivity {
 
         final FTPServer lFTPServer = mFTPServerDAO.fetchById(iServerID);
         final AlertDialog lLoadingAlertDialog;
-        mIsBusy = true;
 
         if (lFTPServer == null) {
             Utils.createErrorAlertDialog(this, "FTP Server cannot be found").show();
@@ -298,24 +293,32 @@ public class MainActivity extends AppCompatActivity {
 //            Utils.createErrorAlertDialog(this, "")
 //        }
 
-        lLoadingAlertDialog = Utils.initProgressDialog(this, null);
+        final FTPServices lNewFTPServices = new FTPServices(lFTPServer);
+
+        lLoadingAlertDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                lNewFTPServices.abortConnection();
+                lNewFTPServices.destroyConnection();
+                mIsBusy = false;
+            }
+        });
         lLoadingAlertDialog.setTitle("Connection..."); // TODO : strings
         lLoadingAlertDialog.create();
         lLoadingAlertDialog.show();
 
-        final FTPServices lNewFTPServices = new FTPServices(lFTPServer);
-
         lNewFTPServices.connect(new AFTPConnection.OnConnectionResult() {
             @Override
             public void onSuccess() {
+                mIsBusy = false;
                 Utils.cancelAlertDialogOnUIThread(MainActivity.this, lLoadingAlertDialog);
 
                 startFTPNavigationActivity(iServerID);
-                mIsBusy = false;
             }
 
             @Override
             public void onFail(final AFTPConnection.ErrorCodeDescription iErrorEnum, final int iErrorCode) {
+                mIsBusy = false;
                 if (iErrorEnum == ErrorCodeDescription.ERROR_CONNECTION_INTERRUPTED)
                     return;
                 runOnUiThread(new Runnable() {

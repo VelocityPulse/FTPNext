@@ -52,7 +52,7 @@ import java.util.List;
 
 import static com.vpulse.ftpnext.ftpnavigation.NavigationFetchDir.LARGE_DIRECTORY_SIZE;
 
-// TODO : BEFORE RELEASE : Cancel during connection or loading dont work
+// TODO : BEFORE RELEASE : Cancel during connection or loading don't work
 // TODO : BEFORE RELEASE : Connection canceled while active download are still displaying...
 public class FTPNavigationActivity extends AppCompatActivity {
 
