@@ -72,7 +72,7 @@ public class NavigationTransfer {
     }
 
     protected void onResume() {
-        if (mFTPTransferList.size() > 0 && mContextActivity.mIsShowingTrensfer) {
+        if (mFTPTransferList.size() > 0 && mContextActivity.mIsShowingTransfer) {
             mNarrowTransferAdapter.notifyDataSetChanged();
         }
     }
@@ -325,7 +325,7 @@ public class NavigationTransfer {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         destroyAllTransferConnections();
-                        mContextActivity.mIsShowingTrensfer = false;
+                        mContextActivity.mIsShowingTransfer = false;
                         FTPLogManager.unsubscribeOnNewFTPLogColored(lOnNewFTPLogColored);
                         mContextActivity.mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DOWNLOAD_FINISHED);
                     }
@@ -337,9 +337,9 @@ public class NavigationTransfer {
                     lBuilder.setTitle("Downloading ..."); // TODO : strings
                 else if (iLoadDirection == LoadDirection.UPLOAD)
                     lBuilder.setTitle("Uploading ...");
-                mContextActivity.mTrensferDialog = lBuilder.create();
-                mContextActivity.mTrensferDialog.show();
-                mContextActivity.mIsShowingTrensfer = true;
+                mContextActivity.mTransferDialog = lBuilder.create();
+                mContextActivity.mTransferDialog.show();
+                mContextActivity.mIsShowingTransfer = true;
             }
         });
     }
@@ -388,7 +388,7 @@ public class NavigationTransfer {
             @Override
             public void onClick(DialogInterface iDialog, int iWhich) {
                 mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
-                mContextActivity.mTrensferDialog.dismiss();
+                mContextActivity.mTransferDialog.dismiss();
 
                 destroyAllTransferConnections();
             }
@@ -536,7 +536,7 @@ public class NavigationTransfer {
                             public void run() {
                                 if (!mContextActivity.mSuccessDialog.isShowing() &&
                                         mNarrowTransferAdapter.getItemCountOmitPendingFile() == 0) {
-                                    mContextActivity.mTrensferDialog.dismiss();
+                                    mContextActivity.mTransferDialog.dismiss();
                                     showSuccessTransfer();
                                 }
                             }
@@ -545,7 +545,7 @@ public class NavigationTransfer {
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                mContextActivity.mTrensferDialog
+                                mContextActivity.mTransferDialog
                                         .getButton(DialogInterface.BUTTON_NEGATIVE)
                                         .setText("Finish"); // TODO : Strings
                             }

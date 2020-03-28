@@ -100,7 +100,7 @@ public class NavigationActivity extends AppCompatActivity {
     protected AlertDialog mSuccessDialog;
     protected AlertDialog mCreateFolderDialog;
     protected AlertDialog mIndexingPendingFilesDialog;
-    protected AlertDialog mTrensferDialog;
+    protected AlertDialog mTransferDialog;
     protected AlertDialog mChooseExistingFileAction;
     protected AlertDialog mDeletingInfoDialog;
     protected AlertDialog mDeletingErrorDialog;
@@ -108,7 +108,7 @@ public class NavigationActivity extends AppCompatActivity {
     protected Handler mHandler;
     protected boolean mWasOnPause;
     protected boolean mIsDirectoryFetchFinished;
-    protected boolean mIsShowingTrensfer;
+    protected boolean mIsShowingTransfer;
     protected boolean mIsLargeDirectory;
 
     protected FTPServer mFTPServer;
@@ -142,7 +142,7 @@ public class NavigationActivity extends AppCompatActivity {
         initializeGUI();
         initializeHandler();
         initialize();
-        retrieveFTPServices(false, false);
+        initializeFTPServices(false, false);
     }
 
     @Override
@@ -152,7 +152,7 @@ public class NavigationActivity extends AppCompatActivity {
 
         LogManager.info(TAG, "Was on pause : " + mWasOnPause);
         if (mWasOnPause)
-            retrieveFTPServices(true, mIsResumeFromActivityResult);
+            initializeFTPServices(true, mIsResumeFromActivityResult);
         mIsResumeFromActivityResult = false;
         mNavigationDelete.onResume();
         mNavigationFetchDir.onResume();
@@ -180,19 +180,6 @@ public class NavigationActivity extends AppCompatActivity {
             mFTPServices.destroyConnection();
 
         super.onDestroy();
-    }
-
-    private void terminateNavigation() {
-        mFTPServices.destroyConnection();
-
-        if (mIsShowingTrensfer) {
-            FTPTransfer[] lFTPTransfers = FTPTransfer.getFTPTransferInstance(mFTPServer.getDataBaseId());
-
-            for (FTPTransfer lItem : lFTPTransfers) {
-                lItem.destroyConnection();
-            }
-        }
-        finish();
     }
 
     @Override
@@ -265,14 +252,6 @@ public class NavigationActivity extends AppCompatActivity {
         }
     }
 
-    private void requestPermission(Activity iActivity, final String[] iPermissions,
-                                   int iRequestCode, OnPermissionAnswer iOnPermissionAnswer) {
-        mOnPermissionAnswer = iOnPermissionAnswer;
-        ActivityCompat.requestPermissions(this,
-                iPermissions,
-                iRequestCode);
-    }
-
     @Override
     public void onRequestPermissionsResult(int iRequestCode,
                                            @NotNull String[] iPermissions, @NotNull int[] iGrantResults) {
@@ -315,6 +294,27 @@ public class NavigationActivity extends AppCompatActivity {
         }
     }
 
+    private void terminateNavigation() {
+        mFTPServices.destroyConnection();
+
+        if (mIsShowingTransfer) {
+            FTPTransfer[] lFTPTransfers = FTPTransfer.getFTPTransferInstance(mFTPServer.getDataBaseId());
+
+            for (FTPTransfer lItem : lFTPTransfers) {
+                lItem.destroyConnection();
+            }
+        }
+        finish();
+    }
+
+    private void requestPermission(Activity iActivity, final String[] iPermissions,
+                                   int iRequestCode, OnPermissionAnswer iOnPermissionAnswer) {
+        mOnPermissionAnswer = iOnPermissionAnswer;
+        ActivityCompat.requestPermissions(this,
+                iPermissions,
+                iRequestCode);
+    }
+
     private void initialize() {
         FTPServerDAO lFTPServerDAO = DataBase.getFTPServerDAO();
 
@@ -355,8 +355,8 @@ public class NavigationActivity extends AppCompatActivity {
         initializeDialogs();
     }
 
-    private void retrieveFTPServices(final boolean iIsUpdating,
-                                     final boolean iBlockFetchDirIfSuccessRecovery) {
+    private void initializeFTPServices(final boolean iIsUpdating,
+                                       final boolean iBlockFetchDirIfSuccessRecovery) {
         LogManager.info(TAG, "Retrieve FTP Services");
 
         mFTPServices = FTPServices.getFTPServicesInstance(mFTPServer.getDataBaseId());
@@ -364,7 +364,7 @@ public class NavigationActivity extends AppCompatActivity {
         if (mFTPServices == null) {
             // Can happens on android studio apply changes
             LogManager.debug(TAG, "FTP CONNECTION NULL");
-            buildFTPConnection();
+            initializeFTPConnection();
         } else {
             LogManager.info(TAG, "FTP Services fully recovered by get instance");
             LogManager.info(TAG, "FTP Services instance busy : " + mFTPServices.isBusy());
@@ -380,7 +380,7 @@ public class NavigationActivity extends AppCompatActivity {
                     @Override
                     public void onResult(boolean iResult) {
                         if (iResult) {
-                            if (!mIsShowingTrensfer && !iBlockFetchDirIfSuccessRecovery)
+                            if (!mIsShowingTransfer && !iBlockFetchDirIfSuccessRecovery)
                                 mHandler.sendMessage(Message.obtain(
                                         mHandler,
                                         NAVIGATION_ORDER_FETCH_DIRECTORY,
@@ -400,7 +400,7 @@ public class NavigationActivity extends AppCompatActivity {
         });
     }
 
-    private void buildFTPConnection() {
+    private void initializeFTPConnection() {
         LogManager.info(TAG, "Build FTP Connection");
         if (mFTPServer == null) {
             LogManager.error(TAG, "mFTPServer is null");
@@ -528,8 +528,8 @@ public class NavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_MESSAGE_RECONNECT_SUCCESS:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_SUCCESS");
-                        dismissAllDialogsExcepted(mTrensferDialog, mChooseExistingFileAction);
-                        if (!mIsShowingTrensfer)
+                        dismissAllDialogsExcepted(mTransferDialog, mChooseExistingFileAction);
+                        if (!mIsShowingTransfer)
                             mNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
                         break;
 
@@ -566,7 +566,7 @@ public class NavigationActivity extends AppCompatActivity {
                         mFTPServices.abortFetchDirectoryContent();
                         mFTPServices.abortDeleting();
                         dismissAllDialogsExcepted(
-                                mTrensferDialog,
+                                mTransferDialog,
                                 mChooseExistingFileAction,
                                 mReconnectDialog);
 
@@ -964,8 +964,8 @@ public class NavigationActivity extends AppCompatActivity {
             mReconnectDialog.cancel();
         if (mLargeDirDialog != null)
             mLargeDirDialog.cancel();
-        if (mTrensferDialog != null)
-            mTrensferDialog.cancel();
+        if (mTransferDialog != null)
+            mTransferDialog.cancel();
         if (mChooseExistingFileAction != null)
             mChooseExistingFileAction.cancel();
         if (mDeletingInfoDialog != null)
@@ -989,8 +989,8 @@ public class NavigationActivity extends AppCompatActivity {
             mReconnectDialog.cancel();
         if (mLargeDirDialog != null && !lDialogList.contains(mLargeDirDialog))
             mLargeDirDialog.cancel();
-        if (mTrensferDialog != null && !lDialogList.contains(mTrensferDialog))
-            mTrensferDialog.cancel();
+        if (mTransferDialog != null && !lDialogList.contains(mTransferDialog))
+            mTransferDialog.cancel();
         if (mChooseExistingFileAction != null && !lDialogList.contains(mChooseExistingFileAction))
             mChooseExistingFileAction.cancel();
         if (mDeletingInfoDialog != null && !lDialogList.contains(mDeletingInfoDialog))
