@@ -32,7 +32,7 @@ import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
 // TODO : Don't save the metadata if there's already a connection
 // TODO : Add a back arrow on the top left
 
-public class FTPConfigureServerActivity extends AppCompatActivity {
+public class ConfigureServerActivity extends AppCompatActivity {
 
     public static final int ACTIVITY_RESULT_ADD_SUCCESS = 0;
     public static final int ACTIVITY_RESULT_ADD_FAIL = 1;

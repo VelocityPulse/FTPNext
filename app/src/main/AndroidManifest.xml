@@ -28,12 +28,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.vpulse.ftpnext.FTPConfigureServerActivity"
+            android:name="com.vpulse.ftpnext.ConfigureServerActivity"
             android:configChanges="orientation|screenLayout|screenSize"
             android:label="@string/configure_ftp_server"
             android:theme="@style/AppTheme.CustomActionBar" />
         <activity
-            android:name="com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity"
+            android:name="com.vpulse.ftpnext.ftpnavigation.NavigationActivity"
             android:configChanges="orientation|screenLayout|screenSize"
             android:label="@string/ftp_navigation"
             android:theme="@style/AppTheme.CustomActionBar"

@@ -13,16 +13,16 @@ import com.vpulse.ftpnext.R;
 
 import org.apache.commons.net.ftp.FTPFile;
 
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_DELETE_FINISHED;
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_REFRESH_DATA;
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_DELETE_FINISHED;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_ORDER_REFRESH_DATA;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
 
 public class NavigationDelete {
 
     private final static String TAG = "NAVIGATION DELETE";
 
-    private final FTPNavigationActivity mContextActivity;
+    private final NavigationActivity mContextActivity;
     private final Handler mHandler;
 
     private NavigationDelete() throws InstantiationException {
@@ -31,7 +31,7 @@ public class NavigationDelete {
         throw new InstantiationException("Constructor not allowed");
     }
 
-    protected NavigationDelete(FTPNavigationActivity iContextActivity, Handler iHandler) {
+    protected NavigationDelete(NavigationActivity iContextActivity, Handler iHandler) {
         mContextActivity = iContextActivity;
         mHandler = iHandler;
     }

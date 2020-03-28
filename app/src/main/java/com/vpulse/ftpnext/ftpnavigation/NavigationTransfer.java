@@ -37,16 +37,16 @@ import org.apache.commons.net.ftp.FTPFile;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_DOWNLOAD_FINISHED;
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_DOWNLOAD_FINISHED;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
 
 public class NavigationTransfer {
 
     private final static String TAG = "NAVIGATION DOWNLOAD";
 
     private final ArrayList<FTPTransfer> mFTPTransferList;
-    private final FTPNavigationActivity mContextActivity;
+    private final NavigationActivity mContextActivity;
     private final FTPTransfer.OnTransferListener mUniversalTransferListener;
     private final Handler mHandler;
 
@@ -64,7 +64,7 @@ public class NavigationTransfer {
         throw new InstantiationException("Constructor not allowed");
     }
 
-    protected NavigationTransfer(FTPNavigationActivity iContextActivity, Handler iHandler) {
+    protected NavigationTransfer(NavigationActivity iContextActivity, Handler iHandler) {
         mHandler = iHandler;
         mContextActivity = iContextActivity;
         mFTPTransferList = new ArrayList<>();

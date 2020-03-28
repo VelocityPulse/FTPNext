@@ -20,14 +20,14 @@ import com.vpulse.ftpnext.ftpservices.FTPServices;
 
 import org.apache.commons.net.ftp.FTPFile;
 
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL;
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS;
 
 public class NavigationNewFolder {
 
     private final static String TAG = "NAVIGATION NEW FOLDER";
 
-    private final FTPNavigationActivity mContextActivity;
+    private final NavigationActivity mContextActivity;
     private final Handler mHandler;
 
     private NavigationNewFolder() throws InstantiationException {
@@ -36,7 +36,7 @@ public class NavigationNewFolder {
         throw new InstantiationException("Constructor not allowed");
     }
 
-    protected NavigationNewFolder(FTPNavigationActivity iContextActivity, Handler iHandler) {
+    protected NavigationNewFolder(NavigationActivity iContextActivity, Handler iHandler) {
         mContextActivity = iContextActivity;
         mHandler = iHandler;
     }

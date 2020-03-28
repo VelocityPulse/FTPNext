@@ -26,7 +26,7 @@ import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
-import com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity;
+import com.vpulse.ftpnext.ftpnavigation.NavigationActivity;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection.ErrorCodeDescription;
 import com.vpulse.ftpnext.ftpservices.FTPServices;
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
         lFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startFTPConfigureServerActivity(FTPConfigureServerActivity.NO_DATABASE_ID);
+                startFTPConfigureServerActivity(ConfigureServerActivity.NO_DATABASE_ID);
             }
         });
     }
@@ -253,12 +253,12 @@ public class MainActivity extends AppCompatActivity {
             overridePendingTransition(R.anim.no_animation, R.anim.activity_fade_out_centered);
 
             if (iResultData != null) {
-                int lId = iResultData.getIntExtra(FTPConfigureServerActivity.KEY_DATABASE_ID, -1);
+                int lId = iResultData.getIntExtra(ConfigureServerActivity.KEY_DATABASE_ID, -1);
 
                 if (lId != -1) {
-                    if (iResultCode == FTPConfigureServerActivity.ACTIVITY_RESULT_ADD_SUCCESS)
+                    if (iResultCode == ConfigureServerActivity.ACTIVITY_RESULT_ADD_SUCCESS)
                         mAdapter.insertItem(mFTPServerDAO.fetchById(lId));
-                    else if (iResultCode == FTPConfigureServerActivity.ACTIVITY_RESULT_UPDATE_SUCCESS)
+                    else if (iResultCode == ConfigureServerActivity.ACTIVITY_RESULT_UPDATE_SUCCESS)
                         mAdapter.updateItem(mFTPServerDAO.fetchById(lId));
                 }
             }
@@ -354,16 +354,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startFTPNavigationActivity(int iServerID) {
-        Intent lIntent = new Intent(MainActivity.this, FTPNavigationActivity.class);
-        lIntent.putExtra(FTPNavigationActivity.KEY_DATABASE_ID, iServerID);
-        lIntent.putExtra(FTPNavigationActivity.KEY_DIRECTORY_PATH, FTPNavigationActivity.ROOT_DIRECTORY);
+        Intent lIntent = new Intent(MainActivity.this, NavigationActivity.class);
+        lIntent.putExtra(NavigationActivity.KEY_DATABASE_ID, iServerID);
+        lIntent.putExtra(NavigationActivity.KEY_DIRECTORY_PATH, NavigationActivity.ROOT_DIRECTORY);
         startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE_NAVIGATION);
     }
 
     private void startFTPConfigureServerActivity(int iFTPServerId) {
-        Intent lIntent = new Intent(MainActivity.this, FTPConfigureServerActivity.class);
+        Intent lIntent = new Intent(MainActivity.this, ConfigureServerActivity.class);
 
-        lIntent.putExtra(FTPConfigureServerActivity.KEY_DATABASE_ID, iFTPServerId);
+        lIntent.putExtra(ConfigureServerActivity.KEY_DATABASE_ID, iFTPServerId);
         startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE_CONFIGURE_SERVER);
         overridePendingTransition(R.anim.activity_fade_in_centered, R.anim.no_animation);
     }

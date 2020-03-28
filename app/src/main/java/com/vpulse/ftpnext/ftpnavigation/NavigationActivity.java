@@ -52,9 +52,8 @@ import java.util.List;
 
 import static com.vpulse.ftpnext.ftpnavigation.NavigationFetchDir.LARGE_DIRECTORY_SIZE;
 
-// TODO : BEFORE RELEASE : Cancel during connection or loading don't work
 // TODO : BEFORE RELEASE : Connection canceled while active download are still displaying...
-public class FTPNavigationActivity extends AppCompatActivity {
+public class NavigationActivity extends AppCompatActivity {
 
     public static final int NO_DATABASE_ID = -1;
     public static final String ROOT_DIRECTORY = "/";
@@ -543,7 +542,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CONNECTION_FAIL");
                         boolean lIsRecovering = iMsg.arg1 == 1;
                         lErrorDescription = (AFTPConnection.ErrorCodeDescription) iMsg.obj;
-                        new AlertDialog.Builder(FTPNavigationActivity.this)
+                        new AlertDialog.Builder(NavigationActivity.this)
                                 .setTitle("Error") // TODO string
                                 .setMessage((lIsRecovering ? "Reconnection" : "Connection") + " failed..." +
                                         "\nError : " + lErrorDescription +
@@ -615,7 +614,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         lErrorDescription = (AFTPConnection.ErrorCodeDescription) iMsg.obj;
                         mLoadingDialog.dismiss();
                         if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
-                            mErrorADialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+                            mErrorADialog = new AlertDialog.Builder(NavigationActivity.this)
                                     .setTitle("Error") // TODO string
                                     .setMessage("Creation has failed...\nCode : " + lErrorDescription.name())
                                     .setCancelable(false)
@@ -634,7 +633,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_FAIL");
                         dismissAllDialogs();
                         lErrorDescription = (AFTPConnection.ErrorCodeDescription) iMsg.obj;
-                        new AlertDialog.Builder(FTPNavigationActivity.this)
+                        new AlertDialog.Builder(NavigationActivity.this)
                                 .setTitle("Reconnection denied") // TODO string
                                 .setMessage("Reconnection has failed...\nCode : " + lErrorDescription.name())
                                 .setCancelable(false)
@@ -674,7 +673,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
                         if (mCurrentAdapter != null)
                             mCurrentAdapter.setItemsClickable(true);
                         if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
-                            mErrorADialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+                            mErrorADialog = new AlertDialog.Builder(NavigationActivity.this)
                                     .setTitle("Error") // TODO string
                                     .setMessage("Connection has failed...\nCode : " + lErrorDescription.name())
                                     .setCancelable(false)
@@ -938,7 +937,7 @@ public class FTPNavigationActivity extends AppCompatActivity {
     }
 
     protected AlertDialog createDialogError(String iMessage) { // TODO : Replace by resources ID
-        mErrorADialog = new AlertDialog.Builder(FTPNavigationActivity.this)
+        mErrorADialog = new AlertDialog.Builder(NavigationActivity.this)
                 .setTitle("Error") // TODO : string
                 .setMessage(iMessage)
                 .setCancelable(false)

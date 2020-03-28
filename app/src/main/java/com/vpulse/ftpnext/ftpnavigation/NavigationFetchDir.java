@@ -15,10 +15,10 @@ import org.apache.commons.net.ftp.FTPFile;
 
 import java.util.Arrays;
 
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH;
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH;
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE;
-import static com.vpulse.ftpnext.ftpnavigation.FTPNavigationActivity.NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS;
 
 public class NavigationFetchDir {
 
@@ -28,7 +28,7 @@ public class NavigationFetchDir {
 
     private static final int BAD_CONNECTION_TIME = 50;
 
-    private final FTPNavigationActivity mContextActivity;
+    private final NavigationActivity mContextActivity;
     private final Handler mHandler;
 
     private NavigationFetchDir() throws InstantiationException {
@@ -37,7 +37,7 @@ public class NavigationFetchDir {
         throw new InstantiationException("Constructor not allowed");
     }
 
-    protected NavigationFetchDir(FTPNavigationActivity iContextActivity, Handler iHandler) {
+    protected NavigationFetchDir(NavigationActivity iContextActivity, Handler iHandler) {
         mContextActivity = iContextActivity;
         mHandler = iHandler;
         initializeDialogs();
