@@ -1,4 +1,4 @@
-package com.vpulse.ftpnext.ftpnavigation;
+package com.vpulse.ftpnext.navigation;
 
 import android.Manifest;
 import android.app.Activity;
@@ -50,9 +50,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.vpulse.ftpnext.ftpnavigation.NavigationFetchDir.LARGE_DIRECTORY_SIZE;
+import static com.vpulse.ftpnext.navigation.NavigationFetchDir.LARGE_DIRECTORY_SIZE;
 
-// TODO : BEFORE RELEASE : Connection canceled while active download are still displaying...
 public class NavigationActivity extends AppCompatActivity {
 
     public static final int NO_DATABASE_ID = -1;

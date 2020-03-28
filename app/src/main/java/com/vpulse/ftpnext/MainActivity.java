@@ -26,7 +26,7 @@ import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
-import com.vpulse.ftpnext.ftpnavigation.NavigationActivity;
+import com.vpulse.ftpnext.navigation.NavigationActivity;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection.ErrorCodeDescription;
 import com.vpulse.ftpnext.ftpservices.FTPServices;

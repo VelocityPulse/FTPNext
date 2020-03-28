@@ -1,4 +1,4 @@
-package com.vpulse.ftpnext.ftpnavigation;
+package com.vpulse.ftpnext.navigation;
 
 import android.content.DialogInterface;
 import android.os.Handler;
@@ -15,10 +15,10 @@ import org.apache.commons.net.ftp.FTPFile;
 
 import java.util.Arrays;
 
-import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH;
-import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH;
-import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE;
-import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS;
+import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH;
+import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH;
+import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_UPDATE;
+import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS;
 
 public class NavigationFetchDir {
 

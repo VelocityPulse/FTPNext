@@ -1,4 +1,4 @@
-package com.vpulse.ftpnext.ftpnavigation;
+package com.vpulse.ftpnext.navigation;
 
 import android.content.DialogInterface;
 import android.os.Handler;
@@ -13,10 +13,10 @@ import com.vpulse.ftpnext.R;
 
 import org.apache.commons.net.ftp.FTPFile;
 
-import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_DELETE_FINISHED;
-import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
-import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_ORDER_REFRESH_DATA;
-import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
+import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_MESSAGE_DELETE_FINISHED;
+import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
+import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_ORDER_REFRESH_DATA;
+import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
 
 public class NavigationDelete {
 

@@ -1,4 +1,4 @@
-package com.vpulse.ftpnext.ftpnavigation;
+package com.vpulse.ftpnext.navigation;
 
 import android.content.DialogInterface;
 import android.os.Handler;
@@ -20,8 +20,8 @@ import com.vpulse.ftpnext.ftpservices.FTPServices;
 
 import org.apache.commons.net.ftp.FTPFile;
 
-import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL;
-import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS;
+import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL;
+import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS;
 
 public class NavigationNewFolder {
 
