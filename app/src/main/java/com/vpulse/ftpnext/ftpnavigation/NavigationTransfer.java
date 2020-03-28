@@ -37,7 +37,7 @@ import org.apache.commons.net.ftp.FTPFile;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_DOWNLOAD_FINISHED;
+import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_MESSAGE_TRANSFER_FINISHED;
 import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
 import static com.vpulse.ftpnext.ftpnavigation.NavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
 
@@ -121,7 +121,7 @@ public class NavigationTransfer {
                             public void onClick(DialogInterface iDialog, int iWhich) {
                                 iDialog.dismiss();
                                 mContextActivity.mFTPServices.abortIndexingPendingFiles();
-                                mContextActivity.mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DOWNLOAD_FINISHED);
+                                mContextActivity.mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_TRANSFER_FINISHED);
                             }
                         });
 
@@ -312,7 +312,15 @@ public class NavigationTransfer {
                 mNarrowTransferAdapter = new NarrowTransferAdapter(iPendingFiles, mContextActivity);
                 lNarrowTransferRecyclerView.setAdapter(mNarrowTransferAdapter);
 
-                lBuilder.setNegativeButton("Cancel", null);
+                lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        destroyAllTransferConnections();
+                        mContextActivity.mIsShowingTransfer = false;
+                        FTPLogManager.unsubscribeOnNewFTPLogColored(lOnNewFTPLogColored);
+                        mContextActivity.mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_TRANSFER_FINISHED);
+                    }
+                });
 
 //                lBuilder.setNeutralButton("Background", new DialogInterface.OnClickListener() {
 //                    @Override
@@ -324,10 +332,7 @@ public class NavigationTransfer {
                 lBuilder.setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
-                        destroyAllTransferConnections();
-                        mContextActivity.mIsShowingTransfer = false;
                         FTPLogManager.unsubscribeOnNewFTPLogColored(lOnNewFTPLogColored);
-                        mContextActivity.mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DOWNLOAD_FINISHED);
                     }
                 });
 
@@ -563,7 +568,9 @@ public class NavigationTransfer {
         mContextActivity.mSuccessDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
-                mContextActivity.mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DOWNLOAD_FINISHED);
+                destroyAllTransferConnections();
+                mContextActivity.mIsShowingTransfer = false;
+                mContextActivity.mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_TRANSFER_FINISHED);
             }
         });
         mContextActivity.mSuccessDialog.show();

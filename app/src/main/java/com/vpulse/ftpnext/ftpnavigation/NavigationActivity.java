@@ -75,7 +75,7 @@ public class NavigationActivity extends AppCompatActivity {
     protected static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_UPDATE = 20;
     protected static final int NAVIGATION_MESSAGE_DIRECTORY_FAIL_FETCH = 19;
 
-    protected static final int NAVIGATION_MESSAGE_DOWNLOAD_FINISHED = 21;
+    protected static final int NAVIGATION_MESSAGE_TRANSFER_FINISHED = 21;
     protected static final int NAVIGATION_MESSAGE_DELETE_FINISHED = 23;
 
     protected static final int NAVIGATION_ORDER_DISMISS_DIALOGS = 100;
@@ -84,6 +84,7 @@ public class NavigationActivity extends AppCompatActivity {
     protected static final int NAVIGATION_ORDER_REFRESH_DATA = 103;
     protected static final int NAVIGATION_ORDER_SELECTED_MODE_ON = 104;
     protected static final int NAVIGATION_ORDER_SELECTED_MODE_OFF = 105;
+    protected static final int NAVIGATION_ORDER_RECONNECT = 106;
 
     private static final String TAG = "FTP NAVIGATION ACTIVITY";
     private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
@@ -526,6 +527,32 @@ public class NavigationActivity extends AppCompatActivity {
                         }
                         break;
 
+                    case NAVIGATION_ORDER_RECONNECT:
+                        LogManager.info(TAG, "Handle : NAVIGATION_ORDER_RECONNECT");
+                        mReconnectDialog.show();
+
+                        mFTPServices.reconnect(new AFTPConnection.OnConnectionRecover() {
+                            @Override
+                            public void onConnectionRecover() {
+                                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_RECONNECT_SUCCESS);
+                            }
+
+                            @Override
+                            public void onConnectionDenied(final AFTPConnection.ErrorCodeDescription iErrorEnum,
+                                                           int iErrorCode) {
+                                if (mFTPServices != null)
+                                    mFTPServices.disconnect();
+                                mErrorCode = iErrorCode;
+                                mHandler.sendMessage(Message.obtain(
+                                        mHandler,
+                                        NAVIGATION_MESSAGE_RECONNECT_FAIL,
+                                        iErrorEnum
+                                ));
+                            }
+                        });
+                        break;
+
+
                     case NAVIGATION_MESSAGE_RECONNECT_SUCCESS:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_SUCCESS");
                         dismissAllDialogsExcepted(mTransferDialog, mChooseExistingFileAction);
@@ -570,34 +597,26 @@ public class NavigationActivity extends AppCompatActivity {
                                 mChooseExistingFileAction,
                                 mReconnectDialog);
 
-                        mReconnectDialog.show();
-
-                        mFTPServices.reconnect(new AFTPConnection.OnConnectionRecover() {
-                            @Override
-                            public void onConnectionRecover() {
-                                mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_RECONNECT_SUCCESS);
-                            }
-
-                            @Override
-                            public void onConnectionDenied(final AFTPConnection.ErrorCodeDescription iErrorEnum,
-                                                           int iErrorCode) {
-                                if (mFTPServices != null)
-                                    mFTPServices.disconnect();
-                                mErrorCode = iErrorCode;
-                                mHandler.sendMessage(Message.obtain(
-                                        mHandler,
-                                        NAVIGATION_MESSAGE_RECONNECT_FAIL,
-                                        iErrorEnum
-                                ));
-                            }
-                        });
+                        if (!mIsShowingTransfer)
+                            mHandler.sendEmptyMessage(NAVIGATION_ORDER_RECONNECT);
                         break;
 
-                    case NAVIGATION_MESSAGE_DOWNLOAD_FINISHED:
+                    case NAVIGATION_MESSAGE_TRANSFER_FINISHED:
                     case NAVIGATION_MESSAGE_DELETE_FINISHED:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_DOWNLOAD_FINISHED or " +
                                 "NAVIGATION_MESSAGE_DELETE_FINISHED");
                         showFABMenu();
+
+                        mFTPServices.isRemotelyConnectedAsync(new AFTPConnection.OnRemotelyConnectedResult() {
+                            @Override
+                            public void onResult(boolean iResult) {
+                                if (!iResult) {
+                                    dismissAllDialogs();
+                                    mHandler.sendEmptyMessage(NAVIGATION_ORDER_RECONNECT);
+                                }
+                            }
+                        });
+
                         break;
 
                     case NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS:
