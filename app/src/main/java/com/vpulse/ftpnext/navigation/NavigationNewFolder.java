@@ -11,6 +11,7 @@ import android.widget.AutoCompleteTextView;
 
 import androidx.appcompat.app.AlertDialog;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.commons.Utils;
@@ -66,7 +67,7 @@ public class NavigationNewFolder {
 
         View lTextSection = View.inflate(mContextActivity, R.layout.dialog_create_folder, null);
         final TextInputLayout lTextInputLayout = lTextSection.findViewById(R.id.name_edit_text_layout);
-        final AutoCompleteTextView lEditTextView = lTextSection.findViewById(R.id.name_edit_text);
+        final TextInputEditText lEditTextView = lTextSection.findViewById(R.id.name_edit_text);
 
         final String[] lNames = mContextActivity.mCurrentAdapter.getNames();
         lEditTextView.addTextChangedListener(new TextWatcher() {
@@ -123,9 +124,11 @@ public class NavigationNewFolder {
         });
 
         mContextActivity.mCreateFolderDialog = lBuilder.create();
+        lEditTextView.requestFocus();
+        mContextActivity.mCreateFolderDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        // Show must be after showing keyboard
         mContextActivity.mCreateFolderDialog.show();
         mContextActivity.mCreateFolderDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
-        mContextActivity.mCreateFolderDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
     }
 
     private void createFolder(String iName) {

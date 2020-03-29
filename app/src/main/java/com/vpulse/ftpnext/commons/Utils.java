@@ -1,7 +1,6 @@
 package com.vpulse.ftpnext.commons;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
