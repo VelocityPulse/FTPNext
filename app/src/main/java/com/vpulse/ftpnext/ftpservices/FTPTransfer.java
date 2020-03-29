@@ -21,8 +21,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO : BEFORE RELEASE : New speed update system
-// TODO : BEFORE RELEASE : Update create folder dialog view
 public class FTPTransfer extends AFTPConnection {
 
     private static final String TAG = "FTP TRANSFER";
@@ -152,8 +150,7 @@ public class FTPTransfer extends AFTPConnection {
 
         if (lElapsedTime > UPDATE_TRANSFER_TIMER || iForceNotify) {
 
-            float lTimeCrossed = UPDATE_TRANSFER_TIMER - (UPDATE_TRANSFER_TIMER - lElapsedTime);
-            long lImmediateSpeedInKoS = (long) (((float) (mBytesTransferred) / lTimeCrossed) * 1000);
+            long lImmediateSpeedInKoS = (long) ((mBytesTransferred / lElapsedTime) * 1000);
 
             settingAverageSpeed(lImmediateSpeedInKoS);
             mCandidate.setSpeedInByte(getAverageSpeed());
