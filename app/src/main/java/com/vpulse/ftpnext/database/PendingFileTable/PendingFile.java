@@ -25,7 +25,7 @@ public class PendingFile extends ABaseTable {
     private int mSize;
     private boolean mIsConnected;
     private boolean mIsAnError;
-    private long mSpeedInKo;
+    private long mSpeedInByte;
     private int mRemainingTimeInMin;
 
     public PendingFile() {
@@ -154,12 +154,12 @@ public class PendingFile extends ABaseTable {
         mIsConnected = iConnected;
     }
 
-    public long getSpeedInKo() {
-        return mSpeedInKo;
+    public long getSpeedInByte() {
+        return mSpeedInByte;
     }
 
-    public void setSpeedInKo(long iSpeedInKo) {
-        mSpeedInKo = iSpeedInKo;
+    public void setSpeedInByte(long iSpeedInByte) {
+        mSpeedInByte = iSpeedInByte;
     }
 
     public int getRemainingTimeInMin() {

@@ -22,11 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 // TODO : BEFORE RELEASE : New speed update system
+// TODO : BEFORE RELEASE : Update create folder dialog view
 public class FTPTransfer extends AFTPConnection {
 
     private static final String TAG = "FTP TRANSFER";
 
-    private static final long UPDATE_TRANSFER_TIMER = 200;
+    private static final long UPDATE_TRANSFER_TIMER = 75;
     private static final int TRANSFER_FINISH_BREAK = 100;
     private static final int USER_WAIT_BREAK = 300;
 
@@ -109,7 +110,7 @@ public class FTPTransfer extends AFTPConnection {
 
                 if (mCandidate != null) {
                     mCandidate.setRemainingTimeInMin(0);
-                    mCandidate.setSpeedInKo(0);
+                    mCandidate.setSpeedInByte(0);
                     mCandidate.setConnected(false);
                     if (iOnTransferListener != null)
                         iOnTransferListener.onConnectionLost(mCandidate);
@@ -147,16 +148,17 @@ public class FTPTransfer extends AFTPConnection {
         mBytesTransferred += iBytesTransferred;
 
         long lCurrentTimeMillis = System.currentTimeMillis();
-        long lElapsedTime = lCurrentTimeMillis - mTimer;
+        float lElapsedTime = lCurrentTimeMillis - mTimer;
 
         if (lElapsedTime > UPDATE_TRANSFER_TIMER || iForceNotify) {
-            mCandidate.setConnected(true);
-            long lImmediateSpeedInKoS = ((mBytesTransferred * 1000) / UPDATE_TRANSFER_TIMER) / 1000;
+
+            float lTimeCrossed = UPDATE_TRANSFER_TIMER - (UPDATE_TRANSFER_TIMER - lElapsedTime);
+            long lImmediateSpeedInKoS = (long) (((float) (mBytesTransferred) / lTimeCrossed) * 1000);
 
             settingAverageSpeed(lImmediateSpeedInKoS);
-            mCandidate.setSpeedInKo(getAverageSpeed());
+            mCandidate.setSpeedInByte(getAverageSpeed());
 
-            float lRemainingTime = (float) mCandidate.getSize() / (float) mCandidate.getSpeedInKo();
+            float lRemainingTime = (float) mCandidate.getSize() / (float) mCandidate.getSpeedInByte();
             mCandidate.setRemainingTimeInMin((int) lRemainingTime);
 
             mCandidate.setProgress((int) iTotalBytesTransferred);
@@ -339,6 +341,7 @@ public class FTPTransfer extends AFTPConnection {
                             FTPLogManager.pushStatusLog(
                                     "Start download of " + mCandidate.getName());
 
+                            mCandidate.setConnected(true);
                             // ---------------- DOWNLAND LOOP
                             while ((lBytesRead = lRemoteStream.read(bytesArray)) != -1) {
                                 mIsTransferring = true;
@@ -535,7 +538,7 @@ public class FTPTransfer extends AFTPConnection {
                         OutputStream lRemoteStream = null;
                         try {
                             lLocalStream = new FileInputStream(lLocalFile);
-                            byte[] bytesArray = new byte[2048];
+                            byte[] bytesArray = new byte[16384];
                             int lBytesRead;
                             int lTotalRead = lRemoteFile == null ? 0 : (int) lRemoteFile.getSize();
                             int lFinalSize = (int) lLocalFile.length();
@@ -551,6 +554,7 @@ public class FTPTransfer extends AFTPConnection {
                                 break;
                             }
 
+                            mCandidate.setConnected(true);
                             lLocalStream.skip(lTotalRead);
                             // ---------------- UPLOAD LOOP
                             while ((lBytesRead = lLocalStream.read(bytesArray)) != -1) {
@@ -558,7 +562,8 @@ public class FTPTransfer extends AFTPConnection {
                                 lTotalRead += lBytesRead;
 
                                 lRemoteStream.write(bytesArray, 0, lBytesRead);
-                                notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize, true);
+
+                                notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize, false);
 
                                 if (mIsInterrupted)
                                     break;
@@ -630,7 +635,7 @@ public class FTPTransfer extends AFTPConnection {
     }
 
     private void finishCandidateSuccessfully() {
-        mCandidate.setSpeedInKo(0);
+        mCandidate.setSpeedInByte(0);
         mCandidate.setRemainingTimeInMin(0);
         mCandidate.setFinished(true);
         mCandidate.setProgress(mCandidate.getSize());

@@ -4,9 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +15,12 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.vpulse.ftpnext.R;
+import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 
@@ -167,15 +169,18 @@ public class NarrowTransferAdapter
                 iCustomItemViewHolder.mLoading.setVisibility(View.INVISIBLE);
                 iCustomItemViewHolder.mTextSpeedView.setVisibility(View.VISIBLE);
 
-                if (lPendingFile.getSpeedInKo() < 1000) {
-                    String lSpeed = lPendingFile.getSpeedInKo() + " Ko/s";
-                    iCustomItemViewHolder.mTextSpeedView.setText(lSpeed);
-                } else {
-                    double lMoSpeed;
-                    lMoSpeed = ((double) lPendingFile.getSpeedInKo()) / 1000d;
-                    String lSpeed = lMoSpeed + " Mo/s";
-                    iCustomItemViewHolder.mTextSpeedView.setText(lSpeed);
-                }
+                String lSpeed = Utils.humanReadableByteCount(lPendingFile.getSpeedInByte(), false);
+                iCustomItemViewHolder.mTextSpeedView.setText(lSpeed);
+
+//                if (lPendingFile.getSpeedInKo() < 1000) {
+//                    String lSpeed = lPendingFile.getSpeedInKo() + " Ko/s";
+//                    iCustomItemViewHolder.mTextSpeedView.setText(lSpeed);
+//                } else {
+//                    double lMoSpeed;
+//                    lMoSpeed = ((double) lPendingFile.getSpeedInKo()) / 1000d;
+//                    String lSpeed = lMoSpeed + " Mo/s";
+//                    iCustomItemViewHolder.mTextSpeedView.setText(lSpeed);
+//                }
             } else {
                 iCustomItemViewHolder.mTextSpeedView.setText("");
                 iCustomItemViewHolder.mLoading.setVisibility(View.VISIBLE);
