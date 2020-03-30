@@ -61,15 +61,6 @@ public class PendingFile extends ABaseTable {
         return this;
     }
 
-    public boolean isSelected() {
-        return mSelected;
-    }
-
-    public PendingFile setSelected(boolean iSelected) {
-        mSelected = iSelected;
-        return this;
-    }
-
     public String getName() {
         return mName;
     }
@@ -129,6 +120,14 @@ public class PendingFile extends ABaseTable {
     }
 
     // Getter and Setter are not in DataBase from here
+
+    public boolean isSelected() {
+        return mSelected;
+    }
+
+    public void setSelected(boolean iSelected) {
+        mSelected = iSelected;
+    }
 
     public int getSize() {
         return mSize;

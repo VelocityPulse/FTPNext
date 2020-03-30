@@ -44,6 +44,8 @@ public class FTPTransfer extends AFTPConnection {
     private long mTimer;
     private long mBytesTransferred;
 
+    private boolean mHasAlreadyBeenConnected;
+
     private int mTurn;
     private long mSpeedAverage1;
     private long mSpeedAverage2;
@@ -678,6 +680,7 @@ public class FTPTransfer extends AFTPConnection {
                 connect(new OnConnectionResult() {
                     @Override
                     public void onSuccess() {
+                        mHasAlreadyBeenConnected = true;
                     }
 
                     @Override
@@ -688,7 +691,7 @@ public class FTPTransfer extends AFTPConnection {
                             mCandidate.setSelected(false);
                             mOnTransferListener.onStateUpdateRequested(mCandidate);
 
-                            if (!mCandidate.isFinished() && mCandidate.isConnected())
+                            if (!mCandidate.isFinished() && mHasAlreadyBeenConnected)
                                 mOnTransferListener.onFileUnselected(mCandidate);
 
                             if (mOnTransferListener != null)
@@ -705,7 +708,8 @@ public class FTPTransfer extends AFTPConnection {
                 if (mIsInterrupted) {
                     if (mCandidate != null && mCandidate.isSelected()) {
                         // TODO : Update database on each returns
-                        DataBase.getPendingFileDAO().update(mCandidate.setSelected(false));
+                        mCandidate.setSelected(false);
+                        DataBase.getPendingFileDAO().update(mCandidate);
                     }
                     break;
                 }

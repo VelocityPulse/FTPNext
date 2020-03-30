@@ -469,6 +469,7 @@ public class NavigationTransfer {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
+                        mNarrowTransferAdapter.notifyItemSelected(iPendingFile);
                         mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
                     }
                 });
