@@ -225,7 +225,6 @@ public abstract class AFTPConnection {
         if (isLocallyConnected()) {
             try {
                 mFTPClient.disconnect();
-                FTPLogManager.pushStatusLog("Disconnection");
             } catch (IOException iE) {
                 iE.printStackTrace();
             }

@@ -465,38 +465,6 @@ public class NavigationTransfer {
             }
 
             @Override
-            public void onNewFileSelected(final PendingFile iPendingFile) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mNarrowTransferAdapter.notifyItemSelected(iPendingFile);
-                        mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
-                    }
-                });
-            }
-
-            @Override
-            public void onFileUnselected(final PendingFile iPendingFile) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mNarrowTransferAdapter.notifyItemUnselected(iPendingFile);
-                        mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
-                    }
-                });
-            }
-
-            @Override
-            public void onTransferProgress(final PendingFile iPendingFile, final long iProgress, final long iSize) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
-                    }
-                });
-            }
-
-            @Override
             public void onTransferSuccess(final PendingFile iPendingFile) {
                 mHandler.post(new Runnable() {
                     @Override
@@ -568,6 +536,10 @@ public class NavigationTransfer {
     }
 
     private void showSuccessTransfer() {
+        if (mContextActivity.isFinishing()) {
+            LogManager.error(TAG, "Show success transfer called but isFinishing == true");
+            return;
+        }
         String lMessage = "All files has been transferred"; // TODO : Strings
 
         mContextActivity.mSuccessDialog = Utils.createSuccessAlertDialog(mContextActivity, lMessage);

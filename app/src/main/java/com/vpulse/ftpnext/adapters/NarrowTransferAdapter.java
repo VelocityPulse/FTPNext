@@ -302,36 +302,6 @@ public class NarrowTransferAdapter
             mRecyclerView.scrollToPosition(0);
     }
 
-    public void notifyItemUnselected(PendingFile iPendingFile) {
-        synchronized (mPendingFileItemList) {
-
-            int lIndexOfPendingFile = -1;
-            int lI = -1;
-            int lMax = mPendingFileItemList.size();
-
-            while (++lI < lMax) {
-                if (mPendingFileItemList.get(lI).mPendingFile == iPendingFile) {
-                    lIndexOfPendingFile = lI;
-                    break;
-                }
-            }
-
-            if (lIndexOfPendingFile == -1) {
-                LogManager.error(TAG, "Picking index of PendingFileItem failed");
-                return;
-            }
-
-            PendingFileItem lToReInsert = mPendingFileItemList.remove(lIndexOfPendingFile);
-            lI = lMax + 1;
-            while (--lI > 0) {
-                if (!mPendingFileItemList.get(lI).mPendingFile.isSelected())
-                    break;
-            }
-            mPendingFileItemList.add(lI, lToReInsert);
-            notifyItemMoved(lIndexOfPendingFile, lI);
-        }
-    }
-
     public void notifyItemSelected(PendingFile iPendingFile) {
         synchronized (mPendingFileItemList) {
 

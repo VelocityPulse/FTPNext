@@ -126,11 +126,15 @@ public class FTPTransfer extends AFTPConnection {
 
                     @Override
                     public void onConnectionDenied(ErrorCodeDescription iErrorEnum, int iErrorCode) {
+                        if (iErrorEnum == ErrorCodeDescription.ERROR_SERVER_DENIED_CONNECTION)
+                            FTPLogManager.pushErrorLog("Server denied connection ...");
+                        else
+                            FTPLogManager.pushErrorLog("Impossible to reconnect ...");
                         if (iOnTransferListener != null)
                             iOnTransferListener.onStop(FTPTransfer.this);
                         if (!mCandidate.isFinished() && mCandidate.isSelected()) {
                             mCandidate.setSelected(false);
-                            mOnTransferListener.onFileUnselected(mCandidate);
+                            mOnTransferListener.onStateUpdateRequested(mCandidate);
                         }
                         destroyConnection();
                     }
@@ -163,7 +167,7 @@ public class FTPTransfer extends AFTPConnection {
             mCandidate.setRemainingTimeInMin((int) lRemainingTime);
 
             mCandidate.setProgress((int) iTotalBytesTransferred);
-            mOnTransferListener.onTransferProgress(mCandidate, iTotalBytesTransferred, iStreamSize);
+            mOnTransferListener.onStateUpdateRequested(mCandidate);
 
             mBytesTransferred = 0;
             mTimer = lCurrentTimeMillis;
@@ -218,7 +222,7 @@ public class FTPTransfer extends AFTPConnection {
 
                     LogManager.info(TAG, "CANDIDATE : \n" + mCandidate.toString());
                     DataBase.getPendingFileDAO().update(mCandidate);
-                    mOnTransferListener.onNewFileSelected(mCandidate);
+                    mOnTransferListener.onStateUpdateRequested(mCandidate);
 
                     if (mIsInterrupted)
                         break;
@@ -316,6 +320,9 @@ public class FTPTransfer extends AFTPConnection {
 
                         connectionLooper();
 
+                        if (mIsInterrupted)
+                            break;
+
                         if (!setBinaryFileType()) {
                             Utils.sleep(USER_WAIT_BREAK); // Break the while speed
                             continue;
@@ -344,7 +351,7 @@ public class FTPTransfer extends AFTPConnection {
                                 mOnTransferListener.onFail(mCandidate);
                                 FTPLogManager.pushErrorLog("Impossible to retrieve remote file stream : \"" +
                                         lRemoteFullPath + "\"");
-                                mFTPClient.disconnect();
+                                disconnect();
                                 break;
                             }
                             mCandidate.setIsAnError(false);
@@ -382,7 +389,7 @@ public class FTPTransfer extends AFTPConnection {
                                 iE.printStackTrace();
                                 mCandidate.setIsAnError(true);
                                 mOnTransferListener.onFail(mCandidate);
-                                mFTPClient.disconnect();
+                                disconnect();
                                 FTPLogManager.pushErrorLog("Failed to complete the transfer : \"" +
                                         mCandidate.getName() + "\"");
                                 break;
@@ -399,11 +406,6 @@ public class FTPTransfer extends AFTPConnection {
                             Utils.sleep(USER_WAIT_BREAK); // Wait the connexion update status
                         }
                         // While upload end
-                    }
-
-                    if (mIsInterrupted && !mCandidate.isFinished()) {
-                        mCandidate.setSelected(false);
-                        iOnTransferListener.onFileUnselected(mCandidate);
                     }
 
                     Utils.sleep(TRANSFER_FINISH_BREAK);
@@ -447,7 +449,7 @@ public class FTPTransfer extends AFTPConnection {
 
                     LogManager.info(TAG, "CANDIDATE : \n" + mCandidate.toString());
                     DataBase.getPendingFileDAO().update(mCandidate);
-                    mOnTransferListener.onNewFileSelected(mCandidate);
+                    mOnTransferListener.onStateUpdateRequested(mCandidate);
 
                     if (mIsInterrupted)
                         break;
@@ -532,6 +534,9 @@ public class FTPTransfer extends AFTPConnection {
 
                         connectionLooper();
 
+                        if (mIsInterrupted)
+                            break;
+
                         try {
                             lRemoteFile = mFTPClient.mlistFile(lFullRemotePath);
                         } catch (Exception iE) {
@@ -565,7 +570,7 @@ public class FTPTransfer extends AFTPConnection {
                                 LogManager.error(TAG, "lRemoteStream == null");
                                 mCandidate.setIsAnError(true);
                                 mOnTransferListener.onFail(mCandidate);
-                                mFTPClient.disconnect();
+                                disconnect();
                                 FTPLogManager.pushErrorLog("Failed to retrieve remote file stream : \"" +
                                         lFullRemotePath + "\"");
                                 break;
@@ -603,7 +608,7 @@ public class FTPTransfer extends AFTPConnection {
                                 iE.printStackTrace();
                                 mCandidate.setIsAnError(true);
                                 mOnTransferListener.onFail(mCandidate);
-                                mFTPClient.disconnect();
+                                disconnect();
                                 FTPLogManager.pushErrorLog("Failed to complete the transfer : \"" +
                                         mCandidate.getName() + "\"");
                                 break;
@@ -659,21 +664,19 @@ public class FTPTransfer extends AFTPConnection {
         mCandidate.setRemainingTimeInMin(0);
         mCandidate.setFinished(true);
         mCandidate.setProgress(mCandidate.getSize());
-        mOnTransferListener.onTransferProgress(mCandidate,
-                mCandidate.getProgress(), mCandidate.getSize());
+        mOnTransferListener.onStateUpdateRequested(mCandidate);
         mOnTransferListener.onTransferSuccess(mCandidate);
         FTPLogManager.pushSuccessLog("Download of " + mCandidate.getName());
     }
 
     private void connectionLooper() {
-        while (!isRemotelyConnected()) {
-            if (mIsInterrupted)
-                break;
+        while (!isRemotelyConnected() && !mIsInterrupted) {
+            LogManager.debug(TAG, "noop returns false");
 
             if (!isReconnecting()) {
                 if (isLocallyConnected())
                     disconnect();
-                while (isLocallyConnected()) {
+                while (isLocallyConnected() && mIsInterrupted) {
                     Utils.sleep(RECONNECTION_WAITING_TIME);
                 }
 
@@ -692,7 +695,7 @@ public class FTPTransfer extends AFTPConnection {
                             mOnTransferListener.onStateUpdateRequested(mCandidate);
 
                             if (!mCandidate.isFinished() && mHasAlreadyBeenConnected)
-                                mOnTransferListener.onFileUnselected(mCandidate);
+                                mOnTransferListener.onStateUpdateRequested(mCandidate);
 
                             if (mOnTransferListener != null)
                                 mOnTransferListener.onStop(FTPTransfer.this);
@@ -706,11 +709,6 @@ public class FTPTransfer extends AFTPConnection {
                 Utils.sleep(200);
 
                 if (mIsInterrupted) {
-                    if (mCandidate != null && mCandidate.isSelected()) {
-                        // TODO : Update database on each returns
-                        mCandidate.setSelected(false);
-                        DataBase.getPendingFileDAO().update(mCandidate);
-                    }
                     break;
                 }
             }
@@ -909,12 +907,6 @@ public class FTPTransfer extends AFTPConnection {
         void onConnected(PendingFile iPendingFile);
 
         void onConnectionLost(PendingFile iPendingFile);
-
-        void onNewFileSelected(PendingFile iPendingFile);
-
-        void onFileUnselected(PendingFile iPendingFile);
-
-        void onTransferProgress(PendingFile iPendingFile, long iProgress, long iSize);
 
         void onTransferSuccess(PendingFile iPendingFile);
 
