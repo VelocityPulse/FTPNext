@@ -155,7 +155,7 @@ public class NarrowTransferAdapter
                 LogManager.debug(TAG, "SET RED FOR " + lPendingFile.getName());
                 iCustomItemViewHolder.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.error));
             }
-        } else if (lPendingFile.isStarted()) {
+        } else if (lPendingFile.isSelected()) {
             // Normal download update
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -324,7 +324,7 @@ public class NarrowTransferAdapter
             PendingFileItem lToReInsert = mPendingFileItemList.remove(lIndexOfPendingFile);
             lI = -1;
             while (++lI < lMax) {
-                if (!mPendingFileItemList.get(lI).mPendingFile.isStarted()) {
+                if (!mPendingFileItemList.get(lI).mPendingFile.isSelected()) {
                     mPendingFileItemList.add(lI, lToReInsert);
                     notifyItemMoved(lIndexOfPendingFile, lI);
                     break;

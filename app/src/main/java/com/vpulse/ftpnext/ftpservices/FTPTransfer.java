@@ -126,8 +126,8 @@ public class FTPTransfer extends AFTPConnection {
                     public void onConnectionDenied(ErrorCodeDescription iErrorEnum, int iErrorCode) {
                         if (iOnTransferListener != null)
                             iOnTransferListener.onStop(FTPTransfer.this);
-                        if (!mCandidate.isFinished() && mCandidate.isStarted()) {
-                            mCandidate.setStarted(false);
+                        if (!mCandidate.isFinished() && mCandidate.isSelected()) {
+                            mCandidate.setSelected(false);
                             mOnTransferListener.onFileUnselected(mCandidate);
                         }
                         destroyConnection();
@@ -400,7 +400,7 @@ public class FTPTransfer extends AFTPConnection {
                     }
 
                     if (mIsInterrupted && !mCandidate.isFinished()) {
-                        mCandidate.setStarted(false);
+                        mCandidate.setSelected(false);
                         iOnTransferListener.onFileUnselected(mCandidate);
                     }
 
@@ -641,9 +641,9 @@ public class FTPTransfer extends AFTPConnection {
 
             PendingFile oRet;
             for (PendingFile lItem : iSelection) {
-                if (!lItem.isStarted() && !lItem.isFinished() && !lItem.isAnError()) {
+                if (!lItem.isSelected() && !lItem.isFinished() && !lItem.isAnError()) {
                     oRet = lItem;
-                    oRet.setStarted(true);
+                    oRet.setSelected(true);
                     return oRet;
                 }
             }
@@ -685,7 +685,7 @@ public class FTPTransfer extends AFTPConnection {
                         LogManager.error(TAG, "Connection loop failed to connect");
                         if (iErrorEnum == ErrorCodeDescription.ERROR_SERVER_DENIED_CONNECTION) {
                             FTPLogManager.pushErrorLog("Server denied connection ...");
-                            mCandidate.setStarted(false);
+                            mCandidate.setSelected(false);
                             mOnTransferListener.onStateUpdateRequested(mCandidate);
 
                             if (!mCandidate.isFinished() && mCandidate.isConnected())
@@ -703,9 +703,9 @@ public class FTPTransfer extends AFTPConnection {
                 Utils.sleep(200);
 
                 if (mIsInterrupted) {
-                    if (mCandidate != null && mCandidate.isStarted()) {
+                    if (mCandidate != null && mCandidate.isSelected()) {
                         // TODO : Update database on each returns
-                        DataBase.getPendingFileDAO().update(mCandidate.setStarted(false));
+                        DataBase.getPendingFileDAO().update(mCandidate.setSelected(false));
                     }
                     break;
                 }

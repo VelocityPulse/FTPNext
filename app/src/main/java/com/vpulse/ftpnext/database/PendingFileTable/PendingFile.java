@@ -6,7 +6,6 @@ import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LoadDirection;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.ABaseTable;
-import com.vpulse.ftpnext.ftpservices.FTPLogManager;
 
 public class PendingFile extends ABaseTable {
 
@@ -14,7 +13,6 @@ public class PendingFile extends ABaseTable {
 
     private int mServerId;
     private LoadDirection mLoadDirection;
-    private boolean mStarted;
     private String mName;
     private String mRemotePath;
     private String mLocalPath;
@@ -24,6 +22,7 @@ public class PendingFile extends ABaseTable {
 
     // Not in database :
     private int mSize;
+    private boolean mSelected;
     private boolean mIsConnected;
     private boolean mIsAnError;
     private long mSpeedInByte;
@@ -32,12 +31,12 @@ public class PendingFile extends ABaseTable {
     public PendingFile() {
     }
 
-    public PendingFile(int iServerId, LoadDirection iLoadDirection, boolean iStarted,
+    public PendingFile(int iServerId, LoadDirection iLoadDirection, boolean iSelected,
                        String iName, String iRemotePath, String iLocalPath,
                        ExistingFileAction iExistingFileAction) {
         mServerId = iServerId;
         mLoadDirection = iLoadDirection;
-        mStarted = iStarted;
+        mSelected = iSelected;
         mName = iName;
         mRemotePath = iRemotePath;
         mLocalPath = iLocalPath;
@@ -62,12 +61,12 @@ public class PendingFile extends ABaseTable {
         return this;
     }
 
-    public boolean isStarted() {
-        return mStarted;
+    public boolean isSelected() {
+        return mSelected;
     }
 
-    public PendingFile setStarted(boolean iStarted) {
-        mStarted = iStarted;
+    public PendingFile setSelected(boolean iSelected) {
+        mSelected = iSelected;
         return this;
     }
 
@@ -179,7 +178,7 @@ public class PendingFile extends ABaseTable {
         oToString = "Database id: " + mDataBaseId +
                 "\nServerId: " + mServerId +
                 "\nLoadDirection: " + mLoadDirection.toString() +
-                "\nStarted: " + mStarted +
+                "\nStarted: " + mSelected +
                 "\nRemote path:\t\t" + mRemotePath +
                 "\nLocal path:\t\t" + mLocalPath +
                 "\nFinished: " + mFinished +
@@ -196,7 +195,7 @@ public class PendingFile extends ABaseTable {
         LogManager.debug(TAG, "Not useless updating content");
         mServerId = iPendingFile.mServerId;
         mLoadDirection = iPendingFile.mLoadDirection;
-        mStarted = iPendingFile.mStarted;
+        mSelected = iPendingFile.mSelected;
         mName = iPendingFile.mName;
         mRemotePath = iPendingFile.mRemotePath;
         mLocalPath = iPendingFile.mLocalPath;

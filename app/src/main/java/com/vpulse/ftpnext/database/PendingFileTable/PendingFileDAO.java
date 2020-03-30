@@ -19,6 +19,7 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
 
     private static final int VERSION_ADD_EXISTING_FILE_ACTION = 2;
     private static final int VERSION_UPDATE_PATH_AND_ENCLOSING_COLUMN_NAME = 3;
+    private static final int VERSION_REMOVE_COLUMN_STARTED = 4;
 
     public PendingFileDAO(SQLiteDatabase iDataBase) {
         super(iDataBase);
@@ -118,6 +119,11 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
             mDataBase.execSQL("DROP TABLE " + TABLE);
             mDataBase.execSQL(TABLE_CREATE);
         }
+
+        if (iOldVersion < VERSION_REMOVE_COLUMN_STARTED) {
+            mDataBase.execSQL("DROP TABLE " + TABLE);
+            mDataBase.execSQL(TABLE_CREATE);
+        }
     }
 
     @Override
@@ -134,7 +140,6 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
 
         mContentValues.put(COLUMN_SERVER_ID, iObject.getServerId());
         mContentValues.put(COLUMN_LOAD_DIRECTION, iObject.getLoadDirection().getValue());
-        mContentValues.put(COLUMN_STARTED, iObject.isStarted());
         mContentValues.put(COLUMN_NAME, iObject.getName());
         mContentValues.put(COLUMN_REMOTE_PATH, iObject.getRemotePath());
         mContentValues.put(COLUMN_LOCAL_PATH, iObject.getLocalPath());
@@ -158,8 +163,6 @@ public class PendingFileDAO extends ADataAccessObject<PendingFile> implements IP
         if (iCursor.getColumnIndex(COLUMN_LOAD_DIRECTION) != -1)
             oObject.setLoadDirection(LoadDirection.getValue(
                     iCursor.getColumnIndexOrThrow(COLUMN_LOAD_DIRECTION)));
-        if (iCursor.getColumnIndexOrThrow(COLUMN_STARTED) != -1)
-            oObject.setStarted(iCursor.getInt(iCursor.getColumnIndexOrThrow(COLUMN_STARTED)) != 0);
         if (iCursor.getColumnIndexOrThrow(COLUMN_NAME) != -1)
             oObject.setName(iCursor.getString(iCursor.getColumnIndexOrThrow(COLUMN_NAME)));
         if (iCursor.getColumnIndexOrThrow(COLUMN_REMOTE_PATH) != -1)
