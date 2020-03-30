@@ -6,6 +6,7 @@ import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LoadDirection;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.ABaseTable;
+import com.vpulse.ftpnext.ftpservices.FTPLogManager;
 
 public class PendingFile extends ABaseTable {
 

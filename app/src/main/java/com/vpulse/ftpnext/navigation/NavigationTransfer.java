@@ -480,6 +480,7 @@ public class NavigationTransfer {
                     @Override
                     public void run() {
                         // TODO : BEFORE RELEASE : Sort items to put loading on the top
+                        mNarrowTransferAdapter.notifyItemUnselected(iPendingFile);
                         mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
                     }
                 });

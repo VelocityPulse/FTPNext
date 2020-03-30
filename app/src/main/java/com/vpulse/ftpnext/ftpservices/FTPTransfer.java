@@ -250,6 +250,8 @@ public class FTPTransfer extends AFTPConnection {
                     if (lRemoteFile == null) {
                         mCandidate.setIsAnError(true);
                         mOnTransferListener.onFail(mCandidate);
+                        FTPLogManager.pushErrorLog(
+                                "Failed to recover remote file : \"" + lRemoteFullPath + "\"");
                         continue;
                     }
 
@@ -266,6 +268,9 @@ public class FTPTransfer extends AFTPConnection {
                                 LogManager.error(TAG, "Impossible to create new file");
                                 mCandidate.setIsAnError(true);
                                 mOnTransferListener.onFail(mCandidate);
+                                FTPLogManager.pushErrorLog(
+                                        "Impossible to write on the local storage at path : \"" +
+                                                lLocalFullPath + "\"");
                                 if (mIsInterrupted)
                                     break;
                                 continue;
@@ -291,6 +296,9 @@ public class FTPTransfer extends AFTPConnection {
                         iE.printStackTrace();
                         mCandidate.setIsAnError(true);
                         mOnTransferListener.onFail(mCandidate);
+                        FTPLogManager.pushErrorLog(
+                                "Impossible to write on the local storage at path : \"" +
+                                        lLocalFullPath + "\"");
                         continue;
                     }
 
@@ -330,13 +338,15 @@ public class FTPTransfer extends AFTPConnection {
                                 LogManager.error(TAG, "Remote stream null");
                                 mCandidate.setIsAnError(true);
                                 mOnTransferListener.onFail(mCandidate);
+                                FTPLogManager.pushErrorLog("Impossible to retrieve remote file stream : \"" +
+                                        lRemoteFullPath + "\"");
                                 mFTPClient.disconnect();
                                 break;
                             }
                             mCandidate.setIsAnError(false);
 
                             FTPLogManager.pushStatusLog(
-                                    "Start download of " + mCandidate.getName());
+                                    "Start download of \"" + mCandidate.getName() + "\"");
 
                             mCandidate.setConnected(true);
                             // ---------------- DOWNLAND LOOP
@@ -369,6 +379,8 @@ public class FTPTransfer extends AFTPConnection {
                                 mCandidate.setIsAnError(true);
                                 mOnTransferListener.onFail(mCandidate);
                                 mFTPClient.disconnect();
+                                FTPLogManager.pushErrorLog("Failed to complete the transfer : \"" +
+                                        mCandidate.getName() + "\"");
                                 break;
                             }
                             mFTPClient.enterLocalActiveMode();
@@ -460,6 +472,8 @@ public class FTPTransfer extends AFTPConnection {
                         LogManager.error(TAG, "Local file doesn't exist");
                         mCandidate.setIsAnError(true);
                         mOnTransferListener.onFail(mCandidate);
+                        FTPLogManager.pushErrorLog("Failed to retrieve local file : \"" +
+                                lFullLocalPath + "\"");
                         continue;
                     }
 
@@ -484,7 +498,7 @@ public class FTPTransfer extends AFTPConnection {
                         } catch (IOException iE) {
                             iE.printStackTrace();
                             LogManager.error(TAG, "Impossible to create new file");
-                            FTPLogManager.pushErrorLog("Impossible to create path or new file");
+                            FTPLogManager.pushErrorLog("Impossible to create path");
                             mCandidate.setIsAnError(true);
                             mOnTransferListener.onFail(mCandidate);
                             continue;
@@ -540,7 +554,7 @@ public class FTPTransfer extends AFTPConnection {
                             int lTotalRead = lRemoteFile == null ? 0 : (int) lRemoteFile.getSize();
                             int lFinalSize = (int) lLocalFile.length();
                             mCandidate.setSize(lFinalSize);
-                            mCandidate.setProgress((int) lLocalFile.length());
+                            mCandidate.setProgress(lTotalRead);
 
                             lRemoteStream = mFTPClient.appendFileStream(lFullRemotePath);
                             if (lRemoteStream == null) {
@@ -548,6 +562,8 @@ public class FTPTransfer extends AFTPConnection {
                                 mCandidate.setIsAnError(true);
                                 mOnTransferListener.onFail(mCandidate);
                                 mFTPClient.disconnect();
+                                FTPLogManager.pushErrorLog("Failed to retrieve remote file stream : \"" +
+                                        lFullRemotePath + "\"");
                                 break;
                             }
 
@@ -560,21 +576,22 @@ public class FTPTransfer extends AFTPConnection {
 
                                 lRemoteStream.write(bytesArray, 0, lBytesRead);
 
-                                notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize, false);
+                                notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize);
 
                                 if (mIsInterrupted)
                                     break;
                             }
                             // ---------------- UPLOAD LOOP
 
-                            // Closing streams necessary before complete pending command
-                            closeUploadStreams(lLocalStream, lRemoteStream);
-
+                            notifyTransferProgress(lTotalRead, lBytesRead, lFinalSize, true);
                             mIsTransferring = false;
                             lFinished = true;
 
                             if (mIsInterrupted)
                                 break;
+
+                            // Closing streams necessary before complete pending command
+                            closeUploadStreams(lLocalStream, lRemoteStream);
 
                             try {
                                 mFTPClient.completePendingCommand();
@@ -583,6 +600,8 @@ public class FTPTransfer extends AFTPConnection {
                                 mCandidate.setIsAnError(true);
                                 mOnTransferListener.onFail(mCandidate);
                                 mFTPClient.disconnect();
+                                FTPLogManager.pushErrorLog("Failed to complete the transfer : \"" +
+                                        mCandidate.getName() + "\"");
                                 break;
                             }
                             mFTPClient.enterLocalActiveMode();
@@ -661,6 +680,7 @@ public class FTPTransfer extends AFTPConnection {
 
                     @Override
                     public void onFail(ErrorCodeDescription iErrorEnum, int iErrorCode) {
+                        LogManager.error(TAG, "Connection loop failed to connect");
                         if (iErrorEnum == ErrorCodeDescription.ERROR_SERVER_DENIED_CONNECTION) {
                             FTPLogManager.pushErrorLog("Server denied the connection ...");
                             if (mOnTransferListener != null)

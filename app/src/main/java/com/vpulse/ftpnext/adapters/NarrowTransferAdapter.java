@@ -172,15 +172,6 @@ public class NarrowTransferAdapter
                 String lSpeed = Utils.humanReadableByteCount(lPendingFile.getSpeedInByte(), false);
                 iCustomItemViewHolder.mTextSpeedView.setText(lSpeed);
 
-//                if (lPendingFile.getSpeedInKo() < 1000) {
-//                    String lSpeed = lPendingFile.getSpeedInKo() + " Ko/s";
-//                    iCustomItemViewHolder.mTextSpeedView.setText(lSpeed);
-//                } else {
-//                    double lMoSpeed;
-//                    lMoSpeed = ((double) lPendingFile.getSpeedInKo()) / 1000d;
-//                    String lSpeed = lMoSpeed + " Mo/s";
-//                    iCustomItemViewHolder.mTextSpeedView.setText(lSpeed);
-//                }
             } else {
                 iCustomItemViewHolder.mTextSpeedView.setText("");
                 iCustomItemViewHolder.mLoading.setVisibility(View.VISIBLE);
@@ -308,6 +299,37 @@ public class NarrowTransferAdapter
         int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
         if (firstVisiblePosition == 0 && lNewPosition == 0)
             mRecyclerView.scrollToPosition(0);
+    }
+
+    public void notifyItemUnselected(PendingFile iPendingFile) {
+        synchronized (mPendingFileItemList) {
+
+            int lIndexOfPendingFile = -1;
+            int lI = -1;
+            int lMax = mPendingFileItemList.size();
+
+            while (++lI < lMax) {
+                if (mPendingFileItemList.get(lI).mPendingFile == iPendingFile) {
+                    lIndexOfPendingFile = lI;
+                    break;
+                }
+            }
+
+            if (lIndexOfPendingFile == -1) {
+                LogManager.error(TAG, "Picking index of pending file failed");
+                return;
+            }
+
+            PendingFileItem lToReInsert = mPendingFileItemList.remove(lIndexOfPendingFile);
+            lI = -1;
+            while (++lI < lMax) {
+                if (!mPendingFileItemList.get(lI).mPendingFile.isStarted()) {
+                    mPendingFileItemList.add(lI, lToReInsert);
+                    notifyItemMoved(lIndexOfPendingFile, lI);
+                    break;
+                }
+            }
+        }
     }
 
     static class PendingFileItem {

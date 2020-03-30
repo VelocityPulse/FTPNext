@@ -99,6 +99,7 @@ public class FTPServices extends AFTPConnection {
             @Override
             public void run() {
                 try {
+                    // TODO : BEFORE RELEASE : Try remove -> cancel remove -> update folder 2x
                     FTPFile lWorkingDir = mFTPClient.mlistFile(iNewWorkingDirectory);
                     FTPLogManager.pushStatusLog(
                             "Updating current working dir to \"" + iNewWorkingDirectory + "\"");
@@ -106,7 +107,7 @@ public class FTPServices extends AFTPConnection {
                     if (lWorkingDir != null && lWorkingDir.isDirectory())
                         mCurrentDirectory = lWorkingDir;
 
-                } catch (IOException iE) {
+                } catch (Exception iE) {
                     iE.printStackTrace();
                 }
             }
