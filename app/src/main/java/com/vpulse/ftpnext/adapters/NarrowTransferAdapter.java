@@ -27,6 +27,7 @@ import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO : Bug of item layout when orientation changes many time (width become shorter)
 public class NarrowTransferAdapter
         extends RecyclerView.Adapter<NarrowTransferAdapter.CustomItemViewHolder> {
 

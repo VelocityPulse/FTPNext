@@ -479,7 +479,6 @@ public class NavigationTransfer {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        // TODO : BEFORE RELEASE : Sort items to put loading on the top
                         mNarrowTransferAdapter.notifyItemUnselected(iPendingFile);
                         mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
                     }
@@ -508,8 +507,13 @@ public class NavigationTransfer {
             }
 
             @Override
-            public void onRightAccessFail(PendingFile iPendingFile) {
-
+            public void onStateUpdateRequested(final PendingFile iPendingFile) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
+                    }
+                });
             }
 
             @Override

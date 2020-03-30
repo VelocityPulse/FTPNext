@@ -151,6 +151,8 @@ public class FTPTransfer extends AFTPConnection {
         if (lElapsedTime > UPDATE_TRANSFER_TIMER || iForceNotify) {
 
             long lImmediateSpeedInKoS = (long) ((mBytesTransferred / lElapsedTime) * 1000);
+            if (lImmediateSpeedInKoS < 0)
+                lImmediateSpeedInKoS = 0;
 
             settingAverageSpeed(lImmediateSpeedInKoS);
             mCandidate.setSpeedInByte(getAverageSpeed());
@@ -619,7 +621,7 @@ public class FTPTransfer extends AFTPConnection {
 
                     // Issue : The remote file was removed after a fast wifi re connexion
                     // Or when we killed the app
-                    // Fix : It appears that it is a FTP server problem and absolutely not a
+                    // Answer : It appears that it is a FTP server problem and absolutely not a
                     // ftp client problem
 
                     Utils.sleep(TRANSFER_FINISH_BREAK);
@@ -682,13 +684,15 @@ public class FTPTransfer extends AFTPConnection {
                     public void onFail(ErrorCodeDescription iErrorEnum, int iErrorCode) {
                         LogManager.error(TAG, "Connection loop failed to connect");
                         if (iErrorEnum == ErrorCodeDescription.ERROR_SERVER_DENIED_CONNECTION) {
-                            FTPLogManager.pushErrorLog("Server denied the connection ...");
+                            FTPLogManager.pushErrorLog("Server denied connection ...");
+                            mCandidate.setStarted(false);
+                            mOnTransferListener.onStateUpdateRequested(mCandidate);
+
+                            if (!mCandidate.isFinished() && mCandidate.isConnected())
+                                mOnTransferListener.onFileUnselected(mCandidate);
+
                             if (mOnTransferListener != null)
                                 mOnTransferListener.onStop(FTPTransfer.this);
-                            if (!mCandidate.isFinished() && mCandidate.isStarted()) {
-                                mCandidate.setStarted(false);
-                                mOnTransferListener.onFileUnselected(mCandidate);
-                            }
                             destroyConnection();
                         }
                     }
@@ -910,7 +914,7 @@ public class FTPTransfer extends AFTPConnection {
 
         void onTransferSuccess(PendingFile iPendingFile);
 
-        void onRightAccessFail(PendingFile iPendingFile);
+        void onStateUpdateRequested(PendingFile iPendingFile);
 
         /**
          * Called when the file to download is already existing on the local storage.
