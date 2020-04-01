@@ -111,7 +111,10 @@ public abstract class AFTPConnection {
             @Override
             public void onNetworkLost() {
                 LogManager.info(TAG, "On network lost");
-                FTPLogManager.pushErrorLog("Losing network connection");
+                if (isLocallyConnected()) {
+                    disconnect();
+                    FTPLogManager.pushErrorLog("Connection lost");
+                }
 
                 if (isReconnecting()) {
                     LogManager.info(TAG, "Already reconnecting");
@@ -273,7 +276,7 @@ public abstract class AFTPConnection {
             public void run() {
                 try {
                     LogManager.info(TAG, "Will connect with : \n" + mFTPServer.toString());
-                    FTPLogManager.pushStatusLog("Connection with " + mFTPServer.getServer());
+                    FTPLogManager.pushStatusLog("Will connect with " + mFTPServer.getServer());
 
                     mFTPClient.setControlEncoding("UTF-8");
                     mFTPClient.setDefaultPort(mFTPServer.getPort());
@@ -298,7 +301,7 @@ public abstract class AFTPConnection {
 
                     if (!FTPReply.isPositiveCompletion(mFTPClient.getReplyCode()) || !isLocallyConnected()) {
                         FTPLogManager.pushErrorLog("Server \"" + mFTPServer.getName() + "\" refused connection");
-                        LogManager.error(TAG, "FTP server refused connection.");
+                        LogManager.error(TAG, "Server refused connection.");
 
                         mFTPClient.disconnect();
                         if (onConnectionResult != null) {
@@ -312,8 +315,8 @@ public abstract class AFTPConnection {
                         return;
                     }
 
-                    FTPLogManager.pushSuccessLog("Connection \"" + mFTPServer.getName() + "\"");
                     LogManager.info(TAG, "FTPClient connected");
+                    FTPLogManager.pushSuccessLog("Connected to \"" + mFTPServer.getName() + "\"");
 
                     if (onConnectionResult != null)
                         onConnectionResult.onSuccess();

@@ -338,6 +338,7 @@ public class NavigationTransfer {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         FTPLogManager.unsubscribeOnNewFTPLogColored(lOnNewFTPLogColored);
+                        destroyAllTransferConnections();
                     }
                 });
 

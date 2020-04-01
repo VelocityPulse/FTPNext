@@ -33,7 +33,6 @@ public class FTPTransfer extends AFTPConnection {
 
     private static boolean mIsAskingActionForExistingFile;
 
-    private OnStreamClosed mOnStreamClosed;
     private OnTransferListener mOnTransferListener;
     private PendingFile mCandidate;
 
@@ -91,16 +90,19 @@ public class FTPTransfer extends AFTPConnection {
     public void destroyConnection() {
         LogManager.info(TAG, "Destroy connection");
 
-        mOnStreamClosed = new OnStreamClosed() {
+        mHandlerConnection.post(new Runnable() {
             @Override
-            public void onStreamClosed() {
+            public void run() {
+                if (isTransferring()) {
+                    mHandlerConnection.postDelayed(this, 500);
+                    return;
+                }
                 if (mCandidate != null)
                     mCandidate.setSelected(false);
-                mOnStreamClosed = null;
                 FTPTransfer.super.destroyConnection();
                 sFTPTransferInstances.remove(FTPTransfer.this);
             }
-        };
+        });
 
         abortTransfer();
     }
@@ -850,9 +852,6 @@ public class FTPTransfer extends AFTPConnection {
         } catch (IOException iEx) {
             LogManager.error(TAG, "Closing streams not working");
             iEx.printStackTrace();
-        } finally {
-            if (mOnStreamClosed != null)
-                mOnStreamClosed.onStreamClosed();
         }
     }
 
@@ -867,9 +866,6 @@ public class FTPTransfer extends AFTPConnection {
         } catch (IOException iEx) {
             LogManager.error(TAG, "Closing streams not working");
             iEx.printStackTrace();
-        } finally {
-            if (mOnStreamClosed != null)
-                mOnStreamClosed.onStreamClosed();
         }
     }
 
@@ -935,11 +931,5 @@ public class FTPTransfer extends AFTPConnection {
          * FTPTransfer has nothing to do anymore
          */
         void onStop(FTPTransfer iFTPTransfer);
-    }
-
-    private interface OnStreamClosed {
-
-        void onStreamClosed();
-
     }
 }

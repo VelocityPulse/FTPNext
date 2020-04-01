@@ -58,11 +58,13 @@ public class NetworkManager {
     }
 
     public void unsubscribeOnNetworkAvailable(OnNetworkAvailable iOnNetworkAvailable) {
-        mOnNetworkAvailableList.remove(iOnNetworkAvailable);
+        if (!mOnNetworkAvailableList.remove(iOnNetworkAvailable))
+            LogManager.error(TAG, "Unsubscribe network available failed !");
     }
 
     public void unsubscribeOnNetworkLost(OnNetworkLost iOnNetworkLost) {
-        mOnNetworkLostList.remove(iOnNetworkLost);
+        if (!mOnNetworkLostList.remove(iOnNetworkLost))
+            LogManager.error(TAG, "Unsubscribe network lost failed !");
     }
 
     public boolean isNetworkAvailable() {
