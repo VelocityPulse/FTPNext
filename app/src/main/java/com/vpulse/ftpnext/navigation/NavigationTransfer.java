@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.text.Spanned;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
@@ -41,6 +42,7 @@ import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_MESSAG
 import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
 import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
 
+// TODO : BEFORE RELEASE : Loading cancel button still doesn't work...
 public class NavigationTransfer {
 
     private final static String TAG = "NAVIGATION DOWNLOAD";
@@ -253,6 +255,8 @@ public class NavigationTransfer {
                 RecyclerView lNarrowTransferRecyclerView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_recycler_view);
                 lNarrowTransferRecyclerView.setLayoutManager(new LinearLayoutManager(mContextActivity));
 
+                Button lSortButton = lDownloadingDialogView.findViewById(R.id.narrow_transfer_recycler_button_sort);
+
                 final TextView lLogView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_log_view);
                 final ScrollView lScrollView = lDownloadingDialogView.findViewById(R.id.narrow_transfer_scroll_view);
                 lScrollView.setSmoothScrollingEnabled(true);
@@ -310,6 +314,7 @@ public class NavigationTransfer {
                 }
 
                 mNarrowTransferAdapter = new NarrowTransferAdapter(iPendingFiles, mContextActivity);
+                mNarrowTransferAdapter.setSortButton(lSortButton);
                 lNarrowTransferRecyclerView.setAdapter(mNarrowTransferAdapter);
 
                 lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -561,7 +566,6 @@ public class NavigationTransfer {
     }
 
     private void showUploadConfirmation(final Uri[] iUris) {
-        LogManager.debug(TAG, "Show upload confirmation");
         mContextActivity.mIndexingPendingFilesDialog = Utils.createAlertDialog(
                 mContextActivity,
                 "Uploading", // TODO : Strings

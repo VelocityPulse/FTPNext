@@ -186,10 +186,8 @@ public class NavigationActivity extends AppCompatActivity {
     public void onBackPressed() {
         LogManager.info(TAG, "On back pressed");
 
-        if (mFTPServices.isBusy()) {
-            LogManager.debug(TAG, "Canceling onBackPressed");
+        if (mFTPServices.isBusy())
             return;
-        }
 
         if (mIsFABOpen)
             closeFABMenu();
@@ -363,7 +361,7 @@ public class NavigationActivity extends AppCompatActivity {
 
         if (mFTPServices == null) {
             // Can happens on android studio apply changes
-            LogManager.debug(TAG, "FTP CONNECTION NULL");
+            LogManager.error(TAG, "FTP CONNECTION NULL");
             initializeFTPConnection();
         } else {
             LogManager.info(TAG, "FTP Services fully recovered by get instance");

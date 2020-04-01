@@ -361,7 +361,6 @@ public abstract class AFTPConnection {
             LogManager.error(TAG, "Asking remotely connected but without callback");
             return;
         }
-        LogManager.debug(TAG, "Is remotely connected async");
 
         // New Thread necessary to don't block mHandlerConnection
         new Thread(new Runnable() {
@@ -383,7 +382,6 @@ public abstract class AFTPConnection {
         } catch (IOException iE) {
             LogManager.error(TAG, "Send noop exception : " + iE.getMessage());
         }
-        LogManager.debug(TAG, "noop returns : " + lNoopResult);
         return lNoopResult;
     }
 
@@ -442,7 +440,7 @@ public abstract class AFTPConnection {
                 public void run() {
                     if (lLastCode != mFTPClient.getReplyCode()) {
                         lLastCode = mFTPClient.getReplyCode();
-                        LogManager.debug(TAG, "code reply : " + lLastCode);
+                        LogManager.info(TAG, "code reply : " + lLastCode);
                         FTPLogManager.pushCodeReplyLog(lLastCode);
                     }
 

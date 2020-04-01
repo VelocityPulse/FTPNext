@@ -191,7 +191,6 @@ public class PendingFile extends ABaseTable {
             return;
         }
 
-        LogManager.debug(TAG, "Not useless updating content");
         mServerId = iPendingFile.mServerId;
         mLoadDirection = iPendingFile.mLoadDirection;
         mSelected = iPendingFile.mSelected;

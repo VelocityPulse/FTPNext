@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="500dp"
@@ -8,30 +9,49 @@
     android:paddingTop="?dialogPreferredPadding"
     android:paddingRight="?dialogPreferredPadding">
 
-    <include
-        layout="@layout/narrow_transfer_recycler_layout"
-        android:layout_width="match_parent"
-        android:layout_height="350dp" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/narrow_transfer_recycler_button_sort"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:minHeight="0dp"
+        android:text="SORT"
+        app:icon="@drawable/ic_sort" />
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:layout_marginTop="20dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <ScrollView
-            android:id="@+id/narrow_transfer_scroll_view"
+        <include
+            layout="@layout/narrow_transfer_recycler_layout"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_alignParentBottom="true"
-            tools:ignore="UselessParent">
+            android:layout_height="350dp" />
 
-            <TextView
-                android:id="@+id/narrow_transfer_log_view"
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_marginTop="20dp">
+
+            <ScrollView
+                android:id="@+id/narrow_transfer_scroll_view"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="200dp"
+                android:layout_alignParentBottom="true"
+                tools:ignore="UselessParent">
 
-        </ScrollView>
+                <TextView
+                    android:id="@+id/narrow_transfer_log_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
 
-    </RelativeLayout>
+            </ScrollView>
+
+        </RelativeLayout>
+
+    </LinearLayout>
 
 </LinearLayout>

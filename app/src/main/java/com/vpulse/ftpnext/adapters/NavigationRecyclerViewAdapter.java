@@ -597,7 +597,6 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             this.setAnimationListener(new AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
-                    LogManager.debug(TAG, "On animation start");
                     if (mIsAppearing) {
                         for (CustomItemViewAdapter lItem : mCustomViewItemList)
                             lItem.mCheckBox.setVisibility(View.VISIBLE);

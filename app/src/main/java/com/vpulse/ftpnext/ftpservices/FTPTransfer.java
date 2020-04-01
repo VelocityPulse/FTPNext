@@ -94,6 +94,8 @@ public class FTPTransfer extends AFTPConnection {
         mOnStreamClosed = new OnStreamClosed() {
             @Override
             public void onStreamClosed() {
+                if (mCandidate != null)
+                    mCandidate.setSelected(false);
                 mOnStreamClosed = null;
                 FTPTransfer.super.destroyConnection();
                 sFTPTransferInstances.remove(FTPTransfer.this);
@@ -405,9 +407,10 @@ public class FTPTransfer extends AFTPConnection {
                             closeDownloadStreams(lLocalStream, lRemoteStream);
                             Utils.sleep(USER_WAIT_BREAK); // Wait the connexion update status
                         }
-                        // While upload end
+                        // While download end
                     }
 
+                    mCandidate.setSelected(false);
                     Utils.sleep(TRANSFER_FINISH_BREAK);
                     // While candidate end
                 }
@@ -624,6 +627,7 @@ public class FTPTransfer extends AFTPConnection {
                             closeUploadStreams(lLocalStream, lRemoteStream);
                             Utils.sleep(USER_WAIT_BREAK); // Wait the connexion update status
                         }
+                        // While upload end
                     }
 
                     // Issue : The remote file was removed after a fast wifi re connexion
@@ -632,10 +636,10 @@ public class FTPTransfer extends AFTPConnection {
                     // ftp client problem
 
                     Utils.sleep(TRANSFER_FINISH_BREAK);
-                    // While upload end
+                    mCandidate.setSelected(false);
+                    // While candidate end
                 }
                 mTransferThread = null;
-                // While candidate end
             }
         });
 
@@ -649,6 +653,9 @@ public class FTPTransfer extends AFTPConnection {
             PendingFile oRet;
             for (PendingFile lItem : iSelection) {
                 if (!lItem.isSelected() && !lItem.isFinished() && !lItem.isAnError()) {
+
+                    if (mCandidate != null) // Security init
+                        mCandidate.setSelected(false);
                     oRet = lItem;
                     oRet.setSelected(true);
                     return oRet;
@@ -671,7 +678,6 @@ public class FTPTransfer extends AFTPConnection {
 
     private void connectionLooper() {
         while (!isRemotelyConnected() && !mIsInterrupted) {
-            LogManager.debug(TAG, "noop returns false");
 
             if (!isReconnecting()) {
                 if (isLocallyConnected())

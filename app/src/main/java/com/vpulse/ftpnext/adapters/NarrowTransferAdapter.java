@@ -1,6 +1,5 @@
 package com.vpulse.ftpnext.adapters;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
@@ -10,12 +9,14 @@ import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -25,8 +26,11 @@ import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
+// TODO : Why not add a fading to white on the end of the name TextView (To avoid brutal cut on the display)
 // TODO : Bug of item layout when orientation changes many time (width become shorter)
 public class NarrowTransferAdapter
         extends RecyclerView.Adapter<NarrowTransferAdapter.CustomItemViewHolder> {
@@ -34,9 +38,14 @@ public class NarrowTransferAdapter
     private static final String TAG = "NARROW TRANSFER ADAPTER";
     private static final int MAX_REMOVE_REQUEST_IN_SEC = 15;
     private static final int REMOVE_BREAK_TIMER = 1000;
+    private static final int SORT_BUTTON_DELAY = 1000;
+
     private final List<PendingFileItem> mToRemovePendingFileItemList;
     private final List<PendingFileItem> mPendingFileItemList;
     private final List<CustomItemViewHolder> mCustomItemViewHolderList;
+
+    private Button mSortButton;
+    private int mStartedAnimations;
 
     private Context mContext;
 
@@ -44,38 +53,85 @@ public class NarrowTransferAdapter
 
     private int mUpdateRequestedInSecond;
     private long mTimer;
+    private Handler mHandler;
+    private Runnable mSortButtonDelayer;
 
     public NarrowTransferAdapter(PendingFile[] iPendingFiles, Context iContext) {
         mPendingFileItemList = new ArrayList<>();
         mToRemovePendingFileItemList = new ArrayList<>();
         mCustomItemViewHolderList = new ArrayList<>();
+        mHandler = new Handler();
+
         mContext = iContext;
 
         for (PendingFile lItem : iPendingFiles)
             mPendingFileItemList.add(new PendingFileItem(lItem));
+        setHasStableIds(true);
     }
 
     public NarrowTransferAdapter(Context iContext) {
         mPendingFileItemList = new ArrayList<>();
         mToRemovePendingFileItemList = new ArrayList<>();
         mCustomItemViewHolderList = new ArrayList<>();
+        mHandler = new Handler();
 
         mContext = iContext;
+        setHasStableIds(true);
     }
 
-    @SuppressLint("StaticFieldLeak")
+    private void initAnimator() {
+        mSortButtonDelayer = new Runnable() {
+            @Override
+            public void run() {
+                mSortButton.setEnabled(true);
+            }
+        };
+
+        mRecyclerView.setItemAnimator(new DefaultItemAnimator() {
+            @Override
+            public void onAnimationStarted(@NonNull RecyclerView.ViewHolder viewHolder) {
+                super.onAnimationStarted(viewHolder);
+
+                mStartedAnimations++;
+                mSortButton.setEnabled(false);
+            }
+
+            @Override
+            public void onMoveStarting(RecyclerView.ViewHolder item) {
+                super.onMoveStarting(item);
+
+                mStartedAnimations++;
+                mSortButton.setEnabled(false);
+            }
+
+            @Override
+            public void onAnimationFinished(@NonNull RecyclerView.ViewHolder viewHolder) {
+                super.onAnimationFinished(viewHolder);
+
+                mStartedAnimations--;
+                if (mStartedAnimations < 0)
+                    mStartedAnimations = 0;
+
+                if (mStartedAnimations >= 1) {
+                    // removeCallbacksAndMessages(null) also remove all running adapter animations
+                    mHandler.removeCallbacks(mSortButtonDelayer);
+                    mHandler.postDelayed(mSortButtonDelayer, SORT_BUTTON_DELAY);
+                }
+            }
+        });
+    }
+
     @Override
     public void onAttachedToRecyclerView(@NonNull RecyclerView iRecyclerView) {
         super.onAttachedToRecyclerView(iRecyclerView);
         mRecyclerView = iRecyclerView;
 
-        final Handler lHandler = new Handler();
-        lHandler.post(new Runnable() {
+        mHandler.post(new Runnable() {
             @Override
             public void run() {
                 if (mRecyclerView != null) {
                     removePendingFiles();
-                    lHandler.postDelayed(this, REMOVE_BREAK_TIMER);
+                    mHandler.postDelayed(this, REMOVE_BREAK_TIMER);
                 }
             }
         });
@@ -90,14 +146,18 @@ public class NarrowTransferAdapter
                 freeAdapter();
             }
         });
+
+        initAnimator();
     }
 
     private void freeAdapter() {
+        LogManager.info(TAG, "Free adapter");
         mToRemovePendingFileItemList.clear();
         mPendingFileItemList.clear();
         mCustomItemViewHolderList.clear();
         mRecyclerView = null;
         mContext = null;
+        // Do not quite safely the handler because it's the MainThread
     }
 
     @NonNull
@@ -127,9 +187,9 @@ public class NarrowTransferAdapter
         iCustomItemViewHolder.mPendingFileItem = lPendingFileItem;
 
         // Set text name
-        String lName = lPendingFile.getRemotePath() + lPendingFile.getName();
-        if (!iCustomItemViewHolder.mTextFileView.getText().equals(lName))
-            iCustomItemViewHolder.mTextFileView.setText(lName);
+        if (!iCustomItemViewHolder.mTextFileView.getText().equals(lPendingFileItem.mFullName)) {
+            iCustomItemViewHolder.mTextFileView.setText(lPendingFileItem.mFullName);
+        }
 
         // Set progress bar
         if (iCustomItemViewHolder.mProgressBar.getMax() != lPendingFile.getSize())
@@ -151,10 +211,9 @@ public class NarrowTransferAdapter
             iCustomItemViewHolder.mTextSpeedView.setVisibility(View.INVISIBLE);
             iCustomItemViewHolder.mLoading.setVisibility(View.INVISIBLE);
             iCustomItemViewHolder.mErrorImage.setVisibility(View.VISIBLE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                LogManager.debug(TAG, "SET RED FOR " + lPendingFile.getName());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
                 iCustomItemViewHolder.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.error));
-            }
+
         } else if (lPendingFile.isSelected()) {
             // Normal download update
 
@@ -206,6 +265,17 @@ public class NarrowTransferAdapter
     }
 
     /**
+     * In collaboration with setHasStableIds(true) in the constructors
+     * This trick allow the recycler to improve performances and be able to recognize which lines
+     * are already bound in the list. Also it allows functions like notifyDataSetChanged() to
+     * properly set their animations.
+     */
+    @Override
+    public long getItemId(int position) {
+        return mPendingFileItemList.get(position).hashCode();
+    }
+
+    /**
      * @return The number of item after the freeing of the remove pending file
      */
     public int getItemCountOmitPendingFile() {
@@ -223,12 +293,16 @@ public class NarrowTransferAdapter
     }
 
     public void updatePendingFileData(PendingFile iPendingFile) {
-        for (CustomItemViewHolder lItem : mCustomItemViewHolderList) {
-            if (!lItem.mPendingFileItem.mHasBeenRemoved &&
-                    lItem.mPendingFileItem.mPendingFile == iPendingFile &&
-                    lItem.mMainLayout.getParent() != null) {
-                onBindViewHolder(lItem, mPendingFileItemList.indexOf(lItem.mPendingFileItem));
-                return;
+        synchronized (mPendingFileItemList) {
+            for (CustomItemViewHolder lItem : mCustomItemViewHolderList) {
+                if (lItem.mPendingFileItem != null &&
+                        !lItem.mPendingFileItem.mHasBeenRemoved &&
+                        lItem.mPendingFileItem.mPendingFile == iPendingFile &&
+                        lItem.mMainLayout.getParent() != null) {
+
+                    onBindViewHolder(lItem, mPendingFileItemList.indexOf(lItem.mPendingFileItem));
+                    return;
+                }
             }
         }
     }
@@ -332,14 +406,58 @@ public class NarrowTransferAdapter
         }
     }
 
+    /**
+     * Sort items.
+     * The has two step, putting all selected pending file to top, and sort by name only them.
+     * It doesn't sort by name the unselected files because their order is the already the fetching
+     * order.
+     */
+    private void sortItems() {
+        synchronized (mPendingFileItemList) {
+
+            Collections.sort(mPendingFileItemList, new Comparator<PendingFileItem>() {
+                @Override
+                public int compare(PendingFileItem o1, PendingFileItem o2) {
+                    boolean lStarted1 = o1.mPendingFile.isSelected();
+                    boolean lStarted2 = o2.mPendingFile.isSelected();
+
+                    if (lStarted1 != lStarted2)
+                        return lStarted1 ? -1 : 1;
+
+                    // Canceling name sorting if the compare is about an unselected PendingFile
+                    if (!o1.mPendingFile.isSelected() || !o2.mPendingFile.isSelected())
+                        return 0;
+
+                    return o1.mFullName.compareTo(o2.mFullName);
+                }
+            });
+
+            notifyDataSetChanged();
+        }
+    }
+
+    public void setSortButton(Button iButton) {
+        mSortButton = iButton;
+        mSortButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sortItems();
+            }
+        });
+    }
+
+    // TODO : Why not make it inherit from Pending file ? Cool optimisation
     static class PendingFileItem {
         PendingFile mPendingFile;
+        String mFullName;
         boolean isErrorAlreadyProceed;
         int mTimeOfErrorNotified;
         boolean mHasBeenRemoved;
 
         PendingFileItem(PendingFile iPendingFile) {
             mPendingFile = iPendingFile;
+            mFullName = iPendingFile.getRemotePath() + iPendingFile.getName();
+            ;
         }
     }
 
