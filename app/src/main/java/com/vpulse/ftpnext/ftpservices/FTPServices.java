@@ -245,7 +245,8 @@ public class FTPServices extends AFTPConnection {
                     FTPLogManager.pushSuccessLog("Fetching \"" + iPath + "\"");
                     iOnFetchDirectoryResult.onSuccess(lFiles);
                 } catch (InterruptedException iE) {
-                    updateWorkingDirectory(lLeavingDirectory.getName());
+                    if (lLeavingDirectory != null)
+                        updateWorkingDirectory(lLeavingDirectory.getName());
                     iOnFetchDirectoryResult.onInterrupt();
                 } catch (Exception iE) {
                     iE.printStackTrace();

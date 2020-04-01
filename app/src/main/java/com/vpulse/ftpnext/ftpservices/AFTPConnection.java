@@ -88,8 +88,10 @@ public abstract class AFTPConnection {
         if (isLocallyConnected())
             disconnect();
 
-        if (mHandlerConnection != null)
+        if (mHandlerConnection != null) {
+            mHandlerConnection.removeCallbacksAndMessages(null);
             mHandlerConnection.getLooper().quitSafely();
+        }
     }
 
     private void initializeNetworkMonitoring() {

@@ -188,7 +188,11 @@ public class NavigationFetchDir {
                     public void run() {
                         if (mContextActivity.mCancelingDialog != null && mContextActivity.mCancelingDialog.isShowing())
                             mContextActivity.mCancelingDialog.dismiss();
-                        mContextActivity.mCurrentAdapter.setItemsClickable(true);
+
+                        if (mContextActivity.mCurrentAdapter == null)
+                            mContextActivity.finish();
+                        else
+                            mContextActivity.mCurrentAdapter.setItemsClickable(true);
                     }
                 });
             }
