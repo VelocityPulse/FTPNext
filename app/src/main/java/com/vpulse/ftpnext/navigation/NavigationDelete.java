@@ -220,7 +220,6 @@ public class NavigationDelete {
 
     private void successDelete() {
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
-        mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
         mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DELETE_FINISHED);
     }
 
@@ -228,7 +227,6 @@ public class NavigationDelete {
         mContextActivity.mCurrentAdapter.setSelectionMode(false);
         mContextActivity.mFTPServices.abortDeleting();
         mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
-        mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
         mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_DELETE_FINISHED);
     }
 }

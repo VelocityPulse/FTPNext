@@ -99,7 +99,6 @@ public class FTPServices extends AFTPConnection {
             @Override
             public void run() {
                 try {
-                    // TODO : BEFORE RELEASE : Try remove -> cancel remove -> update folder 2x
                     FTPFile lWorkingDir = mFTPClient.mlistFile(iNewWorkingDirectory);
                     FTPLogManager.pushStatusLog(
                             "Updating current working dir to \"" + iNewWorkingDirectory + "\"");
@@ -150,6 +149,17 @@ public class FTPServices extends AFTPConnection {
             FTPLogManager.pushStatusLog("Aborting deleting");
             mDeleteFileInterrupted = true;
         }
+
+        mHandlerConnection.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mFTPClient.abort();
+                } catch (IOException iE) {
+                    iE.printStackTrace();
+                }
+            }
+        });
     }
 
     public void fetchDirectoryContent(final String iPath, @NotNull final IOnFetchDirectoryResult iOnFetchDirectoryResult) {

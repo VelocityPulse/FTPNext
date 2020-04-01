@@ -623,6 +623,8 @@ public class NavigationActivity extends AppCompatActivity {
                                 if (!iResult) {
                                     dismissAllDialogs();
                                     mHandler.sendEmptyMessage(NAVIGATION_ORDER_RECONNECT);
+                                } else {
+                                    mHandler.sendEmptyMessage(NAVIGATION_ORDER_REFRESH_DATA);
                                 }
                             }
                         });
