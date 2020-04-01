@@ -49,12 +49,12 @@ public class NavigationFetchDir {
 
     private void initializeDialogs() {
         // Canceling dialog
-        mContextActivity.mCancelingDialog = Utils.initProgressDialogNoButton(mContextActivity);
+        mContextActivity.mCancelingDialog = Utils.createProgressDialogNoButton(mContextActivity);
         mContextActivity.mCancelingDialog.setTitle("Canceling..."); //TODO : strings
         mContextActivity.mCancelingDialog.create(); // TODO test if necessary
 
         // Large directory dialog
-        mContextActivity.mLargeDirDialog = Utils.initProgressDialog(mContextActivity, new DialogInterface.OnClickListener() {
+        mContextActivity.mFetchLargeDirDialog = Utils.createProgressDialog(mContextActivity, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface iDialog, int iWhich) {
                 iDialog.dismiss();
@@ -62,9 +62,9 @@ public class NavigationFetchDir {
                 mContextActivity.mFTPServices.abortFetchDirectoryContent();
             }
         });
-        mContextActivity.mLargeDirDialog.setCancelable(false);
-        mContextActivity.mLargeDirDialog.setTitle("Large directory"); // TODO : strings
-        mContextActivity.mLargeDirDialog.create();
+        mContextActivity.mFetchLargeDirDialog.setCancelable(false);
+        mContextActivity.mFetchLargeDirDialog.setTitle("Large directory"); // TODO : strings
+        mContextActivity.mFetchLargeDirDialog.create();
     }
 
     protected void runFetchProcedures(final String iDirectoryPath, boolean iIsLargeDirectory,
@@ -95,7 +95,7 @@ public class NavigationFetchDir {
         }
 
         if (iIsLargeDirectory)
-            mContextActivity.mLargeDirDialog.show();
+            mContextActivity.mFetchLargeDirDialog.show();
 
         // Waiting fetch stop
         if (mContextActivity.mFTPServices.isFetchingFolders()) { // if another activity didn't stop its fetch yet
@@ -126,16 +126,26 @@ public class NavigationFetchDir {
             public void run() {
                 // in case if dialog has been canceled
                 if (!mContextActivity.mIsDirectoryFetchFinished &&
-                        (mContextActivity.mLargeDirDialog == null ||
-                                !mContextActivity.mLargeDirDialog.isShowing())) {
+                        (mContextActivity.mFetchLargeDirDialog == null ||
+                                !mContextActivity.mFetchLargeDirDialog.isShowing())) {
 
                     if (mContextActivity.mCurrentAdapter != null &&
                             mContextActivity.mCurrentAdapter.getSwipeRefreshLayout().isRefreshing())
                         return;
 
                     if (!mContextActivity.mIsDirectoryFetchFinished) {
-                        mContextActivity.mLoadingDialog.setTitle("Loading..."); //TODO : strings
-                        mContextActivity.mLoadingDialog.show();
+                        mContextActivity.mFetchDirLoadingDialog = Utils.createProgressDialog(
+                                mContextActivity,
+                                "Loading",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface iDialog, int iWhich) {
+                                        iDialog.dismiss();
+                                        mContextActivity.mCancelingDialog.show();
+                                        mContextActivity.mFTPServices.abortFetchDirectoryContent();
+                                    }
+                                });
+                        mContextActivity.mFetchDirLoadingDialog.show();
                     }
                 }
             }

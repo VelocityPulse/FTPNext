@@ -91,17 +91,18 @@ public class NavigationActivity extends AppCompatActivity {
 
     protected NavigationRecyclerViewAdapter mCurrentAdapter;
 
-    protected AlertDialog mLoadingDialog;
     protected AlertDialog mCancelingDialog;
-    protected AlertDialog mLargeDirDialog;
     protected AlertDialog mReconnectDialog;
 
+    protected AlertDialog mFTPServiceConnectionDialog;
+    protected AlertDialog mFetchDirLoadingDialog;
+    protected AlertDialog mFetchLargeDirDialog;
     protected AlertDialog mErrorADialog;
     protected AlertDialog mSuccessDialog;
     protected AlertDialog mCreateFolderDialog;
     protected AlertDialog mIndexingPendingFilesDialog;
     protected AlertDialog mTransferDialog;
-    protected AlertDialog mChooseExistingFileAction;
+    protected AlertDialog mChooseExistingFileActionDialog;
     protected AlertDialog mDeletingInfoDialog;
     protected AlertDialog mDeletingErrorDialog;
 
@@ -362,6 +363,7 @@ public class NavigationActivity extends AppCompatActivity {
         if (mFTPServices == null) {
             // Can happens on android studio apply changes
             LogManager.error(TAG, "FTP CONNECTION NULL");
+            Utils.showLongToast(this, "FTP CONNECTION NULL");
             initializeFTPConnection();
         } else {
             LogManager.info(TAG, "FTP Services fully recovered by get instance");
@@ -408,8 +410,19 @@ public class NavigationActivity extends AppCompatActivity {
 
         mFTPServices = new FTPServices(mFTPServer);
 
-        mLoadingDialog.setTitle("Connection..."); // TODO : strings
-        mLoadingDialog.show();
+//        mFetchDirLoadingDialog.setTitle("Connection..."); // TODO : strings
+//        mFetchDirLoadingDialog.show();
+
+        mFTPServiceConnectionDialog = Utils.createProgressDialog(this,
+                "Connection...",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface iDialog, int iWhich) {
+                        iDialog.dismiss();
+                        mFTPServices.destroyConnection();
+                        finish();
+                    }
+                });
 
         mFTPServices.connect(new AFTPConnection.OnConnectionResult() {
             @Override
@@ -488,10 +501,10 @@ public class NavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS:
                         LogManager.info(TAG, "Handle : NAVIGATION_ORDER_DISMISS_LOADING_DIALOGS");
-                        if (mLoadingDialog != null)
-                            mLoadingDialog.dismiss();
-                        if (mLargeDirDialog != null)
-                            mLargeDirDialog.dismiss();
+                        if (mFetchDirLoadingDialog != null)
+                            mFetchDirLoadingDialog.dismiss();
+                        if (mFetchLargeDirDialog != null)
+                            mFetchLargeDirDialog.dismiss();
                         break;
 
                     case NAVIGATION_ORDER_SELECTED_MODE_ON:
@@ -552,7 +565,7 @@ public class NavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_MESSAGE_RECONNECT_SUCCESS:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_RECONNECT_SUCCESS");
-                        dismissAllDialogsExcepted(mTransferDialog, mChooseExistingFileAction);
+                        dismissAllDialogsExcepted(mTransferDialog, mChooseExistingFileActionDialog);
                         if (!mIsShowingTransfer)
                             mNavigationFetchDir.runFetchProcedures(mDirectoryPath, mIsLargeDirectory, true);
                         break;
@@ -591,7 +604,7 @@ public class NavigationActivity extends AppCompatActivity {
                         mFTPServices.abortDeleting();
                         dismissAllDialogsExcepted(
                                 mTransferDialog,
-                                mChooseExistingFileAction,
+                                mChooseExistingFileActionDialog,
                                 mReconnectDialog);
 
                         if (!mIsShowingTransfer)
@@ -620,7 +633,7 @@ public class NavigationActivity extends AppCompatActivity {
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CREATE_FOLDER_SUCCESS");
                         // TODO : Sort items
                         FTPFile lNewDirectory = (FTPFile) iMsg.obj;
-                        mLoadingDialog.dismiss();
+                        mFetchDirLoadingDialog.dismiss();
                         mCurrentAdapter.insertItem(lNewDirectory, 0);
                         mCurrentAdapter.getRecyclerView().scrollToPosition(0);
                         break;
@@ -628,7 +641,7 @@ public class NavigationActivity extends AppCompatActivity {
                     case NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_CREATE_FOLDER_FAIL");
                         lErrorDescription = (AFTPConnection.ErrorCodeDescription) iMsg.obj;
-                        mLoadingDialog.dismiss();
+                        mFetchDirLoadingDialog.dismiss();
                         if (mIsRunning && (mReconnectDialog == null || !mReconnectDialog.isShowing())) {
                             mErrorADialog = new AlertDialog.Builder(NavigationActivity.this)
                                     .setTitle("Error") // TODO string
@@ -718,18 +731,12 @@ public class NavigationActivity extends AppCompatActivity {
         mSuccessDialog = Utils.createSuccessAlertDialog(this, "");
 
         // Loading dialog
-        mLoadingDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface iDialog, int iWhich) {
-                iDialog.dismiss();
-                onBackPressed();
-            }
-        });
-        mLoadingDialog.setTitle("Loading..."); // TODO : strings
-        mLoadingDialog.create();
+        mFetchDirLoadingDialog = Utils.createProgressDialog(this, null);
+        mFetchDirLoadingDialog.setTitle("Loading..."); // TODO : strings
+        mFetchDirLoadingDialog.create();
 
         // Reconnection dialog
-        mReconnectDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
+        mReconnectDialog = Utils.createProgressDialog(this, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
@@ -972,22 +979,24 @@ public class NavigationActivity extends AppCompatActivity {
             mErrorADialog.cancel();
         if (mSuccessDialog != null)
             mSuccessDialog.cancel();
-        if (mLoadingDialog != null)
-            mLoadingDialog.cancel();
+        if (mFetchDirLoadingDialog != null)
+            mFetchDirLoadingDialog.cancel();
         if (mIndexingPendingFilesDialog != null)
             mIndexingPendingFilesDialog.cancel();
         if (mReconnectDialog != null)
             mReconnectDialog.cancel();
-        if (mLargeDirDialog != null)
-            mLargeDirDialog.cancel();
+        if (mFetchLargeDirDialog != null)
+            mFetchLargeDirDialog.cancel();
         if (mTransferDialog != null)
             mTransferDialog.cancel();
-        if (mChooseExistingFileAction != null)
-            mChooseExistingFileAction.cancel();
+        if (mChooseExistingFileActionDialog != null)
+            mChooseExistingFileActionDialog.cancel();
         if (mDeletingInfoDialog != null)
             mDeletingInfoDialog.cancel();
         if (mDeletingErrorDialog != null)
             mDeletingErrorDialog.cancel();
+        if (mFTPServiceConnectionDialog != null)
+            mFTPServiceConnectionDialog.cancel();
     }
 
     protected void dismissAllDialogsExcepted(DialogInterface... iToNotDismiss) {
@@ -997,22 +1006,24 @@ public class NavigationActivity extends AppCompatActivity {
             mErrorADialog.cancel();
         if (mSuccessDialog != null && !lDialogList.contains(mSuccessDialog))
             mSuccessDialog.cancel();
-        if (mLoadingDialog != null && lDialogList.contains(mLoadingDialog))
-            mLoadingDialog.cancel();
+        if (mFetchDirLoadingDialog != null && lDialogList.contains(mFetchDirLoadingDialog))
+            mFetchDirLoadingDialog.cancel();
         if (mIndexingPendingFilesDialog != null && !lDialogList.contains(mIndexingPendingFilesDialog))
             mIndexingPendingFilesDialog.cancel();
         if (mReconnectDialog != null && !lDialogList.contains(mReconnectDialog))
             mReconnectDialog.cancel();
-        if (mLargeDirDialog != null && !lDialogList.contains(mLargeDirDialog))
-            mLargeDirDialog.cancel();
+        if (mFetchLargeDirDialog != null && !lDialogList.contains(mFetchLargeDirDialog))
+            mFetchLargeDirDialog.cancel();
         if (mTransferDialog != null && !lDialogList.contains(mTransferDialog))
             mTransferDialog.cancel();
-        if (mChooseExistingFileAction != null && !lDialogList.contains(mChooseExistingFileAction))
-            mChooseExistingFileAction.cancel();
+        if (mChooseExistingFileActionDialog != null && !lDialogList.contains(mChooseExistingFileActionDialog))
+            mChooseExistingFileActionDialog.cancel();
         if (mDeletingInfoDialog != null && !lDialogList.contains(mDeletingInfoDialog))
             mDeletingInfoDialog.cancel();
         if (mDeletingErrorDialog != null && !lDialogList.contains(mDeletingErrorDialog))
             mDeletingErrorDialog.cancel();
+        if (mFTPServiceConnectionDialog != null && !lDialogList.contains(mFTPServiceConnectionDialog))
+            mFTPServiceConnectionDialog.cancel();
     }
 
     private abstract class OnPermissionAnswer {

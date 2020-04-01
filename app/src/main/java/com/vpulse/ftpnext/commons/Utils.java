@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
@@ -166,20 +167,52 @@ public class Utils {
         return String.format(Locale.FRANCE, "%.1f %sB", iBytes / Math.pow(lUnit, lExp), lPre);
     }
 
-    public static AlertDialog initProgressDialog(Context iContext, final AlertDialog.OnClickListener iOnClickCancelListener) {
+    public static AlertDialog createProgressDialog(Context iContext, final AlertDialog.OnClickListener iOnClickCancelListener) {
         final AlertDialog.Builder lProgressDialog;
         lProgressDialog = new AlertDialog.Builder(iContext);
         lProgressDialog.setView(R.layout.loading_icon);
         lProgressDialog.setCancelable(false);
         lProgressDialog.setNegativeButton("Cancel", iOnClickCancelListener);
+
         return lProgressDialog.create();
     }
 
-    public static AlertDialog initProgressDialogNoButton(Context iContext) {
+    public static AlertDialog createProgressDialogNoButton(Context iContext) {
         final AlertDialog.Builder lProgressDialog;
         lProgressDialog = new AlertDialog.Builder(iContext);
         lProgressDialog.setView(R.layout.loading_icon);
         lProgressDialog.setCancelable(false);
+
         return lProgressDialog.create();
+    }
+
+    public static AlertDialog createProgressDialog(Context iContext,
+                                                   String iTitle,
+                                                   final AlertDialog.OnClickListener iOnClickCancelListener) {
+        final AlertDialog.Builder lProgressDialog;
+        lProgressDialog = new AlertDialog.Builder(iContext);
+        lProgressDialog.setView(R.layout.loading_icon);
+        lProgressDialog.setTitle(iTitle);
+        lProgressDialog.setCancelable(false);
+        lProgressDialog.setNegativeButton("Cancel", iOnClickCancelListener);
+
+        return lProgressDialog.create();
+    }
+
+    public static void showToast(final Activity iMyActivity, final String iToast) {
+        iMyActivity.runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(iMyActivity, iToast, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    public static void showLongToast(final Activity iMyActivity, final String iToast) {
+        iMyActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(iMyActivity, iToast, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

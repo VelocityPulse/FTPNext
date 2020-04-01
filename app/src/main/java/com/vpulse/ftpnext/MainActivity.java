@@ -295,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
 
         final FTPServices lNewFTPServices = new FTPServices(lFTPServer);
 
-        lLoadingAlertDialog = Utils.initProgressDialog(this, new DialogInterface.OnClickListener() {
+        lLoadingAlertDialog = Utils.createProgressDialog(this, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 lNewFTPServices.abortConnection();

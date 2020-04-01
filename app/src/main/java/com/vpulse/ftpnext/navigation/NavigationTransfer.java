@@ -42,7 +42,6 @@ import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_MESSAG
 import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
 import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
 
-// TODO : BEFORE RELEASE : Loading cancel button still doesn't work...
 public class NavigationTransfer {
 
     private final static String TAG = "NAVIGATION DOWNLOAD";
@@ -408,8 +407,8 @@ public class NavigationTransfer {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                mContextActivity.mChooseExistingFileAction = lBuilder.create();
-                mContextActivity.mChooseExistingFileAction.show();
+                mContextActivity.mChooseExistingFileActionDialog = lBuilder.create();
+                mContextActivity.mChooseExistingFileActionDialog.show();
             }
         });
     }
