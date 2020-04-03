@@ -2,6 +2,8 @@ package com.vpulse.ftpnext.ftpservices;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.Resources;
+import android.util.TypedValue;
 
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.core.LogManager;
@@ -20,27 +22,46 @@ public class FTPLogManager {
 
     private static String mSuccessColorString;
     private static String mErrorColorString;
-    private static String mCodeReplyColorString;
+    private static String mReplyColorString;
     private static String mStatusColorString;
 
     private static List<OnNewFTPLog> mOnNewFTPLogList;
     private static List<OnNewFTPLogColored> mOnNewFTPLogColoredList;
 
-    private FTPLogManager() {}
+    private FTPLogManager() {
+    }
 
     @SuppressLint("ResourceType")
     public static void init(Context iContext) {
         mOnNewFTPLogList = new ArrayList<>();
         mOnNewFTPLogColoredList = new ArrayList<>();
 
-        mSuccessColorString = iContext.getResources().getString(R.color.log_success).substring(3, 9);
-        mErrorColorString = iContext.getResources().getString(R.color.log_error).substring(3, 9);
-        mCodeReplyColorString = iContext.getResources().getString(R.color.log_code_reply).substring(3, 9);
-        mStatusColorString = iContext.getResources().getString(R.color.log_status).substring(3, 9);
+        notifyThemeChanged(iContext);
+    }
+
+    public static void notifyThemeChanged(Context iContext) {
+        TypedValue lTypedValue = new TypedValue();
+        Resources.Theme lTheme = iContext.getTheme();
+
+        lTheme.resolveAttribute(R.attr.logSuccessColor, lTypedValue, true);
+        mSuccessColorString = Integer.toHexString(lTypedValue.data).substring(2, 8);
+        LogManager.error(TAG, mSuccessColorString);
+
+        lTheme.resolveAttribute(R.attr.logErrorColor, lTypedValue, true);
+        mErrorColorString = Integer.toHexString(lTypedValue.data).substring(2, 8);
+        LogManager.error(TAG, mErrorColorString);
+
+        lTheme.resolveAttribute(R.attr.logReplyColor, lTypedValue, true);
+        mReplyColorString = Integer.toHexString(lTypedValue.data).substring(2, 8);
+        LogManager.error(TAG, mReplyColorString);
+
+        lTheme.resolveAttribute(R.attr.logStatusColor, lTypedValue, true);
+        mStatusColorString = Integer.toHexString(lTypedValue.data).substring(2, 8);
+        LogManager.error(TAG, mStatusColorString);
 
         mSuccessColorString = "#" + mSuccessColorString;
         mErrorColorString = "#" + mErrorColorString;
-        mCodeReplyColorString = "#" + mCodeReplyColorString;
+        mReplyColorString = "#" + mReplyColorString;
         mStatusColorString = "#" + mStatusColorString;
     }
 
@@ -121,7 +142,7 @@ public class FTPLogManager {
         else if (iLog.startsWith(TYPE_ERROR))
             iLog = "<font color='" + mErrorColorString + "'>" + iLog + "</font>";
         else if (iLog.startsWith(TYPE_CODE_REPLY))
-            iLog = "<font color='" + mCodeReplyColorString + "'>" + iLog + "</font>";
+            iLog = "<font color='" + mReplyColorString + "'>" + iLog + "</font>";
         else if (iLog.startsWith(TYPE_STATUS))
             iLog = "<font color='" + mStatusColorString + "'>" + iLog + "</font>";
 

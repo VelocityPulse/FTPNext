@@ -27,10 +27,11 @@ import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
-import com.vpulse.ftpnext.navigation.NavigationActivity;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection;
 import com.vpulse.ftpnext.ftpservices.AFTPConnection.ErrorCodeDescription;
+import com.vpulse.ftpnext.ftpservices.FTPLogManager;
 import com.vpulse.ftpnext.ftpservices.FTPServices;
+import com.vpulse.ftpnext.navigation.NavigationActivity;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -94,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
         AppCore.getInstance().startApplication(this);
         if (PreferenceManager.isDarkTheme())
             setTheme(R.style.AppTheme_Dark);
+        FTPLogManager.notifyThemeChanged(this);
 
         setContentView(R.layout.activity_main);
 

@@ -26,10 +26,14 @@
 
         <item name="android:colorBackground">@color/lightBackground</item>
         <item name="android:itemBackground">@color/lightPrimary</item>
+
+        <item name="logSuccessColor">@color/lightLogSuccess</item>
+        <item name="logErrorColor">@color/lightLogError</item>
+        <item name="logStatusColor">#191919</item>
+        <item name="logReplyColor">@color/lightLogReply</item>
     </style>
 
     <style name="AppTheme.Dark">
-
         <item name="colorPrimary">@color/darkPrimary</item>
         <item name="colorAccent">@color/darkAccent</item>
         <item name="colorPrimaryDark">@color/darkPrimaryDark</item>
@@ -44,6 +48,11 @@
 
         <item name="android:colorBackground">@color/darkBackground</item>
         <item name="android:itemBackground">@color/darkPrimary</item>
+
+        <item name="logSuccessColor">@color/darkLogSuccess</item>
+        <item name="logErrorColor">@color/darkLogError</item>
+        <item name="logStatusColor">@color/darkLogStatus</item>
+        <item name="logReplyColor">@color/darkLogReply</item>
 
         <item name="alertDialogTheme">@style/AppTheme.Dark.Dialog</item>
 

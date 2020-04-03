@@ -153,10 +153,8 @@ public class PreferenceManager {
     }
 
     public void startPreferencesManager(Context iContext) {
-        if (mSharedPreferences != null) {
-            LogManager.error(TAG, "Preferences manager is already started");
+        if (mSharedPreferences != null)
             return;
-        }
 
         mSharedPreferences = iContext.getSharedPreferences(APP_ADDRESS, Context.MODE_PRIVATE);
         if (mSharedPreferences.getBoolean(PREFERENCE_FIRST_RUN, true)) {

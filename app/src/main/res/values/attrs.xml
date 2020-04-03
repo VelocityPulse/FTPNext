@@ -3,4 +3,9 @@
 
     <attr name="actionBarContentColor" format="color" />
 
+    <attr name="logSuccessColor" format="color" />
+    <attr name="logErrorColor" format="color" />
+    <attr name="logReplyColor" format="color" />
+    <attr name="logStatusColor" format="color" />
+
 </resources>

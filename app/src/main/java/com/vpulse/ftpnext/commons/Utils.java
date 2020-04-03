@@ -237,13 +237,6 @@ public class Utils {
      * @return The color
      */
     public static int fetchCurrentThemeColor(Activity iActivity, int iRes) {
-//        TypedValue typedValue = new TypedValue();
-//
-//        TypedArray a = iActivity.obtainStyledAttributes(typedValue.data, new int[] { iRes });
-//        int color = a.getColor(0, 0);
-//
-//        a.recycle();
-//        return color;
         final TypedValue value = new TypedValue();
         iActivity.getTheme().resolveAttribute(iRes, value, true);
         return value.data;

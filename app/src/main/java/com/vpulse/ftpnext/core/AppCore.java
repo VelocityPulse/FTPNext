@@ -37,9 +37,6 @@ public class AppCore {
     }
 
     public void startApplication(Context iMainActivityContext) {
-        if (mApplicationStarted)
-            return;
-
         // Data base
         DataBase lDataBase = DataBase.getInstance();
         lDataBase.open(iMainActivityContext);

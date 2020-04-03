@@ -6,7 +6,12 @@
     <color name="lightPrimaryDark">#005b9f</color>
     <color name="lightBackground">#FFFFFF</color>
     <color name="lightTextColor">@color/androidColorGray</color>
-    <color name="lightError">#FF0000</color>
+    <color name="lightError">#B62323</color>
+
+    <color name="lightLogSuccess">#008300</color>
+    <color name="lightLogError">@color/lightError</color>
+    <color name="lightLogStatus">#4A4A4A</color>
+    <color name="lightLogReply">@color/lightPrimaryDark</color>
 
     <color name="darkPrimary">#0288d1</color>
     <color name="darkAccent">#5eb8ff</color>
@@ -14,16 +19,14 @@
     <color name="darkBackground">#2A2D33</color>
     <color name="darkBackgroundLight">#53565c</color>
     <color name="darkWhite">#AFAFAF</color>
-    <color name="darkError">#8A0000</color>
+    <color name="darkError">#A53232</color>
+
+    <color name="darkLogSuccess">#4B8A4B</color>
+    <color name="darkLogError">@color/darkError</color>
+    <color name="darkLogStatus">@color/darkWhite</color>
+    <color name="darkLogReply">@color/darkPrimaryDark</color>
 
     <color name="androidColorGray">#737373</color>
-
-
-    <color name="log_success">#2A872A</color>
-    <color name="log_error">@color/darkError</color>
-    <color name="log_code_reply">@color/lightAccent</color>
-    <color name="log_status">#AD000000</color>
-
     <!--<color name="mtrl_textinput_default_box_stroke_color" tools:override="true">#fff</color>-->
 
 </resources>

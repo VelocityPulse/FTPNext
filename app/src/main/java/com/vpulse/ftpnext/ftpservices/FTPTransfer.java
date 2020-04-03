@@ -675,7 +675,7 @@ public class FTPTransfer extends AFTPConnection {
         mCandidate.setProgress(mCandidate.getSize());
         mOnTransferListener.onStateUpdateRequested(mCandidate);
         mOnTransferListener.onTransferSuccess(mCandidate);
-        FTPLogManager.pushSuccessLog("Download of " + mCandidate.getName());
+        FTPLogManager.pushSuccessLog("Download of \"" + mCandidate.getName() + "\"");
     }
 
     private void connectionLooper() {
