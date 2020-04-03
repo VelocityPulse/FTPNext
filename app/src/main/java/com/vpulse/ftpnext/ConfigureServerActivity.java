@@ -32,9 +32,7 @@ import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
 
 // TODO : Set last local folder used
 // TODO : Don't save the metadata if there's already a connection
-// TODO : Add a back arrow on the top left
 
-// TODO : BEFORE RELEASE : Change the text of "Wait !" for smt accurate
 public class ConfigureServerActivity extends AppCompatActivity {
 
     public static final int ACTIVITY_RESULT_ADD_SUCCESS = 0;
@@ -253,7 +251,7 @@ public class ConfigureServerActivity extends AppCompatActivity {
         // If form isn't empty && (edited != null && form hasn't been edited)
         if (!lFTPServer.isEmpty() && (lFTPServer != null && !lFTPServer.equals(mEditedFTPServer))) {
             new AlertDialog.Builder(this)
-                    .setTitle("Wait !")
+                    .setTitle("Cancel this entry?")
                     .setMessage("Are you sure to cancel this entry?")
                     .setPositiveButton("yes", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {

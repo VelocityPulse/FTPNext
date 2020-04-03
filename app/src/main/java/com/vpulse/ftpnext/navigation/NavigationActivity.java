@@ -140,7 +140,7 @@ public class NavigationActivity extends AppCompatActivity {
         super.onCreate(iSavedInstanceState);
         if (PreferenceManager.isDarkTheme())
             setTheme(R.style.AppTheme_Dark);
-        setContentView(R.layout.activity_ftp_navigation);
+        setContentView(R.layout.activity_navigation);
 
         mIsRunning = true;
         initializeGUI();
