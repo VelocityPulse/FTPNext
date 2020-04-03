@@ -33,7 +33,7 @@
             android:visibility="gone"
             app:fabCustomSize="@dimen/sub_floating_button_size"
             app:fabSize="mini"
-            app:srcCompat="@drawable/icon_cloud_upload_filled" />
+            app:srcCompat="@drawable/ic_cloud_upload_filled" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/navigation_fab_create_folder"
@@ -44,7 +44,7 @@
             android:visibility="gone"
             app:fabCustomSize="@dimen/sub_floating_button_size"
             app:fabSize="mini"
-            app:srcCompat="@drawable/icon_create_folder_filled" />
+            app:srcCompat="@drawable/ic_create_folder_filled" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/navigation_floating_action_button"
@@ -54,7 +54,7 @@
             android:layout_marginBottom="@dimen/floating_button_margin"
             android:visibility="visible"
             app:fabCustomSize="@dimen/floating_button_size"
-            app:srcCompat="@drawable/icon_add" />
+            app:srcCompat="@drawable/ic_add" />
 
     </FrameLayout>
 
