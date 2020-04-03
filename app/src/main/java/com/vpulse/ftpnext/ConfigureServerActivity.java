@@ -24,6 +24,7 @@ import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppInfo;
 import com.vpulse.ftpnext.core.FTPType;
 import com.vpulse.ftpnext.core.LogManager;
+import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
@@ -32,6 +33,7 @@ import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
 // TODO : Don't save the metadata if there's already a connection
 // TODO : Add a back arrow on the top left
 
+// TODO : BEFORE RELEASE : Change the text of "Wait !" for smt accurate
 public class ConfigureServerActivity extends AppCompatActivity {
 
     public static final int ACTIVITY_RESULT_ADD_SUCCESS = 0;
@@ -64,6 +66,8 @@ public class ConfigureServerActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
+        if (PreferenceManager.isDarkTheme())
+            setTheme(R.style.AppTheme_Dark);
         setContentView(R.layout.activity_configure_ftp_server);
 
         initializeGUI();
@@ -105,7 +109,7 @@ public class ConfigureServerActivity extends AppCompatActivity {
     private void initializeGUI() {
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_arrow_up);
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_home_up);
         getSupportActionBar().setCustomView(R.layout.action_bar_configure_server);
 
         mRootView = findViewById(R.id.activity_configure_ftp_server_scrollview);

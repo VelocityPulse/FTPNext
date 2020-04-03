@@ -3,9 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/action_parameters"
-        android:orderInCategory="100"
-        android:icon="@drawable/ic_settings"
+        android:icon="@drawable/ic_menu_settings"
         android:title="Parameters"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
     <!--    TODO : Strings -->
 </menu>

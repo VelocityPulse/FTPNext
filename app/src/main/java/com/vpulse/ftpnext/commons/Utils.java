@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
@@ -199,20 +200,52 @@ public class Utils {
         return lProgressDialog.create();
     }
 
-    public static void showToast(final Activity iMyActivity, final String iToast) {
-        iMyActivity.runOnUiThread(new Runnable() {
+    public static AlertDialog createProgressDialog(Context iContext,
+                                                   String iTitle,
+                                                   String iButtonText,
+                                                   final AlertDialog.OnClickListener iOnClickCancelListener) {
+        final AlertDialog.Builder lProgressDialog;
+        lProgressDialog = new AlertDialog.Builder(iContext);
+        lProgressDialog.setView(R.layout.loading_icon);
+        lProgressDialog.setTitle(iTitle);
+        lProgressDialog.setCancelable(false);
+        lProgressDialog.setNegativeButton(iButtonText, iOnClickCancelListener);
+
+        return lProgressDialog.create();
+    }
+
+    public static void showToast(final Activity iActivity, final String iToast) {
+        iActivity.runOnUiThread(new Runnable() {
             public void run() {
-                Toast.makeText(iMyActivity, iToast, Toast.LENGTH_SHORT).show();
+                Toast.makeText(iActivity, iToast, Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    public static void showLongToast(final Activity iMyActivity, final String iToast) {
-        iMyActivity.runOnUiThread(new Runnable() {
+    public static void showLongToast(final Activity iActivity, final String iToast) {
+        iActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(iMyActivity, iToast, Toast.LENGTH_LONG).show();
+                Toast.makeText(iActivity, iToast, Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    /**
+     * @param iActivity The current activity
+     * @param iRes      must be an attribute like R.attr.colorAccent
+     * @return The color
+     */
+    public static int fetchCurrentThemeColor(Activity iActivity, int iRes) {
+//        TypedValue typedValue = new TypedValue();
+//
+//        TypedArray a = iActivity.obtainStyledAttributes(typedValue.data, new int[] { iRes });
+//        int color = a.getColor(0, 0);
+//
+//        a.recycle();
+//        return color;
+        final TypedValue value = new TypedValue();
+        iActivity.getTheme().resolveAttribute(iRes, value, true);
+        return value.data;
     }
 }

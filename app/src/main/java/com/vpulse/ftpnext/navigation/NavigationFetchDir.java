@@ -49,7 +49,15 @@ public class NavigationFetchDir {
 
     private void initializeDialogs() {
         // Canceling dialog
-        mContextActivity.mCancelingDialog = Utils.createProgressDialogNoButton(mContextActivity);
+        mContextActivity.mCancelingDialog = Utils.createProgressDialog(mContextActivity,
+                "Canceling...",
+                "Terminate", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        mContextActivity.finish();
+                    }
+                });
+
         mContextActivity.mCancelingDialog.setTitle("Canceling..."); //TODO : strings
         mContextActivity.mCancelingDialog.create(); // TODO test if necessary
 
@@ -58,8 +66,10 @@ public class NavigationFetchDir {
             @Override
             public void onClick(DialogInterface iDialog, int iWhich) {
                 iDialog.dismiss();
-                mContextActivity.mCancelingDialog.show();
-                mContextActivity.mFTPServices.abortFetchDirectoryContent();
+                if (mContextActivity.mFTPServices.isFetchingFolders()) {
+                    mContextActivity.mCancelingDialog.show();
+                    mContextActivity.mFTPServices.abortFetchDirectoryContent();
+                }
             }
         });
         mContextActivity.mFetchLargeDirDialog.setCancelable(false);
@@ -143,6 +153,7 @@ public class NavigationFetchDir {
                                         iDialog.dismiss();
                                         mContextActivity.mCancelingDialog.show();
                                         mContextActivity.mFTPServices.abortFetchDirectoryContent();
+
                                     }
                                 });
                         mContextActivity.mFetchDirLoadingDialog.show();

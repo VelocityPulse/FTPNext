@@ -1,35 +1,71 @@
 <resources>
 
+    <!--    Themes ============================================== -->
+
     <style name="AppTheme" parent="Theme.MaterialComponents.Light">
 
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorAccent">@color/primaryLight</item>
-        <item name="colorPrimaryDark">@color/primaryDark</item>
-
-        <item name="colorSecondary">@color/primaryLight</item>
-        <item name="colorOnSecondary">@color/white</item>
-
-        <item name="colorError">#F44336</item>
-
-        <item name="android:colorBackground">@color/background</item>
-        <item name="android:itemBackground">@color/primary</item>
     </style>
 
-<!--    Action bar ============================================== -->
+    <!--    Sub themes ============================================== -->
+    <style name="AppTheme.Light">
+        <item name="colorPrimary">@color/lightPrimary</item>
+        <item name="colorAccent">@color/lightAccent</item>
+        <item name="colorPrimaryDark">@color/lightPrimaryDark</item>
 
-    <style name="ThemeActionBar" parent="@style/ThemeOverlay.AppCompat.ActionBar">
-        <item name="colorControlNormal">@android:color/white</item>
+        <item name="colorSecondary">@color/lightAccent</item>
+        <item name="colorOnSecondary">@color/lightBackground</item>
+        <item name="colorSurface">@color/lightBackground</item>
+
+        <item name="colorOnBackground">@color/lightAccent</item>
+
+        <item name="colorError">@color/lightError</item>
+
+        <item name="android:textColor">@color/lightTextColor</item>
+
+        <item name="actionBarContentColor">@android:color/white</item>
+
+        <item name="android:colorBackground">@color/lightBackground</item>
+        <item name="android:itemBackground">@color/lightPrimary</item>
     </style>
 
-    <style name="AppTheme.CustomActionBar">
-        <item name="windowActionBar">true</item>
-        <item name="android:windowFullscreen">false</item>
+    <style name="AppTheme.Dark">
 
-        <item name="windowActionBarOverlay">true</item>
-        <item name="android:windowActionBarOverlay">true</item>
+        <item name="colorPrimary">@color/darkPrimary</item>
+        <item name="colorAccent">@color/darkAccent</item>
+        <item name="colorPrimaryDark">@color/darkPrimaryDark</item>
 
-        <item name="actionBarTheme">@style/ThemeActionBar</item>
-        <item name="android:actionBarTheme">@style/ThemeActionBar</item>
+        <item name="colorSecondary">@color/darkPrimary</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+
+        <item name="colorError">@color/darkError</item>
+        <item name="colorOnBackground">@color/darkAccent</item>
+        <item name="actionBarContentColor">@android:color/white</item>
+        <item name="android:textColor">@color/darkWhite</item>
+
+        <item name="android:colorBackground">@color/darkBackground</item>
+        <item name="android:itemBackground">@color/darkPrimary</item>
+
+        <item name="alertDialogTheme">@style/AppTheme.Dark.Dialog</item>
+
     </style>
+
+    <style name="AppTheme.Dark.Dialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="buttonBarButtonStyle">@style/AppTheme.Dark.Dialog.Button</item>
+        <item name="background">@color/darkBackground</item>
+        <item name="android:windowBackground">@color/darkBackground</item>
+
+        <!-- Colors init for contentView of the dialog : -->
+        <item name="colorAccent">@color/darkAccent</item>
+
+        <!-- Colors of title and message : -->
+        <item name="android:textColor">@color/darkWhite</item>
+        <item name="android:textColorPrimary">@color/darkWhite</item>
+    </style>
+
+    <style name="AppTheme.Dark.Dialog.Button" parent="@style/Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/darkPrimary</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
 
 </resources>

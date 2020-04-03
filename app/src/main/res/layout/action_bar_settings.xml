@@ -13,6 +13,6 @@
         android:background="@android:color/transparent"
         android:gravity="center"
         android:text="Settings"
-        android:textColor="#FFFFFF" />
+        android:textColor="?actionBarContentColor" />
 
 </LinearLayout>

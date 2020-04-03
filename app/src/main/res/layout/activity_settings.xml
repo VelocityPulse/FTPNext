@@ -39,12 +39,13 @@
                 android:paddingEnd="@dimen/settings_line_horizontal_padding">
 
                 <ImageView
+                    style="@style/AppTheme"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
+                    android:tint="?colorAccent"
                     android:src="@drawable/ic_signal_cellular"
-                    android:tint="@color/primary"
                     tools:ignore="ContentDescription" />
 
                 <TextView
@@ -75,12 +76,13 @@
                 android:paddingEnd="@dimen/settings_line_horizontal_padding">
 
                 <ImageView
+                    style="@style/AppTheme"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
+                    android:tint="?colorAccent"
                     android:src="@drawable/ic_cable_connection"
-                    android:tint="@color/primary"
                     tools:ignore="ContentDescription" />
 
                 <LinearLayout
@@ -161,12 +163,13 @@
                 android:paddingEnd="@dimen/settings_line_navigation_horizontal_padding">
 
                 <ImageView
+                    style="@style/AppTheme"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
+                    android:tint="?colorAccent"
                     android:src="@drawable/ic_settings"
-                    android:tint="@color/primary"
                     tools:ignore="ContentDescription" />
 
                 <LinearLayout
@@ -193,12 +196,13 @@
                 </LinearLayout>
 
                 <ImageView
+                    style="@style/AppTheme"
                     android:layout_width="@dimen/arrow_navigate_next_size"
                     android:layout_height="@dimen/arrow_navigate_next_size"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
+                    android:tint="?colorAccent"
                     android:src="@drawable/ic_arrow_navigate_next"
-                    android:tint="@color/primary"
                     tools:ignore="ContentDescription" />
 
             </RelativeLayout>
@@ -228,7 +232,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/settings_height_line"
             android:background="@drawable/ripple_effect_primary"
-            android:clickable="false"
+            android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
             android:orientation="horizontal"
@@ -236,13 +240,13 @@
             android:paddingEnd="@dimen/settings_line_horizontal_padding">
 
             <ImageView
+                style="@style/AppTheme"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:alpha="0.4"
+                android:tint="?colorAccent"
                 android:src="@drawable/ic_brightness_moon"
-                android:tint="@color/primary"
                 tools:ignore="ContentDescription" />
 
             <TextView
@@ -251,7 +255,6 @@
                 android:layout_centerVertical="true"
                 android:layout_marginStart="@dimen/settings_line_text_padding_start"
                 android:layout_marginEnd="@dimen/settings_line_text_margin_end"
-                android:enabled="false"
                 android:text="Dark theme" />
 
             <Switch
@@ -261,8 +264,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:background="@android:color/transparent"
-                android:clickable="false"
-                android:enabled="false" />
+                android:clickable="false" />
 
         </RelativeLayout>
 

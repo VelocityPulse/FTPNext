@@ -34,7 +34,8 @@ public class ExistingFileActionActivity extends AppCompatActivity {
     @Override
     public void onCreate(@Nullable Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
-
+        if (PreferenceManager.isDarkTheme())
+            setTheme(R.style.AppTheme_Dark);
         setContentView(R.layout.activity_existing_file_action);
 
         initializeGUI();
@@ -50,6 +51,7 @@ public class ExistingFileActionActivity extends AppCompatActivity {
     private void initializeGUI() {
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_home_back);
         getSupportActionBar().setCustomView(R.layout.action_bar_existing_file);
     }
 

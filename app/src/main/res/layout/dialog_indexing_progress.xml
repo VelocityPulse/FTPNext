@@ -11,7 +11,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Path :"
-        android:textColor="@android:color/darker_gray"
         android:textSize="20dp" />
 
     <TextView
@@ -20,14 +19,13 @@
         android:layout_height="wrap_content"
         android:ellipsize="start"
         android:singleLine="true"
-        android:textColor="@android:color/black"
+        android:textColor="?colorAccent"
         android:textSize="20dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="File :"
-        android:textColor="@android:color/darker_gray"
         android:textSize="20dp" />
 
     <TextView
@@ -36,7 +34,7 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:lines="3"
-        android:textColor="@android:color/black"
+        android:textColor="?colorAccent"
         android:textSize="20dp" />
 
 

@@ -1,8 +1,12 @@
 package com.vpulse.ftpnext;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +19,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppInfo;
 import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.PreferenceManager;
@@ -43,7 +48,8 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
-
+        if (PreferenceManager.isDarkTheme())
+            setTheme(R.style.AppTheme_Dark);
         setContentView(R.layout.activity_settings);
 
         initializeGUI();
@@ -61,6 +67,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void initializeGUI() {
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_home_back);
         getSupportActionBar().setCustomView(R.layout.action_bar_settings);
     }
 
@@ -114,12 +121,33 @@ public class SettingsActivity extends AppCompatActivity {
                 startActivityChooseExistingFile();
             }
         });
-//        mDarkThemeLayout.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//            }
-//        });
+
+        mDarkThemeLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDarkThemeSwitch.setChecked(!mDarkThemeSwitch.isChecked());
+                Utils.createAlertDialog(
+                        SettingsActivity.this,
+                        "Restart required",
+                        "The application needs to restart to apply the new theme",
+                        "Restart",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                PreferenceManager.setDarkTheme(mDarkThemeSwitch.isChecked());
+                                restartActivity();
+                            }
+                        },
+                        "Cancel",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                mDarkThemeSwitch.setChecked(!mDarkThemeSwitch.isChecked());
+                            }
+                        })
+                        .show();
+            }
+        });
 
         mDownloadSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -177,5 +205,32 @@ public class SettingsActivity extends AppCompatActivity {
         Intent lIntent = new Intent(SettingsActivity.this, ExistingFileActionActivity.class);
 
         startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE_EXISTING_FILE);
+    }
+
+    private void restartActivity() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                SettingsActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+//                        Intent mMainActivity = new Intent(SettingsActivity.this, MainActivity.class);
+//                        int mPendingIntentId = 123456;
+//                        PendingIntent mPendingIntent = PendingIntent.getActivity(SettingsActivity.this, mPendingIntentId, mMainActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+//                        AlarmManager mgr = (AlarmManager) SettingsActivity.this.getSystemService(Context.ALARM_SERVICE);
+//                        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+//                        System.exit(0);
+
+                        finish();
+                        Intent i = getBaseContext().getPackageManager().
+                                getLaunchIntentForPackage(getBaseContext().getPackageName());
+                        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(i);
+
+                    }
+                });
+            }
+        }, 200);
     }
 }

@@ -1,26 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <color name="primaryLight">#5eb8ff</color>
-    <color name="primary">#0288d1</color>
-    <color name="primaryDark">#005b9f</color>
+    <color name="lightPrimary">#0288d1</color>
+    <color name="lightAccent">#5eb8ff</color>
+    <color name="lightPrimaryDark">#005b9f</color>
+    <color name="lightBackground">#FFFFFF</color>
+    <color name="lightTextColor">@color/androidColorGray</color>
+    <color name="lightError">#FF0000</color>
 
-    <color name="secondary">#053e96</color>
-    <color name="secondaryLight">#4f68c7</color>
-    <color name="secondaryDark">#001967</color>
+    <color name="darkPrimary">#0288d1</color>
+    <color name="darkAccent">#5eb8ff</color>
+    <color name="darkPrimaryDark">#005b9f</color>
+    <color name="darkBackground">#2A2D33</color>
+    <color name="darkBackgroundLight">#53565c</color>
+    <color name="darkWhite">#AFAFAF</color>
+    <color name="darkError">#8A0000</color>
 
-    <color name="background">@color/white</color>
+    <color name="androidColorGray">#737373</color>
 
-    <color name="white">@android:color/white</color>
 
-    <color name="androidColorGray">#626262</color>
-
-    <color name="error">#FF0000</color>
-
-    <color name="log_success">#008300</color>
-    <color name="log_error">#FFFF0000</color>
-    <color name="log_code_reply">#FF0000FF</color>
-    <color name="log_status">#FF000000</color>
+    <color name="log_success">#2A872A</color>
+    <color name="log_error">@color/darkError</color>
+    <color name="log_code_reply">@color/lightAccent</color>
+    <color name="log_status">#AD000000</color>
 
     <!--<color name="mtrl_textinput_default_box_stroke_color" tools:override="true">#fff</color>-->
 

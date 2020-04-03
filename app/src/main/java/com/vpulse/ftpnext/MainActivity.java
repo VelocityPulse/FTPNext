@@ -23,6 +23,7 @@ import com.vpulse.ftpnext.adapters.MainRecyclerViewAdapter;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.LogManager;
+import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
@@ -89,6 +90,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
+
+        AppCore.getInstance().startApplication(this);
+        if (PreferenceManager.isDarkTheme())
+            setTheme(R.style.AppTheme_Dark);
 
         setContentView(R.layout.activity_main);
 
@@ -200,8 +205,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initialize() {
-        AppCore.getInstance().startApplication(this);
-
         mFTPServerDAO = DataBase.getFTPServerDAO();
         mIsRunning = true;
 

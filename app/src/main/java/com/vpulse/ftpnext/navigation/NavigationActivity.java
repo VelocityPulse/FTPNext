@@ -36,6 +36,7 @@ import com.vpulse.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.LogManager;
+import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
@@ -137,6 +138,8 @@ public class NavigationActivity extends AppCompatActivity {
     protected void onCreate(Bundle iSavedInstanceState) {
         LogManager.info(TAG, "On create");
         super.onCreate(iSavedInstanceState);
+        if (PreferenceManager.isDarkTheme())
+            setTheme(R.style.AppTheme_Dark);
         setContentView(R.layout.activity_ftp_navigation);
 
         mIsRunning = true;
@@ -450,6 +453,7 @@ public class NavigationActivity extends AppCompatActivity {
     private void initializeGUI() {
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_home_back);
         getSupportActionBar().setCustomView(R.layout.action_bar_navigation);
 
         mMainFAB = findViewById(R.id.navigation_floating_action_button);
@@ -693,6 +697,7 @@ public class NavigationActivity extends AppCompatActivity {
 
                     case NAVIGATION_MESSAGE_DIRECTORY_SUCCESS_FETCH:
                         LogManager.info(TAG, "Handle : NAVIGATION_MESSAGE_NEW_DIRECTORY_SUCCESS_FETCH");
+                        mHandler.sendEmptyMessage(NAVIGATION_ORDER_DISMISS_DIALOGS);
                         lFiles = (FTPFile[]) iMsg.obj;
                         inflateNewAdapter(lFiles, mDirectoryPath, false);
                         break;
@@ -833,9 +838,9 @@ public class NavigationActivity extends AppCompatActivity {
             }
         });
         lSwipeRefreshLayout.setColorSchemeResources(
-                R.color.primaryLight,
-                R.color.secondaryLight,
-                R.color.primaryDark);
+                R.color.lightAccent,
+                R.color.lightPrimary,
+                R.color.lightPrimaryDark);
 
         mRecyclerSection.addView(lSwipeRefreshLayout);
 

@@ -111,11 +111,11 @@ public class NavigationTransfer {
                     public void run() {
 
                         final AlertDialog.Builder lBuilder = new AlertDialog.Builder(mContextActivity);
-                        View mIndexingPendingFilesView = View.inflate(mContextActivity,
+                        View lIndexingPendingFilesView = View.inflate(mContextActivity,
                                 R.layout.dialog_indexing_progress, null);
 
-                        mIndexingFolderText = mIndexingPendingFilesView.findViewById(R.id.dialog_indexing_folder);
-                        mIndexingFileText = mIndexingPendingFilesView.findViewById(R.id.dialog_indexing_file);
+                        mIndexingFolderText = lIndexingPendingFilesView.findViewById(R.id.dialog_indexing_folder);
+                        mIndexingFileText = lIndexingPendingFilesView.findViewById(R.id.dialog_indexing_file);
 
                         lBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                             @Override
@@ -127,8 +127,8 @@ public class NavigationTransfer {
                         });
 
                         lBuilder.setCancelable(false);
-                        lBuilder.setView(mIndexingPendingFilesView);
-                        lBuilder.setMessage("Indexing files :"); // TODO : strings
+                        lBuilder.setView(lIndexingPendingFilesView);
+                        lBuilder.setTitle("Indexing files :"); // TODO : strings
                         mContextActivity.mIndexingPendingFilesDialog = lBuilder.create();
                         mContextActivity.mIndexingPendingFilesDialog.show();
                     }

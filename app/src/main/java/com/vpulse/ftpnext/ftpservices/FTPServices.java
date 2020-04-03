@@ -26,7 +26,6 @@ public class FTPServices extends AFTPConnection {
 
     private static List<FTPServices> sFTPServicesInstances;
 
-    private boolean mStartingFetchDirectory;
 
     private Thread mDirectoryFetchThread;
     private Thread mDeleteFileThread;
@@ -113,6 +112,7 @@ public class FTPServices extends AFTPConnection {
         });
     }
 
+    // TODO : Aborting fetch is extremely long to timeout and stop, check if we can decrease the timeout
     public void abortFetchDirectoryContent() {
         LogManager.info(TAG, "Abort fetch directory contents");
 
@@ -178,10 +178,8 @@ public class FTPServices extends AFTPConnection {
         mDirectoryFetchThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                mStartingFetchDirectory = true;
                 FTPLogManager.pushStatusLog("Fetching content of \"" + iPath + "\"");
 
-                mStartingFetchDirectory = false;
                 FTPFile lLeavingDirectory = mCurrentDirectory;
 
                 try {
@@ -642,10 +640,9 @@ public class FTPServices extends AFTPConnection {
 
     public boolean isFetchingFolders() {
         // Display :
-//        LogManager.info(TAG, "isFetchingFolders : " + isConnected() + " && (" +
-//                (mDirectoryFetchThread != null && mDirectoryFetchThread.isAlive()) + ") || " + mStartingFetchDirectory);
-        return (isLocallyConnected() && (mDirectoryFetchThread != null && mDirectoryFetchThread.isAlive())) ||
-                mStartingFetchDirectory;
+        LogManager.info(TAG, "isFetchingFolders : " + isLocallyConnected() + " && " +
+                (mDirectoryFetchThread != null && mDirectoryFetchThread.isAlive()));
+        return isLocallyConnected() && (mDirectoryFetchThread != null && mDirectoryFetchThread.isAlive());
     }
 
     public boolean isCreatingFolder() {

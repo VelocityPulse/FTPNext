@@ -1,6 +1,8 @@
 package com.vpulse.ftpnext.adapters;
 
-import android.content.Context;
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.res.ColorStateList;
 import android.os.Build;
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -47,7 +49,7 @@ public class NarrowTransferAdapter
     private Button mSortButton;
     private int mStartedAnimations;
 
-    private Context mContext;
+    private Activity mActivity;
 
     private RecyclerView mRecyclerView;
 
@@ -56,26 +58,26 @@ public class NarrowTransferAdapter
     private Handler mHandler;
     private Runnable mSortButtonDelayer;
 
-    public NarrowTransferAdapter(PendingFile[] iPendingFiles, Context iContext) {
+    public NarrowTransferAdapter(PendingFile[] iPendingFiles, Activity iActivity) {
         mPendingFileItemList = new ArrayList<>();
         mToRemovePendingFileItemList = new ArrayList<>();
         mCustomItemViewHolderList = new ArrayList<>();
         mHandler = new Handler();
 
-        mContext = iContext;
+        mActivity = iActivity;
 
         for (PendingFile lItem : iPendingFiles)
             mPendingFileItemList.add(new PendingFileItem(lItem));
         setHasStableIds(true);
     }
 
-    public NarrowTransferAdapter(Context iContext) {
+    public NarrowTransferAdapter(Activity iActivity) {
         mPendingFileItemList = new ArrayList<>();
         mToRemovePendingFileItemList = new ArrayList<>();
         mCustomItemViewHolderList = new ArrayList<>();
         mHandler = new Handler();
 
-        mContext = iContext;
+        mActivity = iActivity;
         setHasStableIds(true);
     }
 
@@ -156,7 +158,7 @@ public class NarrowTransferAdapter
         mPendingFileItemList.clear();
         mCustomItemViewHolderList.clear();
         mRecyclerView = null;
-        mContext = null;
+        mActivity = null;
         // Do not quite safely the handler because it's the MainThread
     }
 
@@ -179,6 +181,7 @@ public class NarrowTransferAdapter
         return lItem;
     }
 
+    @SuppressLint("ResourceType")
     @Override
     public void onBindViewHolder(@NonNull CustomItemViewHolder iCustomItemViewHolder, int iPosition) {
         final PendingFileItem lPendingFileItem = mPendingFileItemList.get(iPosition);
@@ -212,14 +215,14 @@ public class NarrowTransferAdapter
             iCustomItemViewHolder.mLoading.setVisibility(View.INVISIBLE);
             iCustomItemViewHolder.mErrorImage.setVisibility(View.VISIBLE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                iCustomItemViewHolder.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.error));
+                iCustomItemViewHolder.mProgressBar.setProgressTintList(mActivity.getColorStateList(R.color.lightError));
 
         } else if (lPendingFile.isSelected()) {
             // Normal download update
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                iCustomItemViewHolder.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.primaryLight));
-            }
+                iCustomItemViewHolder.mProgressBar.setProgressTintList(ColorStateList.valueOf(
+                        Utils.fetchCurrentThemeColor(mActivity, R.attr.colorAccent)));            }
 
             iCustomItemViewHolder.mErrorImage.clearAnimation();
             iCustomItemViewHolder.mErrorImage.setVisibility(View.INVISIBLE);
@@ -241,7 +244,8 @@ public class NarrowTransferAdapter
             // Not started
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                iCustomItemViewHolder.mProgressBar.setProgressTintList(mContext.getColorStateList(R.color.primaryLight));
+                iCustomItemViewHolder.mProgressBar.setProgressTintList(ColorStateList.valueOf(
+                        Utils.fetchCurrentThemeColor(mActivity, R.attr.colorAccent)));
             }
 
             iCustomItemViewHolder.mErrorImage.clearAnimation();
