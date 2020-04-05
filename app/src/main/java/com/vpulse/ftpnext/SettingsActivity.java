@@ -1,8 +1,5 @@
 package com.vpulse.ftpnext;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -111,7 +108,8 @@ public class SettingsActivity extends AppCompatActivity {
                 mWifiOnlySwitch.setChecked(!mWifiOnlySwitch.isChecked());
                 if (!mWifiOnlySwitch.isChecked()) {
                     showWifiOnlySecurityDialog();
-                }
+                } else
+                    PreferenceManager.setWifiOnly(true);
             }
         });
 
@@ -181,7 +179,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         AlertDialog.Builder lBuilder = new AlertDialog.Builder(this)
                 .setTitle("Disable Wi-Fi only") // TODO : Strings
-                .setMessage("Warning : That could cause additional costs")
+                .setMessage("Warning : That might cause additional costs")
                 .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface iDialog, int iWhich) {

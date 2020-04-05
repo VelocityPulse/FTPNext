@@ -13,7 +13,7 @@ public class PreferenceManager {
     // Default values :
     public static final int DEFAULT_MAX_TRANSFERS_VALUE = 2;
     public static final ExistingFileAction DEFAULT_EXISTING_FILE_ACTION = NOT_DEFINED;
-    public static final boolean DEFAULT_WIFI_ONLY = true;
+    public static final boolean DEFAULT_WIFI_ONLY = false;
     public static final boolean DEFAULT_IS_DARK_THEME = false;
     public static final String DEFAULT_LOGS_VALUE = "";
 

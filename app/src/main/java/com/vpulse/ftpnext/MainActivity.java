@@ -294,9 +294,15 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-//        if (PreferenceManager.isWifiOnly() && !AppCore.getNetworkManager().isCurrentNetworkIsWifi()) {
-//            Utils.createErrorAlertDialog(this, "")
-//        }
+        if (PreferenceManager.isWifiOnly() && !AppCore.getNetworkManager().isCurrentNetworkIsWifi()) {
+            Utils.createAlertDialog(this,
+                    "Wi-Fi only",
+                    "You can activate cellulars data in the settings page.",
+                    "Ok",
+                    null)
+                    .show();
+            return;
+        }
 
         final FTPServices lNewFTPServices = new FTPServices(lFTPServer);
 
