@@ -187,7 +187,8 @@
                 android:layout_height="wrap_content"
                 android:cursorVisible="false"
                 android:hint="Local Folder"
-                android:inputType="text" />
+                android:inputType="text"
+                android:textColor="?android:textColor" />
 
         </com.google.android.material.textfield.TextInputLayout>
 

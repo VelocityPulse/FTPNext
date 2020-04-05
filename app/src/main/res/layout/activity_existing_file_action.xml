@@ -37,7 +37,7 @@
             android:paddingStart="@dimen/existing_file_padding"
             android:paddingEnd="0dp"
             android:text="@string/existing_file_ask_each_time"
-            android:textColor="@color/androidColorGray"
+            android:textColor="?android:textColor"
             android:textSize="@dimen/existing_file_description_text_size" />
 
     </LinearLayout>
@@ -64,7 +64,7 @@
             android:paddingStart="@dimen/existing_file_padding"
             android:paddingEnd="0dp"
             android:text="@string/existing_file_replace_file"
-            android:textColor="@color/androidColorGray"
+            android:textColor="?android:textColor"
             android:textSize="@dimen/existing_file_description_text_size" />
 
     </LinearLayout>
@@ -91,7 +91,7 @@
             android:paddingStart="@dimen/existing_file_padding"
             android:paddingEnd="0dp"
             android:text="@string/existing_file_resume_download"
-            android:textColor="@color/androidColorGray"
+            android:textColor="?android:textColor"
             android:textSize="@dimen/existing_file_description_text_size" />
 
     </LinearLayout>
@@ -118,7 +118,7 @@
             android:paddingStart="@dimen/existing_file_padding"
             android:paddingEnd="0dp"
             android:text="@string/existing_file_if_sizes_diff"
-            android:textColor="@color/androidColorGray"
+            android:textColor="?android:textColor"
             android:textSize="@dimen/existing_file_description_text_size" />
     </LinearLayout>
 
@@ -144,7 +144,7 @@
             android:paddingStart="@dimen/existing_file_padding"
             android:paddingEnd="0dp"
             android:text="@string/existing_file_ignore"
-            android:textColor="@color/androidColorGray"
+            android:textColor="?android:textColor"
             android:textSize="@dimen/existing_file_description_text_size" />
 
     </LinearLayout>
@@ -172,7 +172,7 @@
             android:paddingStart="@dimen/existing_file_padding"
             android:paddingEnd="0dp"
             android:text="@string/existing_file_if_more_recent"
-            android:textColor="@color/androidColorGray"
+            android:textColor="?android:textColor"
             android:textSize="@dimen/existing_file_description_text_size" />
 
     </LinearLayout>
@@ -200,7 +200,7 @@
             android:paddingStart="@dimen/existing_file_padding"
             android:paddingEnd="0dp"
             android:text="@string/existing_file_if_sizes_are_diff_or_more_recent"
-            android:textColor="@color/androidColorGray"
+            android:textColor="?android:textColor"
             android:textSize="@dimen/existing_file_description_text_size" />
 
     </LinearLayout>
@@ -228,7 +228,7 @@
             android:paddingStart="@dimen/existing_file_padding"
             android:paddingEnd="0dp"
             android:text="@string/existing_file_rename_file"
-            android:textColor="@color/androidColorGray"
+            android:textColor="?android:textColor"
             android:textSize="@dimen/existing_file_description_text_size" />
 
     </LinearLayout>

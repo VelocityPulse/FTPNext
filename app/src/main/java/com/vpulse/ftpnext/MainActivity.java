@@ -246,7 +246,6 @@ public class MainActivity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(this,
                         lPermissionNetwork,
                         ACTIVITY_REQUEST_CODE_INTERNET);
-
             }
         }
     }
