@@ -1,8 +1,9 @@
 package com.vpulse.ftpnext;
 
+import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.ColorStateList;
+import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,6 +17,8 @@ import android.widget.RadioGroup;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
 
 import com.google.android.material.textfield.TextInputEditText;
@@ -35,12 +38,15 @@ import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
 
 public class ConfigureServerActivity extends AppCompatActivity {
 
+
     public static final int ACTIVITY_RESULT_ADD_SUCCESS = 0;
     public static final int ACTIVITY_RESULT_ADD_FAIL = 1;
     public static final int ACTIVITY_RESULT_ABORT = 2;
     public static final int ACTIVITY_RESULT_UPDATE_SUCCESS = 3;
     public static final String KEY_DATABASE_ID = "KEY_DATABASE_ID";
     public static final int NO_DATABASE_ID = -1;
+
+    private static final int ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
 
     private static final int ACTIVITY_REQUEST_CODE_SELECT_FOLDER = 10;
     private static final String TAG = "CONFIGURE FTP SERVER ACTIVITY";
@@ -133,8 +139,15 @@ public class ConfigureServerActivity extends AppCompatActivity {
         mFolderNameEditText.setShowSoftInputOnFocus(false);
         mFolderNameEditText.setTextIsSelectable(true);
         mFolderNameEditText.setTextIsSelectable(false);
+        mFolderNameEditText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View iView) {
+                onClickLocalFolder(iView);
+            }
+        });
 
         mTypeRadioGroup = findViewById(R.id.type_radio_group);
+
     }
 
     private void initializeListeners() {
@@ -364,10 +377,33 @@ public class ConfigureServerActivity extends AppCompatActivity {
 
                 mFolderNameEditText.setText(mAbsolutePath);
             }
+        } else if (iRequestCode == ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE) {
+            LogManager.debug(TAG, "RESULT CODE : " + iResultCode);
         }
     }
 
-    public void OnClickLocalFolder(View view) {
+    private void onClickLocalFolder(View view) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+
+            Utils.createAlertDialog(this,
+                    "Permissions required",
+                    "Read and Storage permissions are required to select a folder. " +
+                            "If you denied this permission before, please go in the android settings of this app to unlock the read/write permissions.",
+                    "Ok",
+                    null)
+                    .show();
+            return;
+        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            String[] lPermissions = new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
+            ActivityCompat.requestPermissions(this,
+                    lPermissions,
+                    ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE);
+            return;
+        }
+
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         startActivityForResult(intent, ACTIVITY_REQUEST_CODE_SELECT_FOLDER);
     }
