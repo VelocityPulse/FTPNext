@@ -494,7 +494,12 @@ public class NavigationTransfer {
 
             @Override
             public void onExistingFile(final PendingFile iPendingFile) {
-                createExistingFileDialog(iPendingFile);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        createExistingFileDialog(iPendingFile);
+                    }
+                });
             }
 
             @Override
