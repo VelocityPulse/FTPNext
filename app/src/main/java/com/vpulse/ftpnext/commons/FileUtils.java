@@ -106,75 +106,75 @@ public final class FileUtils {
      * Gets the file path of the given Uri.
      */
     @SuppressLint({"NewApi", "ObsoleteSdkInt"})
-    public static String getPathFromDocumentUri(Context context, Uri uri) {
-        final boolean needToCheckUri = Build.VERSION.SDK_INT >= 19;
-        String selection = null;
-        String[] selectionArgs = null;
+    public static String getPathFromDocumentUri(Context iContext, Uri iUri) {
+        final boolean lNeedToCheckUri = Build.VERSION.SDK_INT >= 19;
+        String lSelection = null;
+        String[] lSelectionArgs = null;
         // Uri is different in versions after KITKAT (Android 4.4), we need to
         // deal with different Uris.
-        if (needToCheckUri && DocumentsContract.isDocumentUri(context.getApplicationContext(), uri)) {
-            if (isExternalStorageDocument(uri)) {
-                final String docId = DocumentsContract.getDocumentId(uri);
-                final String[] split = docId.split(":");
-                return Environment.getExternalStorageDirectory() + "/" + split[1];
-            } else if (isDownloadsDocument(uri)) {
-                final String id = DocumentsContract.getDocumentId(uri);
-                uri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"), Long.parseLong(id));
-            } else if (isMediaDocument(uri)) {
-                final String docId = DocumentsContract.getDocumentId(uri);
-                final String[] split = docId.split(":");
-                final String type = split[0];
-                if ("image".equals(type)) {
-                    uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-                } else if ("video".equals(type)) {
-                    uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-                } else if ("audio".equals(type)) {
-                    uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        if (lNeedToCheckUri && DocumentsContract.isDocumentUri(iContext.getApplicationContext(), iUri)) {
+            if (isExternalStorageDocument(iUri)) {
+                final String lDocId = DocumentsContract.getDocumentId(iUri);
+                final String[] lSplit = lDocId.split(":");
+                return Environment.getExternalStorageDirectory() + "/" + lSplit[1];
+            } else if (isDownloadsDocument(iUri)) {
+                final String lId = DocumentsContract.getDocumentId(iUri);
+                iUri = ContentUris.withAppendedId(
+                        Uri.parse("content://downloads/public_downloads"), Long.parseLong(lId));
+            } else if (isMediaDocument(iUri)) {
+                final String lDocId = DocumentsContract.getDocumentId(iUri);
+                final String[] lSplit = lDocId.split(":");
+                final String lType = lSplit[0];
+                if ("image".equals(lType)) {
+                    iUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                } else if ("video".equals(lType)) {
+                    iUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                } else if ("audio".equals(lType)) {
+                    iUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                 }
-                selection = "_id=?";
-                selectionArgs = new String[]{split[1]};
+                lSelection = "_id=?";
+                lSelectionArgs = new String[]{lSplit[1]};
             }
         }
-        if ("content".equalsIgnoreCase(uri.getScheme())) {
-            String[] projection = {MediaStore.Images.Media.DATA};
-            Cursor cursor;
+        if ("content".equalsIgnoreCase(iUri.getScheme())) {
+            String[] lProjection = {MediaStore.Images.Media.DATA};
+            Cursor lCursor;
             try {
-                cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
-                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                if (cursor.moveToFirst()) {
-                    return cursor.getString(column_index);
+                lCursor = iContext.getContentResolver().query(iUri, lProjection, lSelection, lSelectionArgs, null);
+                int lColumnIndex = lCursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                if (lCursor.moveToFirst()) {
+                    return lCursor.getString(lColumnIndex);
                 }
             } catch (Exception e) {
             }
-        } else if ("file".equalsIgnoreCase(uri.getScheme())) {
-            return uri.getPath();
+        } else if ("file".equalsIgnoreCase(iUri.getScheme())) {
+            return iUri.getPath();
         }
         return null;
     }
 
     /**
-     * @param uri The Uri to check.
+     * @param iUri The Uri to check.
      * @return Whether the Uri authority is ExternalStorageProvider.
      */
-    public static boolean isExternalStorageDocument(Uri uri) {
-        return "com.android.externalstorage.documents".equals(uri.getAuthority());
+    public static boolean isExternalStorageDocument(Uri iUri) {
+        return "com.android.externalstorage.documents".equals(iUri.getAuthority());
     }
 
     /**
-     * @param uri The Uri to check.
+     * @param iUri The Uri to check.
      * @return Whether the Uri authority is DownloadsProvider.
      */
-    public static boolean isDownloadsDocument(Uri uri) {
-        return "com.android.providers.downloads.documents".equals(uri.getAuthority());
+    public static boolean isDownloadsDocument(Uri iUri) {
+        return "com.android.providers.downloads.documents".equals(iUri.getAuthority());
     }
 
     /**
-     * @param uri The Uri to check.
+     * @param iUri The Uri to check.
      * @return Whether the Uri authority is MediaProvider.
      */
-    public static boolean isMediaDocument(Uri uri) {
-        return "com.android.providers.media.documents".equals(uri.getAuthority());
+    public static boolean isMediaDocument(Uri iUri) {
+        return "com.android.providers.media.documents".equals(iUri.getAuthority());
     }
 
 }
