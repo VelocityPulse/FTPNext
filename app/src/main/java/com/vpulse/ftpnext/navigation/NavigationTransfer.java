@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.adapters.NarrowTransferAdapter;
+import com.vpulse.ftpnext.commons.FileUtils;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LoadDirection;
@@ -182,7 +183,8 @@ public class NavigationTransfer {
         List<PendingFile> lPendingFileList = new ArrayList<>();
 
         for (Uri lItem : iUris) {
-            String lLocalAbsolutePath = Utils.getRealPathFromURI(mContextActivity, lItem);
+//            String lLocalAbsolutePath = Utils.getRealPathFromURI(mContextActivity, lItem);
+            String lLocalAbsolutePath = FileUtils.getPathFromDocumentUri(mContextActivity, lItem);
             String lNameOnly;
             String lLocalPathOnly;
             String lRemotePathOnly;

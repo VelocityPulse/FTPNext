@@ -367,10 +367,10 @@ public class ConfigureServerActivity extends AppCompatActivity {
                 DocumentFile lPickedDir = DocumentFile.fromTreeUri(this, lTreeUri);
 
                 LogManager.info(TAG, lPickedDir.getName());
-                LogManager.info(TAG, FileUtils.getFullPathFromTreeUri(lTreeUri, this));
+                LogManager.info(TAG, FileUtils.getPathFromFolderUri(lTreeUri, this));
 
                 mFolderName = lPickedDir.getName();
-                mAbsolutePath = FileUtils.getFullPathFromTreeUri(lTreeUri, this);
+                mAbsolutePath = FileUtils.getPathFromFolderUri(lTreeUri, this);
 
                 if (!mAbsolutePath.endsWith("/"))
                     mAbsolutePath += "/";

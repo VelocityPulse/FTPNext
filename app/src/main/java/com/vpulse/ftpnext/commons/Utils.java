@@ -14,11 +14,14 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
 import com.vpulse.ftpnext.R;
+import com.vpulse.ftpnext.core.LogManager;
 
 import java.io.File;
 import java.util.Locale;
 
 public class Utils {
+
+    private static final String TAG = "UTILS";
 
     public static void sleep(long iMillis) {
         try {
@@ -30,20 +33,6 @@ public class Utils {
 
     public static String getFileNameFromPath(String lPath) {
         return lPath.substring(lPath.lastIndexOf(File.separator) + 1);
-    }
-
-    public static String getRealPathFromURI(Context iContext, Uri contentURI) {
-        String oResult;
-        Cursor lCursor = iContext.getContentResolver().query(contentURI, null, null, null, null);
-        if (lCursor == null) {
-            oResult = contentURI.getPath();
-        } else {
-            lCursor.moveToFirst();
-            int idx = lCursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-            oResult = lCursor.getString(idx);
-            lCursor.close();
-        }
-        return oResult;
     }
 
     public static void hideKeyboard(Activity iActivity) {

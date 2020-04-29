@@ -45,19 +45,15 @@ public class FTPLogManager {
 
         lTheme.resolveAttribute(R.attr.logSuccessColor, lTypedValue, true);
         mSuccessColorString = Integer.toHexString(lTypedValue.data).substring(2, 8);
-        LogManager.error(TAG, mSuccessColorString);
 
         lTheme.resolveAttribute(R.attr.logErrorColor, lTypedValue, true);
         mErrorColorString = Integer.toHexString(lTypedValue.data).substring(2, 8);
-        LogManager.error(TAG, mErrorColorString);
 
         lTheme.resolveAttribute(R.attr.logReplyColor, lTypedValue, true);
         mReplyColorString = Integer.toHexString(lTypedValue.data).substring(2, 8);
-        LogManager.error(TAG, mReplyColorString);
 
         lTheme.resolveAttribute(R.attr.logStatusColor, lTypedValue, true);
         mStatusColorString = Integer.toHexString(lTypedValue.data).substring(2, 8);
-        LogManager.error(TAG, mStatusColorString);
 
         mSuccessColorString = "#" + mSuccessColorString;
         mErrorColorString = "#" + mErrorColorString;

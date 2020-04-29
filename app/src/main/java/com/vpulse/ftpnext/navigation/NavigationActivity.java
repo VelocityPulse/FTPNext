@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -937,6 +938,7 @@ public class NavigationActivity extends AppCompatActivity {
         lIntent.setType("*/*");
         lIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         lIntent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+
         startActivityForResult(lIntent, ACTIVITY_REQUEST_CODE_SELECT_FILES);
     }
 
