@@ -8,25 +8,68 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/navigation_toolbar"
-            style="@style/Widget.MaterialComponents.Toolbar.Primary"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_scrollFlags="noScroll"
-            app:menu="@menu/navigation"
-            app:navigationIcon="@drawable/ic_home_back"
-            app:title="@string/ftp_navigation">
+            android:layout_height="match_parent">
 
-        </com.google.android.material.appbar.MaterialToolbar>
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/navigation_toolbar"
+                style="@style/Widget.MaterialComponents.Toolbar.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="visible"
+                app:layout_scrollFlags="noScroll"
+                app:menu="@menu/navigation"
+                app:navigationIcon="@drawable/ic_home_back"
+                app:title="@string/ftp_navigation">
 
-<!--        <TextView-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:src="@drawable/ic_search"-->
-<!--            android:text="TEST"-->
-<!--            android:textColor="@android:color/white"-->
-<!--            android:textSize="30dp" />-->
+            </com.google.android.material.appbar.MaterialToolbar>
+
+            <LinearLayout
+                android:id="@+id/navigation_search_bar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:visibility="visible">
+
+                <ImageButton
+                    android:layout_width="54dp"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/ic_home_back" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/search_edit_text_layout"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="20dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:layout_gravity="center"
+                    android:textColorHint="?android:textColor"
+                    app:boxBackgroundColor="@android:color/white"
+                    app:endIconDrawable="@drawable/ic_cancel"
+                    app:endIconMode="custom"
+                    app:endIconTint="?colorAccent"
+                    app:hintEnabled="false">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/search_edit_text"
+                        android:paddingBottom="8dp"
+                        android:paddingTop="0dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="bottom"
+                        android:hint="Search"
+                        android:inputType="text"
+                        android:textColor="?android:textColor" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+        </RelativeLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
 

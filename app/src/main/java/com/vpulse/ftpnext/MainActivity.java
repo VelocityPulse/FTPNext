@@ -64,11 +64,6 @@ Ideas :
 
  */
 
-/*
-Parameters ideas :
-    - Download without wifi
- */
-
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MAIN ACTIVITY";

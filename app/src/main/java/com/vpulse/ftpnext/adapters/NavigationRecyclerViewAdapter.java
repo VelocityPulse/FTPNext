@@ -1,10 +1,6 @@
 package com.vpulse.ftpnext.adapters;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,10 +9,16 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Transformation;
 import android.widget.CheckBox;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.commons.Utils;
@@ -29,10 +31,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<NavigationRecyclerViewAdapter.CustomItemViewAdapter> {
+public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<NavigationRecyclerViewAdapter.CustomItemViewAdapter>
+        implements Filterable {
 
     private static final String TAG = "NAVIGATION RECYCLER VIEW ADAPTER";
 
+    private FTPFileItem[] mOriginalFTPFileItem;
     private List<FTPFileItem> mFTPFileItemList;
     private List<String> mNameList;
     private List<CustomItemViewAdapter> mCustomViewItemList;
@@ -64,12 +68,13 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         mSwipeRefreshLayout.setVisibility(iVisible ? View.VISIBLE : View.INVISIBLE);
         mCustomViewItemList = new ArrayList<>();
 
-        mFTPFileItemList = new ArrayList<>();
-        mNameList = new ArrayList<>();
-        for (FTPFile lItem : iFTPFileList) {
-            mFTPFileItemList.add(new FTPFileItem(lItem));
-            mNameList.add(lItem.getName());
-        }
+        setData(iFTPFileList.toArray(new FTPFile[0]));
+//        mFTPFileItemList = new ArrayList<>();
+//        mNameList = new ArrayList<>();
+//        for (FTPFile lItem : iFTPFileList) {
+//            mFTPFileItemList.add(new FTPFileItem(lItem));
+//            mNameList.add(lItem.getName());
+//        }
     }
 
     public NavigationRecyclerViewAdapter(Context iContext, FrameLayout iRecyclerSection, RecyclerView iRecyclerView,
@@ -201,6 +206,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         }
         mFTPFileItemList.add(new FTPFileItem(iItem));
         mNameList.add(iItem.getName());
+        mOriginalFTPFileItem = mFTPFileItemList.toArray(new FTPFileItem[0]);
         notifyItemRangeInserted(mFTPFileItemList.size() + 1, 1);
     }
 
@@ -215,7 +221,21 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             iPosition = mFTPFileItemList.size();
         mFTPFileItemList.add(iPosition, new FTPFileItem(iItem));
         mNameList.add(iPosition, iItem.getName());
+        mOriginalFTPFileItem = mFTPFileItemList.toArray(new FTPFileItem[0]);
         notifyItemRangeInserted(iPosition, 1);
+    }
+
+    public void removeItem(FTPFile iItem) {
+        LogManager.info(TAG, "Remove item");
+        for (FTPFileItem lItem : mFTPFileItemList) {
+            if (lItem.equals(iItem)) {
+                mFTPFileItemList.remove(lItem);
+                mNameList.remove(lItem.mFTPFile.getName());
+                mOriginalFTPFileItem = mFTPFileItemList.toArray(new FTPFileItem[0]);
+                notifyItemRemoved(mFTPFileItemList.indexOf(lItem));
+                return;
+            }
+        }
     }
 
     public void updateItem(FTPFile iItem) {
@@ -231,30 +251,25 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         }
     }
 
-    public void removeItem(FTPFile iItem) {
-        LogManager.info(TAG, "Remove item");
-        for (FTPFileItem lItem : mFTPFileItemList) {
-            if (lItem.equals(iItem)) {
-                mFTPFileItemList.remove(lItem);
-                mNameList.remove(lItem.mFTPFile.getName());
-                notifyItemRemoved(mFTPFileItemList.indexOf(lItem));
-                return;
-            }
-        }
-    }
-
     public void setData(FTPFile[] iData) {
         LogManager.info(TAG, "Set data");
         if (iData == null) {
             LogManager.error(TAG, "Cannot set the data if the given parameter is null.");
             return;
         }
+
+        if (mFTPFileItemList == null)
+            mFTPFileItemList = new ArrayList<>();
+        if (mNameList == null)
+            mNameList = new ArrayList<>();
+
         mFTPFileItemList.clear();
         mNameList.clear();
         for (FTPFile lItem : iData) {
             mFTPFileItemList.add(new FTPFileItem(lItem));
             mNameList.add(lItem.getName());
         }
+        mOriginalFTPFileItem = mFTPFileItemList.toArray(new FTPFileItem[0]);
         notifyDataSetChanged();
     }
 
@@ -537,6 +552,43 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
     public void setOnClickListener(OnClickListener iListener) {
         mClickListener = iListener;
+    }
+
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+
+            @SuppressWarnings("unchecked")
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+
+//                arrayListNames = (List<String>) results.values;
+//                notifyDataSetChanged();
+            }
+
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+
+                FilterResults results = new FilterResults();
+//                ArrayList<String> FilteredArrayNames = new ArrayList<String>();
+//
+//                // perform your search here using the searchConstraint String.
+//
+//                constraint = constraint.toString().toLowerCase();
+//                for (int i = 0; i < mNameList.size(); i++) {
+//                    String dataNames = mDatabaseOfNames.get(i);
+//                    if (dataNames.toLowerCase().startsWith(constraint.toString())) {
+//                        FilteredArrayNames.add(dataNames);
+//                    }
+//                }
+//
+//                results.count = FilteredArrayNames.size();
+//                results.values = FilteredArrayNames;
+//                Log.e("VALUES", results.values.toString());
+
+                return results;
+            }
+        };
     }
 
     public interface OnLongClickListener {

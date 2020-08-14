@@ -11,12 +11,17 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -31,9 +36,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.vpulse.ftpnext.commons.Utils;
+import com.vpulse.ftpnext.commons.interfaces.OnEndAnimation;
+import com.vpulse.ftpnext.commons.interfaces.OnStartAnimation;
 import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.core.PreferenceManager;
@@ -131,8 +140,11 @@ public class NavigationActivity extends AppCompatActivity {
     private FloatingActionButton mMainFAB;
     private FloatingActionButton mCreateFolderFAB;
     private FloatingActionButton mUploadFileFAB;
+    private LinearLayout mSearchBar;
+    private Toolbar mToolBar;
     private boolean mIsFABOpen;
     private boolean mIsResumeFromActivityResult;
+    private boolean mIsSearchDisplayed;
 
     @Override
     protected void onCreate(Bundle iSavedInstanceState) {
@@ -249,8 +261,10 @@ public class NavigationActivity extends AppCompatActivity {
                 onDownloadClicked();
                 return true;
             case R.id.action_search:
-
-
+                if (!mIsSearchDisplayed)
+                    showSearchBar();
+                else
+                    hideSearchBar();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -454,7 +468,8 @@ public class NavigationActivity extends AppCompatActivity {
     }
 
     private void initializeGUI() {
-        setSupportActionBar((Toolbar) findViewById(R.id.navigation_toolbar));
+        mToolBar = findViewById(R.id.navigation_toolbar);
+        setSupportActionBar(mToolBar);
 
         mMainFAB = findViewById(R.id.navigation_floating_action_button);
         mCreateFolderFAB = findViewById(R.id.navigation_fab_create_folder);
@@ -484,6 +499,34 @@ public class NavigationActivity extends AppCompatActivity {
         });
 
         mRecyclerSection = findViewById(R.id.navigation_recycler_section);
+        mSearchBar = findViewById(R.id.navigation_search_bar);
+
+        final TextInputLayout searchEditTextLayout = findViewById(R.id.search_edit_text_layout);
+        final TextInputEditText searchEditText = findViewById(R.id.search_edit_text);
+
+        searchEditTextLayout.setEndIconOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideSearchBar();
+            }
+        });
+        searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                mCurrentAdapter.getFilter().filter(String.valueOf(s));
+            }
+        });
+
     }
 
     private void initializeHandler() {
@@ -809,6 +852,36 @@ public class NavigationActivity extends AppCompatActivity {
         mMainFAB.show();
         mCreateFolderFAB.show();
         mUploadFileFAB.show();
+    }
+
+    private void showSearchBar() {
+        mIsSearchDisplayed = true;
+        Animation fadeOut = new AlphaAnimation(1, 0);
+        fadeOut.setInterpolator(new DecelerateInterpolator()); //add this
+        fadeOut.setDuration(200);
+        fadeOut.setAnimationListener(new OnEndAnimation() {
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                mToolBar.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        mToolBar.startAnimation(fadeOut);
+    }
+
+    private void hideSearchBar() {
+        mIsSearchDisplayed = false;
+        Animation fadeIn = new AlphaAnimation(0, 1);
+        fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
+        fadeIn.setDuration(200);
+        fadeIn.setAnimationListener(new OnStartAnimation() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                mToolBar.setVisibility(View.VISIBLE);
+            }
+        });
+
+        mToolBar.startAnimation(fadeIn);
     }
 
     private void destroyCurrentAdapter() {
