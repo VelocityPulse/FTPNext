@@ -17,6 +17,7 @@ import android.widget.RadioGroup;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
@@ -112,10 +113,8 @@ public class ConfigureServerActivity extends AppCompatActivity {
     }
 
     private void initializeGUI() {
-        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_home_up);
-        getSupportActionBar().setCustomView(R.layout.action_bar_configure_server);
+        setSupportActionBar((Toolbar) findViewById(R.id.configure_server_toolbar));
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         mRootView = findViewById(R.id.activity_configure_ftp_server_scrollview);
 

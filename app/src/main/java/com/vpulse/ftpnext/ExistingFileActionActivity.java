@@ -8,6 +8,7 @@ import android.widget.RadioButton;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.vpulse.ftpnext.core.PreferenceManager;
 
@@ -49,10 +50,7 @@ public class ExistingFileActionActivity extends AppCompatActivity {
     }
 
     private void initializeGUI() {
-        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_home_back);
-        getSupportActionBar().setCustomView(R.layout.action_bar_existing_file);
+        setSupportActionBar((Toolbar) findViewById(R.id.existing_file_toolbar));
     }
 
     private void initializeViews() {

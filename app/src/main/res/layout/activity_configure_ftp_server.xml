@@ -1,205 +1,213 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_configure_ftp_server_scrollview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:focusable="true"
-    android:focusableInTouchMode="true"
-    tools:context=".ConfigureServerActivity">
+    android:orientation="vertical">
 
-    <!-- FORM -->
+    <include layout="@layout/action_bar_configure_server" />
 
-    <LinearLayout
+    <ScrollView
+        android:id="@+id/activity_configure_ftp_server_scrollview"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="7dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginRight="7dp"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        tools:context=".ConfigureServerActivity">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/name_edit_text_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        <!-- FORM -->
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
-            android:textColorHint="?android:textColor"
-            app:endIconDrawable="@drawable/ic_bookmark"
-            app:endIconMode="custom"
-            app:endIconTint="?colorAccent">
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="7dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginRight="7dp"
+            android:orientation="vertical">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/name_edit_text"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/name_edit_text_layout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Name"
-                android:inputType="text"
-                android:textColor="?android:textColor" />
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
+                android:textColorHint="?android:textColor"
+                app:endIconDrawable="@drawable/ic_bookmark"
+                app:endIconMode="custom"
+                app:endIconTint="?colorAccent">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/name_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Name"
+                    android:inputType="text"
+                    android:textColor="?android:textColor" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/server_host_edit_text_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
-            android:textColorHint="?android:textColor"
-            app:endIconDrawable="@drawable/ic_device_hub"
-            app:endIconMode="custom"
-            app:endIconTint="?colorAccent">
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/server_host_edit_text"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/server_host_edit_text_layout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Server Host"
-                android:inputType="text"
-                android:textColor="?android:textColor" />
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
+                android:textColorHint="?android:textColor"
+                app:endIconDrawable="@drawable/ic_device_hub"
+                app:endIconMode="custom"
+                app:endIconTint="?colorAccent">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/server_host_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Server Host"
+                    android:inputType="text"
+                    android:textColor="?android:textColor" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/user_name_edit_text_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
-            android:textColorHint="?android:textColor"
-            app:endIconDrawable="@drawable/ic_account_circle"
-            app:endIconMode="custom"
-            app:endIconTint="?colorAccent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/username_edit_text"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/user_name_edit_text_layout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Username"
-                android:inputType="text"
-                android:textColor="?android:textColor" />
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
+                android:textColorHint="?android:textColor"
+                app:endIconDrawable="@drawable/ic_account_circle"
+                app:endIconMode="custom"
+                app:endIconTint="?colorAccent">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/username_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Username"
+                    android:inputType="text"
+                    android:textColor="?android:textColor" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/password_edit_text_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
-            android:layout_weight="1"
-            android:textColorHint="?android:textColor"
-            app:endIconMode="password_toggle"
-            app:endIconTint="?colorAccent">
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/password_edit_text"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/password_edit_text_layout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Password"
-                android:inputType="textPassword"
-                android:textColor="?android:textColor" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <RadioGroup
-            android:id="@+id/type_radio_group"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
-            android:orientation="horizontal">
-
-            <RadioButton
-                android:id="@+id/radio_button_ftp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="27dp"
+                android:layout_height="0dp"
+                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
                 android:layout_weight="1"
-                android:checked="true"
-                android:onClick="OnClickRadioButtonFTP"
-                android:scaleX="1.15"
-                android:scaleY="1.15"
-                android:text="FTP"
-                android:textColor="?android:textColor" />
+                android:textColorHint="?android:textColor"
+                app:endIconMode="password_toggle"
+                app:endIconTint="?colorAccent">
 
-            <RadioButton
-                android:id="@+id/radio_button_sftp"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/password_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Password"
+                    android:inputType="textPassword"
+                    android:textColor="?android:textColor" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <RadioGroup
+                android:id="@+id/type_radio_group"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="30dp"
-                android:layout_weight="1"
-                android:alpha="0.4"
-                android:enabled="false"
-                android:onClick="OnClickRadioButtonSFTP"
-                android:scaleX="1.15"
-                android:scaleY="1.15"
-                android:text="SFTP"
-                android:textColor="?android:textColor" />
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
+                android:orientation="horizontal">
 
-        </RadioGroup>
+                <RadioButton
+                    android:id="@+id/radio_button_ftp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="27dp"
+                    android:layout_weight="1"
+                    android:checked="true"
+                    android:onClick="OnClickRadioButtonFTP"
+                    android:scaleX="1.15"
+                    android:scaleY="1.15"
+                    android:text="FTP"
+                    android:textColor="?android:textColor" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/port_edit_text_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
-            android:textColorHint="?android:textColor"
-            app:endIconDrawable="@drawable/ic_lock"
-            app:endIconMode="custom"
-            app:endIconTint="?colorAccent">
+                <RadioButton
+                    android:id="@+id/radio_button_sftp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="30dp"
+                    android:layout_weight="1"
+                    android:alpha="0.4"
+                    android:enabled="false"
+                    android:onClick="OnClickRadioButtonSFTP"
+                    android:scaleX="1.15"
+                    android:scaleY="1.15"
+                    android:text="SFTP"
+                    android:textColor="?android:textColor" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/port_edit_text"
+            </RadioGroup>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/port_edit_text_layout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Port (Default: 21)"
-                android:inputType="number"
-                android:textColor="?android:textColor" />
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
+                android:textColorHint="?android:textColor"
+                app:endIconDrawable="@drawable/ic_lock"
+                app:endIconMode="custom"
+                app:endIconTint="?colorAccent">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/port_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Port (Default: 21)"
+                    android:inputType="number"
+                    android:textColor="?android:textColor" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/local_folder_edit_text_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
-            android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
-            android:textColorHint="?android:textColor"
-            app:endIconDrawable="@drawable/ic_folder_filled"
-            app:endIconMode="custom"
-            app:endIconTint="?colorAccent">
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/local_folder_edit_text"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/local_folder_edit_text_layout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:cursorVisible="false"
-                android:hint="Local Folder"
-                android:inputType="text"
-                android:textColor="?android:textColor" />
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/configure_server_line_vertical_margin"
+                android:layout_marginBottom="@dimen/configure_server_line_vertical_margin"
+                android:textColorHint="?android:textColor"
+                app:endIconDrawable="@drawable/ic_folder_filled"
+                app:endIconMode="custom"
+                app:endIconTint="?colorAccent">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/local_folder_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:cursorVisible="false"
+                    android:hint="Local Folder"
+                    android:inputType="text"
+                    android:textColor="?android:textColor" />
 
-        <Button
-            android:layout_width="100dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="end"
-            android:layout_marginEnd="20dp"
-            android:layout_marginBottom="20dp"
-            android:onClick="OnClickSaveButton"
-            android:text="Save" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-    </LinearLayout>
-</ScrollView>
+            <Button
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:layout_marginEnd="20dp"
+                android:layout_marginBottom="20dp"
+                android:onClick="OnClickSaveButton"
+                android:text="Save" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

@@ -3,7 +3,8 @@
     <!--    Themes ============================================== -->
 
     <style name="AppTheme" parent="Theme.MaterialComponents.Light">
-
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 
     <!--    Sub themes ============================================== -->

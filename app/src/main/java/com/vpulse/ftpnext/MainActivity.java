@@ -10,9 +10,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -78,7 +78,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int ACTIVITY_REQUEST_CODE_NAVIGATION = 3;
     private static final int ACTIVITY_REQUEST_CODE_SETTINGS = 4;
     private static final int ACTIVITY_REQUEST_CODE_INTERNET = 5;
-
 
     private MainRecyclerViewAdapter mAdapter;
     private boolean mIsRunning;
@@ -148,8 +147,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeGUI() {
-        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        getSupportActionBar().setCustomView(R.layout.action_bar_main);
+        setSupportActionBar((Toolbar) findViewById(R.id.main_toolbar));
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         FloatingActionButton lFloatingActionButton = findViewById(R.id.navigation_floating_action_button);
         lFloatingActionButton.setOnClickListener(new View.OnClickListener() {

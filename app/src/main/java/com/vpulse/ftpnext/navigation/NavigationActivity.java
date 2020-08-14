@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,9 +19,9 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
@@ -213,9 +212,8 @@ public class NavigationActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu iMenu) {
+    public boolean onCreateOptionsMenu(final Menu iMenu) {
         getMenuInflater().inflate(R.menu.navigation, iMenu);
-
         return true;
     }
 
@@ -249,6 +247,10 @@ public class NavigationActivity extends AppCompatActivity {
 
                 }
                 onDownloadClicked();
+                return true;
+            case R.id.action_search:
+
+
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -452,10 +454,7 @@ public class NavigationActivity extends AppCompatActivity {
     }
 
     private void initializeGUI() {
-        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_home_back);
-        getSupportActionBar().setCustomView(R.layout.action_bar_navigation);
+        setSupportActionBar((Toolbar) findViewById(R.id.navigation_toolbar));
 
         mMainFAB = findViewById(R.id.navigation_floating_action_button);
         mCreateFolderFAB = findViewById(R.id.navigation_fab_create_folder);
