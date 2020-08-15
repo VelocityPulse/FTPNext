@@ -222,7 +222,8 @@ public class NarrowTransferAdapter
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 iCustomItemViewHolder.mProgressBar.setProgressTintList(ColorStateList.valueOf(
-                        Utils.fetchCurrentThemeColor(mActivity, R.attr.colorAccent)));            }
+                        Utils.fetchCurrentThemeColor(mActivity, R.attr.colorAccent)));
+            }
 
             iCustomItemViewHolder.mErrorImage.clearAnimation();
             iCustomItemViewHolder.mErrorImage.setVisibility(View.INVISIBLE);
@@ -461,7 +462,6 @@ public class NarrowTransferAdapter
         PendingFileItem(PendingFile iPendingFile) {
             mPendingFile = iPendingFile;
             mFullName = iPendingFile.getRemotePath() + iPendingFile.getName();
-            ;
         }
     }
 

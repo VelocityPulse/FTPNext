@@ -1,8 +1,6 @@
 package com.vpulse.ftpnext.adapters;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +8,9 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.core.LogManager;
@@ -44,7 +45,7 @@ public class MainRecyclerViewAdapter extends
     @Override
     public CustomItemViewAdapter onCreateViewHolder(@NonNull ViewGroup iViewGroup, int iI) {
         LinearLayout lLayout = (LinearLayout) LayoutInflater.from(iViewGroup.getContext()).inflate(
-                        R.layout.list_item_main, iViewGroup, false);
+                R.layout.list_item_main, iViewGroup, false);
 
         return new CustomItemViewAdapter(lLayout,
                 (TextView) lLayout.findViewById(R.id.main_recycler_item_main_text),

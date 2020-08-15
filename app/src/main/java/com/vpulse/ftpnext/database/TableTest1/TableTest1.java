@@ -8,7 +8,8 @@ public class TableTest1 extends ABaseTable {
 
     private int mValue = 0;
 
-    public TableTest1() { }
+    public TableTest1() {
+    }
 
     public TableTest1(int iValue) {
         mValue = iValue;

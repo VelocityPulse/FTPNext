@@ -8,7 +8,6 @@ import com.vpulse.ftpnext.core.FTPCharacterEncoding;
 import com.vpulse.ftpnext.core.FTPType;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.ADataAccessObject;
-import com.vpulse.ftpnext.ftpservices.FTPServices;
 
 import java.util.List;
 

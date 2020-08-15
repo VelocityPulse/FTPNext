@@ -7,7 +7,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.AutoCompleteTextView;
 
 import androidx.appcompat.app.AlertDialog;
 

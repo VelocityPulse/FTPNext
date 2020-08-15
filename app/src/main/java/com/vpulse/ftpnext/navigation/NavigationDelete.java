@@ -15,7 +15,6 @@ import org.apache.commons.net.ftp.FTPFile;
 
 import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_MESSAGE_DELETE_FINISHED;
 import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_ORDER_DISMISS_DIALOGS;
-import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_ORDER_REFRESH_DATA;
 import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_ORDER_SELECTED_MODE_OFF;
 
 public class NavigationDelete {
