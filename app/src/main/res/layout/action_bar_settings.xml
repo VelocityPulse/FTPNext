@@ -13,9 +13,9 @@
             style="@style/Widget.MaterialComponents.Toolbar.Primary"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:navigationIcon="@drawable/ic_home_back"
             android:layout_gravity="center"
-            app:layout_scrollFlags="noScroll">
+            app:layout_scrollFlags="noScroll"
+            app:navigationIcon="@drawable/ic_home_back">
 
             <TextView
                 android:id="@+id/toolbar_title"

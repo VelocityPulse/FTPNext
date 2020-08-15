@@ -179,7 +179,7 @@
 
     </LinearLayout>
 
-<!--        android:onClick="onClickSizesDiffOrMoreRecent"-->
+    <!--        android:onClick="onClickSizesDiffOrMoreRecent"-->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -207,7 +207,7 @@
 
     </LinearLayout>
 
-<!--        android:onClick="onClickRename"-->
+    <!--        android:onClick="onClickRename"-->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
