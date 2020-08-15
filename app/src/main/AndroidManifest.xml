@@ -37,7 +37,7 @@
             android:configChanges="orientation|screenLayout|screenSize"
             android:label="@string/ftp_navigation"
             android:theme="@style/AppTheme.Light"
-            android:windowSoftInputMode="adjustNothing" />
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".SettingsActivity"
             android:configChanges="orientation|screenLayout|screenSize"

@@ -12,64 +12,85 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/navigation_toolbar"
-                style="@style/Widget.MaterialComponents.Toolbar.Primary"
-                android:layout_width="match_parent"
+            <FrameLayout
+                android:id="@+id/navigation_home_layout"
+                android:layout_width="55.5dp"
                 android:layout_height="match_parent"
-                android:visibility="visible"
-                app:layout_scrollFlags="noScroll"
-                app:menu="@menu/navigation"
-                app:navigationIcon="@drawable/ic_home_back"
-                app:title="@string/ftp_navigation">
-
-            </com.google.android.material.appbar.MaterialToolbar>
-
-            <LinearLayout
-                android:id="@+id/navigation_search_bar"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:visibility="visible">
+                android:layout_alignParentLeft="true"
+                android:layout_gravity="center">
 
                 <ImageButton
-                    android:layout_width="54dp"
-                    android:layout_height="match_parent"
-                    android:background="@android:color/transparent"
+                    android:id="@+id/navigation_home_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="Home"
+                    android:focusable="true"
                     android:src="@drawable/ic_home_back" />
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/search_edit_text_layout"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="20dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
-                    android:layout_gravity="center"
-                    android:textColorHint="?android:textColor"
-                    app:boxBackgroundColor="@android:color/white"
-                    app:endIconDrawable="@drawable/ic_cancel"
-                    app:endIconMode="custom"
-                    app:endIconTint="?colorAccent"
-                    app:hintEnabled="false">
+            </FrameLayout>
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/search_edit_text"
-                        android:paddingBottom="8dp"
-                        android:paddingTop="0dp"
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_toRightOf="@id/navigation_home_layout">
+
+                <com.google.android.material.appbar.MaterialToolbar
+                    android:id="@+id/navigation_toolbar"
+                    style="@style/Widget.MaterialComponents.Toolbar.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="visible"
+                    app:layout_scrollFlags="noScroll"
+                    app:menu="@menu/navigation"
+                    app:title="@string/ftp_navigation">
+
+                </com.google.android.material.appbar.MaterialToolbar>
+
+                <LinearLayout
+                    android:id="@+id/navigation_search_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:visibility="visible">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/search_edit_text_layout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="bottom"
-                        android:hint="Search"
-                        android:inputType="text"
-                        android:textColor="?android:textColor" />
+                        android:layout_gravity="center"
+                        android:layout_marginRight="20dp"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp"
+                        android:textColorHint="?android:textColor"
+                        app:boxBackgroundColor="@android:color/white"
+                        app:endIconDrawable="@drawable/ic_cancel"
+                        app:endIconMode="custom"
+                        app:endIconTint="?colorAccent"
+                        app:hintEnabled="false">
 
-                </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/search_edit_text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="bottom"
+                            android:hint="Search"
+                            android:inputType="text"
+                            android:paddingTop="0dp"
+                            android:paddingBottom="8dp"
+                            android:textColor="?android:textColor" />
 
-            </LinearLayout>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+            </RelativeLayout>
 
         </RelativeLayout>
+
 
     </com.google.android.material.appbar.AppBarLayout>
 

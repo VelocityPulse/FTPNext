@@ -6,16 +6,17 @@ import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.BounceInterpolator;
@@ -41,6 +42,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.adapters.NavigationRecyclerViewAdapter;
 import com.vpulse.ftpnext.commons.Utils;
+import com.vpulse.ftpnext.commons.interfaces.AfterTextChanged;
 import com.vpulse.ftpnext.commons.interfaces.OnEndAnimation;
 import com.vpulse.ftpnext.commons.interfaces.OnStartAnimation;
 import com.vpulse.ftpnext.core.AppCore;
@@ -140,8 +142,11 @@ public class NavigationActivity extends AppCompatActivity {
     private FloatingActionButton mMainFAB;
     private FloatingActionButton mCreateFolderFAB;
     private FloatingActionButton mUploadFileFAB;
+    private TextInputEditText mSearchEditText;
+    private TextInputLayout mSearchEditTextLayout;
     private LinearLayout mSearchBar;
     private Toolbar mToolBar;
+
     private boolean mIsFABOpen;
     private boolean mIsResumeFromActivityResult;
     private boolean mIsSearchDisplayed;
@@ -208,9 +213,13 @@ public class NavigationActivity extends AppCompatActivity {
         if (mIsFABOpen)
             closeFABMenu();
 
+        if (mIsSearchDisplayed) {
+            hideSearchBar();
+            return;
+        }
+
         if (mCurrentAdapter.isInSelectionMode()) {
-            mCurrentAdapter.setSelectionMode(false);
-            showFABMenu();
+            closeSelectionMode();
             return;
         }
 
@@ -501,32 +510,57 @@ public class NavigationActivity extends AppCompatActivity {
         mRecyclerSection = findViewById(R.id.navigation_recycler_section);
         mSearchBar = findViewById(R.id.navigation_search_bar);
 
-        final TextInputLayout searchEditTextLayout = findViewById(R.id.search_edit_text_layout);
-        final TextInputEditText searchEditText = findViewById(R.id.search_edit_text);
+        mSearchEditTextLayout = findViewById(R.id.search_edit_text_layout);
+        mSearchEditText = findViewById(R.id.search_edit_text);
 
-        searchEditTextLayout.setEndIconOnClickListener(new View.OnClickListener() {
+        View lSearchBarHomeLayout = findViewById(R.id.navigation_home_layout);
+        lSearchBarHomeLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+        View lSearchBarHomeButton = findViewById(R.id.navigation_home_button);
+        lSearchBarHomeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
+
+        mSearchEditTextLayout.setEndIconOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 hideSearchBar();
             }
         });
-        searchEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
+        mSearchEditText.addTextChangedListener(new AfterTextChanged() {
             @Override
             public void afterTextChanged(Editable s) {
                 mCurrentAdapter.getFilter().filter(String.valueOf(s));
             }
         });
 
+        final View lRootView = findViewById(android.R.id.content);
+        lRootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                Rect lMeasureRect = new Rect(); //you should cache this, onGlobalLayout can get called often
+                lRootView.getWindowVisibleDisplayFrame(lMeasureRect);
+
+                // lMeasureRect.bottom is the position above soft keypad
+                int lKeypadHeight = lRootView.getRootView().getHeight() - lMeasureRect.bottom;
+
+                if (lKeypadHeight > 0) {
+                    // keyboard is opened
+                } else {
+                    // keyboard is closed
+                    if (mIsSearchDisplayed)
+                        onBackPressed();
+                }
+            }
+        });
     }
 
     private void initializeHandler() {
@@ -842,6 +876,11 @@ public class NavigationActivity extends AppCompatActivity {
         }
     }
 
+    protected void closeSelectionMode() {
+        mCurrentAdapter.setSelectionMode(false);
+        showFABMenu();
+    }
+
     protected void hideFABMenu() {
         mMainFAB.hide();
         mCreateFolderFAB.hide();
@@ -855,6 +894,9 @@ public class NavigationActivity extends AppCompatActivity {
     }
 
     private void showSearchBar() {
+        if (mIsSearchDisplayed)
+            return;
+
         mIsSearchDisplayed = true;
         Animation fadeOut = new AlphaAnimation(1, 0);
         fadeOut.setInterpolator(new DecelerateInterpolator()); //add this
@@ -867,9 +909,14 @@ public class NavigationActivity extends AppCompatActivity {
         });
 
         mToolBar.startAnimation(fadeOut);
+        Utils.showKeyboard(this, mSearchEditText);
+        hideFABMenu();
     }
 
     private void hideSearchBar() {
+        if (!mIsSearchDisplayed)
+            return;
+
         mIsSearchDisplayed = false;
         Animation fadeIn = new AlphaAnimation(0, 1);
         fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
@@ -880,8 +927,13 @@ public class NavigationActivity extends AppCompatActivity {
                 mToolBar.setVisibility(View.VISIBLE);
             }
         });
+        mCurrentAdapter.getFilter().filter("");
 
         mToolBar.startAnimation(fadeIn);
+        mHandler.postDelayed(() -> {
+            Utils.hideKeyboard(this);
+        }, 200);
+        showFABMenu();
     }
 
     private void destroyCurrentAdapter() {
@@ -939,6 +991,7 @@ public class NavigationActivity extends AppCompatActivity {
                 } else {
 
                     if (iFTPFile.isDirectory()) {
+                        hideSearchBar();
                         lNewAdapter.setItemsClickable(false);
                         mIsLargeDirectory = iFTPFile.getSize() > LARGE_DIRECTORY_SIZE;
                         mNavigationFetchDir.runFetchProcedures(

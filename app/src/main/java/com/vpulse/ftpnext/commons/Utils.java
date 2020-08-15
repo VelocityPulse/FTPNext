@@ -3,9 +3,6 @@ package com.vpulse.ftpnext.commons;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.database.Cursor;
-import android.net.Uri;
-import android.provider.MediaStore;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -14,7 +11,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
 import com.vpulse.ftpnext.R;
-import com.vpulse.ftpnext.core.LogManager;
 
 import java.io.File;
 import java.util.Locale;
@@ -51,6 +47,12 @@ public class Utils {
         if (iView == null)
             iView = new View(iActivity);
         lImm.hideSoftInputFromWindow(iView.getWindowToken(), 0);
+    }
+
+    public static void showKeyboard(Activity iActivity, View iView) {
+        iView.requestFocus();
+        InputMethodManager imm = (InputMethodManager) iActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(iView, InputMethodManager.SHOW_IMPLICIT);
     }
 
     public static boolean isNullOrEmpty(String iStr) {
