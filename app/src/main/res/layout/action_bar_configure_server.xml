@@ -14,8 +14,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            app:navigationIcon="@drawable/ic_home_up"
-            app:layout_scrollFlags="noScroll">
+            app:layout_scrollFlags="noScroll"
+            app:navigationIcon="@drawable/ic_home_up">
 
             <TextView
                 android:id="@+id/toolbar_title"

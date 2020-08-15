@@ -64,11 +64,6 @@ public class SettingsActivity extends AppCompatActivity {
     private void initializeGUI() {
         setSupportActionBar((Toolbar) findViewById(R.id.settings_toolbar));
         getSupportActionBar().setDisplayShowTitleEnabled(false);
-
-//        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_home_back);
-//        getSupportActionBar().setCustomView(R.layout.action_bar_settings);
     }
 
     private void initializeViews() {

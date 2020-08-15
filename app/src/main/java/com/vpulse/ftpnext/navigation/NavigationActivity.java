@@ -528,7 +528,6 @@ public class NavigationActivity extends AppCompatActivity {
             }
         });
 
-
         mSearchEditTextLayout.setEndIconOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

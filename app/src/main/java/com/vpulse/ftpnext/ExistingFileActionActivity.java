@@ -7,7 +7,6 @@ import android.widget.RadioButton;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 import com.vpulse.ftpnext.core.PreferenceManager;
 
@@ -49,7 +48,8 @@ public class ExistingFileActionActivity extends AppCompatActivity {
     }
 
     private void initializeGUI() {
-        setSupportActionBar((Toolbar) findViewById(R.id.existing_file_toolbar));
+        setSupportActionBar(findViewById(R.id.existing_file_toolbar));
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
     }
 
     private void initializeViews() {
