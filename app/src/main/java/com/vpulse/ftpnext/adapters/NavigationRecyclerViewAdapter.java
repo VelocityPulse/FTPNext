@@ -69,12 +69,6 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         mCustomViewItemList = new ArrayList<>();
 
         setData(iFTPFileList.toArray(new FTPFile[0]));
-//        mFTPFileItemList = new ArrayList<>();
-//        mNameList = new ArrayList<>();
-//        for (FTPFile lItem : iFTPFileList) {
-//            mFTPFileItemList.add(new FTPFileItem(lItem));
-//            mNameList.add(lItem.getName());
-//        }
     }
 
     public NavigationRecyclerViewAdapter(Context iContext, FrameLayout iRecyclerSection, RecyclerView iRecyclerView,
@@ -196,6 +190,21 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         return mFTPFileItemList.size();
     }
 
+    public void insertItemPersistently(FTPFile iItem) {
+        insertItem(iItem);
+        mOriginalFTPFileItem = mFTPFileItemList.toArray(new FTPFileItem[0]);
+    }
+
+    public void insertItemPersistently(FTPFile iItem, int iPosition) {
+        insertItem(iItem, iPosition);
+        mOriginalFTPFileItem = mFTPFileItemList.toArray(new FTPFileItem[0]);
+    }
+
+    public void removeItemPersistently(FTPFile iItem) {
+        removeItem(iItem);
+        mOriginalFTPFileItem = mFTPFileItemList.toArray(new FTPFileItem[0]);
+    }
+
     public void insertItem(FTPFile iItem) {
         LogManager.info(TAG, "Insert item");
         LogManager.info(TAG, "Name : " + iItem.getName());
@@ -206,7 +215,6 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         }
         mFTPFileItemList.add(new FTPFileItem(iItem));
         mNameList.add(iItem.getName());
-        mOriginalFTPFileItem = mFTPFileItemList.toArray(new FTPFileItem[0]);
         notifyItemRangeInserted(mFTPFileItemList.size() + 1, 1);
     }
 
@@ -221,7 +229,6 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             iPosition = mFTPFileItemList.size();
         mFTPFileItemList.add(iPosition, new FTPFileItem(iItem));
         mNameList.add(iPosition, iItem.getName());
-        mOriginalFTPFileItem = mFTPFileItemList.toArray(new FTPFileItem[0]);
         notifyItemRangeInserted(iPosition, 1);
     }
 
@@ -229,10 +236,11 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         LogManager.info(TAG, "Remove item");
         for (FTPFileItem lItem : mFTPFileItemList) {
             if (lItem.equals(iItem)) {
+                int lIndex = mFTPFileItemList.indexOf(lItem);
                 mFTPFileItemList.remove(lItem);
                 mNameList.remove(lItem.mFTPFile.getName());
-                mOriginalFTPFileItem = mFTPFileItemList.toArray(new FTPFileItem[0]);
-                notifyItemRemoved(mFTPFileItemList.indexOf(lItem));
+                if (lIndex >= 0)
+                    notifyItemRemoved(lIndex);
                 return;
             }
         }
@@ -560,33 +568,36 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
             @SuppressWarnings("unchecked")
             @Override
-            protected void publishResults(CharSequence constraint, FilterResults results) {
+            protected void publishResults(CharSequence iConstraint, FilterResults iResults) {
 
-//                arrayListNames = (List<String>) results.values;
-//                notifyDataSetChanged();
+                List<FTPFileItem> lFilteredList = (List<FTPFileItem>) iResults.values;
+                List<FTPFileItem> lFTPFileItemList = new ArrayList<>(mFTPFileItemList);
+
+                for (FTPFileItem lItem : mOriginalFTPFileItem) {
+                    if (lFilteredList.contains(lItem)) {
+                        if (!lFTPFileItemList.contains(lItem))
+                            insertItem(lItem.mFTPFile);
+                    } else
+                        removeItem(lItem.mFTPFile);
+                }
             }
 
             @Override
-            protected FilterResults performFiltering(CharSequence constraint) {
+            protected FilterResults performFiltering(CharSequence iConstraint) {
 
-                FilterResults results = new FilterResults();
-//                ArrayList<String> FilteredArrayNames = new ArrayList<String>();
-//
-//                // perform your search here using the searchConstraint String.
-//
-//                constraint = constraint.toString().toLowerCase();
-//                for (int i = 0; i < mNameList.size(); i++) {
-//                    String dataNames = mDatabaseOfNames.get(i);
-//                    if (dataNames.toLowerCase().startsWith(constraint.toString())) {
-//                        FilteredArrayNames.add(dataNames);
-//                    }
-//                }
-//
-//                results.count = FilteredArrayNames.size();
-//                results.values = FilteredArrayNames;
-//                Log.e("VALUES", results.values.toString());
+                FilterResults lResults = new FilterResults();
+                List<FTPFileItem> lFilteredList = new ArrayList<>();
 
-                return results;
+                iConstraint = iConstraint.toString().toLowerCase();
+
+                for (FTPFileItem lItem : mOriginalFTPFileItem) {
+                    if (lItem.mFTPFile.getName().toLowerCase().contains(iConstraint))
+                        lFilteredList.add(lItem);
+                }
+
+                lResults.count = lFilteredList.size();
+                lResults.values = lFilteredList;
+                return lResults;
             }
         };
     }

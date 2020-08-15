@@ -683,7 +683,7 @@ public class NavigationActivity extends AppCompatActivity {
                         // TODO : Sort items
                         FTPFile lNewDirectory = (FTPFile) iMsg.obj;
                         mFetchDirLoadingDialog.dismiss();
-                        mCurrentAdapter.insertItem(lNewDirectory, 0);
+                        mCurrentAdapter.insertItemPersistently(lNewDirectory, 0);
                         mCurrentAdapter.getRecyclerView().scrollToPosition(0);
                         break;
 
