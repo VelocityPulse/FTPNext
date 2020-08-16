@@ -27,6 +27,7 @@ import android.widget.LinearLayout;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.MenuPopupHelper;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -59,6 +60,7 @@ import com.vpulse.ftpnext.ftpservices.FTPTransfer;
 import org.apache.commons.net.ftp.FTPFile;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -240,10 +242,25 @@ public class NavigationActivity extends AppCompatActivity {
         return true;
     }
 
-    public boolean showMenu(View anchor) {
-        PopupMenu popup = new PopupMenu(this, anchor, 0, 0, R.style.PopupMenuTheme);
-        popup.getMenuInflater().inflate(R.menu.navigation_drop, popup.getMenu());
-        popup.show();
+    public boolean showMenu(View iAnchor) {
+        PopupMenu lPopup = new PopupMenu(this, iAnchor, 0, 0, R.style.PopupMenuTheme);
+        lPopup.getMenuInflater().inflate(R.menu.navigation_drop, lPopup.getMenu());
+        lPopup.setOnMenuItemClickListener(this::onOptionsItemSelected);
+
+//        MenuPopupHelper menuHelper = new MenuPopupHelper(this, (MenuBuilder) popup.getMenu(), iAnchor);
+//        menuHelper.setForceShowIcon(true);
+//        menuHelper.show();
+
+        try {
+            Field mFieldPopup = lPopup.getClass().getDeclaredField("mPopup");
+            mFieldPopup.setAccessible(true);
+            MenuPopupHelper mPopupHelper = (MenuPopupHelper) mFieldPopup.get(lPopup);
+            mPopupHelper.setForceShowIcon(true);
+        } catch (Exception iIgnored) {
+            // No need to show exception
+        } finally {
+            lPopup.show();
+        }
         return true;
     }
 

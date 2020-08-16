@@ -6,12 +6,12 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
 
-<!--        <item name="android:textAppearanceLargePopupMenu">@style/myPopupMenuTextAppearanceLarge</item>-->
-<!--        <item name="android:textAppearanceSmallPopupMenu">@style/myPopupMenuTextAppearanceSmall</item>-->
-<!--        <item name="textAppearanceLargePopupMenu">@style/myPopupMenuTextAppearanceLarge</item>-->
-<!--        <item name="textAppearanceSmallPopupMenu">@style/myPopupMenuTextAppearanceSmall</item>-->
+
+        <!-- Menu Popup appearance : -->
         <item name="android:itemTextAppearance">@style/PopupMenuTextStyle</item>
         <item name="itemTextAppearance">@style/PopupMenuTextStyle</item>
+        <item name="android:listPreferredItemHeightSmall">55dp</item>
+        <item name="listPreferredItemHeightSmall">55dp</item>
 
     </style>
 
@@ -66,7 +66,6 @@
         <item name="logErrorColor">@color/darkLogError</item>
         <item name="logStatusColor">@color/darkLogStatus</item>
         <item name="logReplyColor">@color/darkLogReply</item>
-
 
 
         <item name="alertDialogTheme">@style/AppTheme.Dark.Dialog</item>
