@@ -1,10 +1,18 @@
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--    Themes ============================================== -->
 
     <style name="AppTheme" parent="Theme.MaterialComponents.Light">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+
+<!--        <item name="android:textAppearanceLargePopupMenu">@style/myPopupMenuTextAppearanceLarge</item>-->
+<!--        <item name="android:textAppearanceSmallPopupMenu">@style/myPopupMenuTextAppearanceSmall</item>-->
+<!--        <item name="textAppearanceLargePopupMenu">@style/myPopupMenuTextAppearanceLarge</item>-->
+<!--        <item name="textAppearanceSmallPopupMenu">@style/myPopupMenuTextAppearanceSmall</item>-->
+        <item name="android:itemTextAppearance">@style/PopupMenuTextStyle</item>
+        <item name="itemTextAppearance">@style/PopupMenuTextStyle</item>
+
     </style>
 
     <!--    Sub themes ============================================== -->
@@ -26,7 +34,9 @@
         <item name="actionBarContentColor">@android:color/white</item>
 
         <item name="android:colorBackground">@color/lightBackground</item>
-        <item name="android:itemBackground">@color/lightPrimary</item>
+
+        <!--Commented because it made some background issue in PopupWindow.-->
+        <!--<item name="android:itemBackground">@color/lightPrimary</item>&ndash;&gt;-->
 
         <item name="logSuccessColor">@color/lightLogSuccess</item>
         <item name="logErrorColor">@color/lightLogError</item>
@@ -48,12 +58,16 @@
         <item name="android:textColor">@color/darkWhite</item>
 
         <item name="android:colorBackground">@color/darkBackground</item>
-        <item name="android:itemBackground">@color/darkPrimary</item>
+
+        <!--Commented because it made some background issue in PopupWindow.-->
+        <!--        <item name="android:itemBackground">@color/darkPrimary</item>-->
 
         <item name="logSuccessColor">@color/darkLogSuccess</item>
         <item name="logErrorColor">@color/darkLogError</item>
         <item name="logStatusColor">@color/darkLogStatus</item>
         <item name="logReplyColor">@color/darkLogReply</item>
+
+
 
         <item name="alertDialogTheme">@style/AppTheme.Dark.Dialog</item>
 
@@ -77,5 +91,15 @@
         <item name="android:textSize">15sp</item>
     </style>
 
+    <style name="PopupMenuTheme" parent="android:Widget.PopupMenu">
+        <item name="android:popupBackground">@drawable/popup_menu_background</item>
+        <item name="android:textColorPrimary">?colorOnSecondary</item>
+        <item name="android:textColor">?colorOnSecondary</item>
+    </style>
+
+    <style name="PopupMenuTextStyle" parent="@android:style/TextAppearance.Widget.IconMenu.Item">
+        <item name="android:textColor">?colorOnSecondary</item>
+        <item name="android:textSize">17sp</item>
+    </style>
 
 </resources>

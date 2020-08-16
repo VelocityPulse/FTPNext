@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="AlwaysShowAction">
 
     <item
         android:id="@+id/action_search"
@@ -9,16 +11,17 @@
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/action_download"
-        android:icon="@drawable/ic_menu_cloud_download"
-        android:title="Download"
-        app:showAsAction="ifRoom" />
+        android:id="@+id/action_choose_sort"
+        android:icon="@drawable/ic_sort"
+        android:title="Choose sort"
+        app:showAsAction="always" />
 
     <item
-        android:id="@+id/action_delete"
-        android:icon="@drawable/ic_menu_delete"
-        android:title="Delete"
-        app:showAsAction="ifRoom" />
-    <!--    TODO : Strings -->
+        android:id="@+id/action_more"
+        android:icon="@drawable/ic_more"
+        android:title="More"
+        app:showAsAction="always" />
+
+    <!--TODO Strings-->
 
 </menu>

@@ -27,6 +27,7 @@ import android.widget.LinearLayout;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -235,12 +236,20 @@ public class NavigationActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(final Menu iMenu) {
         getMenuInflater().inflate(R.menu.navigation, iMenu);
+
+        return true;
+    }
+
+    public boolean showMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(this, anchor, 0, 0, R.style.PopupMenuTheme);
+        popup.getMenuInflater().inflate(R.menu.navigation_drop, popup.getMenu());
+        popup.show();
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
+    public boolean onOptionsItemSelected(MenuItem iItem) {
+        switch (iItem.getItemId()) {
             case android.R.id.home:
                 onBackPressed();
                 return true;
@@ -270,13 +279,12 @@ public class NavigationActivity extends AppCompatActivity {
                 onDownloadClicked();
                 return true;
             case R.id.action_search:
-                if (!mIsSearchDisplayed)
-                    showSearchBar();
-                else
-                    hideSearchBar();
+                showSearchBar();
                 return true;
+            case R.id.action_more:
+                showMenu(mToolBar.findViewById(R.id.action_more));
             default:
-                return super.onOptionsItemSelected(item);
+                return super.onOptionsItemSelected(iItem);
         }
     }
 

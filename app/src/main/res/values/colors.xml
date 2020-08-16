@@ -27,6 +27,5 @@
     <color name="darkLogReply">@color/darkPrimaryDark</color>
 
     <color name="androidColorGray">#737373</color>
-    <!--<color name="mtrl_textinput_default_box_stroke_color" tools:override="true">#fff</color>-->
 
 </resources>
