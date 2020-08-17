@@ -297,22 +297,31 @@ public class NavigationActivity extends AppCompatActivity {
 
         // Inflate the popup_layout.xml
         LayoutInflater layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View layout = layoutInflater.inflate(R.layout.action_navigation_sort, mToolBar, false);
+        View lLayout = layoutInflater.inflate(R.layout.action_navigation_sort, mToolBar, false);
 
         // Creating the PopupWindow
-        PopupWindow lMenuSortPopUp = new PopupWindow(layout,
+        PopupWindow lMenuSortPopUp = new PopupWindow(lLayout,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 true);
 
-        layout.findViewById(R.id.popup_action_a_to_z).setOnClickListener((iView) -> {
+        lLayout.findViewById(R.id.popup_action_a_to_z).setOnClickListener((iView) -> {
             lMenuSortPopUp.dismiss();
+            mCurrentAdapter.setComparator(new NavigationRecyclerViewAdapter.AtoZComparator());
+            mCurrentAdapter.notifyComparatorChanged();
         });
 
-        layout.findViewById(R.id.popup_action_z_to_a).setOnClickListener((iView) -> {
+        lLayout.findViewById(R.id.popup_action_z_to_a).setOnClickListener((iView) -> {
             lMenuSortPopUp.dismiss();
+            mCurrentAdapter.setComparator(new NavigationRecyclerViewAdapter.ZtoAComparator());
+            mCurrentAdapter.notifyComparatorChanged();
         });
 
+        lLayout.findViewById(R.id.popup_action_recent).setOnClickListener((iView) -> {
+            lMenuSortPopUp.dismiss();
+            mCurrentAdapter.setComparator(new NavigationRecyclerViewAdapter.RecentComparator());
+            mCurrentAdapter.notifyComparatorChanged();
+        });
 
         lMenuSortPopUp.setWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
         lMenuSortPopUp.setHeight(LinearLayout.LayoutParams.WRAP_CONTENT);

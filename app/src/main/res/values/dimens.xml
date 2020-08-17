@@ -39,12 +39,12 @@
 
     <dimen name="navigation_recycler_left_section_shift">32dp</dimen>
     
-    <dimen name="drop_menu_item_width">200dp</dimen>
+    <dimen name="drop_menu_item_width">250dp</dimen>
     <dimen name="drop_menu_item_height">55dp</dimen>
     <dimen name="drop_menu_item_horizontal_padding">10dp</dimen>
     <dimen name="drop_menu_item_icon_size">26dp</dimen>
-    <dimen name="drop_menu_item_text_size">20sp</dimen>
-    <dimen name="drop_menu_item_text_padding_start">6dp</dimen>
+    <dimen name="drop_menu_item_text_size">18sp</dimen>
+    <dimen name="drop_menu_item_text_padding_start">10dp</dimen>
     <dimen name="drop_menu_item_text_padding_end">0dp</dimen>
 
 

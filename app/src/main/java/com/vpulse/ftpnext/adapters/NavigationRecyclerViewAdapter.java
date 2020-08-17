@@ -25,9 +25,13 @@ import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.LogManager;
 
 import org.apache.commons.net.ftp.FTPFile;
+import org.jetbrains.annotations.NotNull;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -40,6 +44,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     private List<FTPFileItem> mFTPFileItemList;
     private List<String> mNameList;
     private List<CustomItemViewAdapter> mCustomViewItemList;
+
+    private FTPFileComparator mComparator = new ZtoAComparator();
 
     private OnLongClickListener mLongClickListener;
     private OnClickListener mClickListener;
@@ -69,6 +75,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         mCustomViewItemList = new ArrayList<>();
 
         setData(iFTPFileList.toArray(new FTPFile[0]));
+        setHasStableIds(true);
     }
 
     public NavigationRecyclerViewAdapter(Context iContext, FrameLayout iRecyclerSection, RecyclerView iRecyclerView,
@@ -82,6 +89,8 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         mDirectoryPath = iDirectoryPath;
         mSwipeRefreshLayout.setVisibility(iVisible ? View.VISIBLE : View.INVISIBLE);
         mCustomViewItemList = new ArrayList<>();
+
+        setHasStableIds(true);
     }
 
     @NonNull
@@ -190,6 +199,11 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         return mFTPFileItemList.size();
     }
 
+    @Override
+    public long getItemId(int position) {
+        return mFTPFileItemList.get(position).hashCode();
+    }
+
     public void insertItemPersistently(FTPFile iItem) {
         insertItem(iItem);
         mOriginalFTPFileItem = mFTPFileItemList.toArray(new FTPFileItem[0]);
@@ -273,12 +287,31 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
 
         mFTPFileItemList.clear();
         mNameList.clear();
+
+        Arrays.sort(iData, mComparator);
         for (FTPFile lItem : iData) {
             mFTPFileItemList.add(new FTPFileItem(lItem));
             mNameList.add(lItem.getName());
         }
+
         mOriginalFTPFileItem = mFTPFileItemList.toArray(new FTPFileItem[0]);
+
         notifyDataSetChanged();
+    }
+
+    public void notifyComparatorChanged() {
+        List<FTPFileItem> lOldItemPosition = new ArrayList<>(mFTPFileItemList);
+
+        Arrays.sort(mOriginalFTPFileItem, mComparator);
+        Collections.sort(mFTPFileItemList, mComparator);
+
+        for (FTPFileItem lItem : mFTPFileItemList) {
+            int lOldPosition = lOldItemPosition.indexOf(lItem);
+            int lNewPosition = mFTPFileItemList.indexOf(lItem);
+
+            if (lNewPosition != lOldPosition)
+                notifyItemMoved(lOldPosition, lNewPosition);
+        }
     }
 
     public String[] getNames() {
@@ -637,6 +670,12 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             }
             return false;
         }
+
+        @NotNull
+        @Override
+        public String toString() {
+            return "FTPFileItem '" + mFTPFile.getName() + "'";
+        }
     }
 
     private class LeftSectionAnimation extends Animation {
@@ -705,6 +744,74 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             }
 
             super.applyTransformation(iInterpolatedTime, iTransformation);
+        }
+    }
+
+    public FTPFileComparator getComparator() {
+        return mComparator;
+    }
+
+    public void setComparator(FTPFileComparator mComparator) {
+        this.mComparator = mComparator;
+    }
+
+    public static abstract class FTPFileComparator implements Comparator<Object> {
+
+        @Override
+        public int compare(Object i1, Object i2) {
+            if (i1 instanceof FTPFile) {
+                return compare((FTPFile) i1, (FTPFile) i2);
+            } else if (i1 instanceof FTPFileItem) {
+                return compare(
+                        (FTPFile) ((FTPFileItem) i1).mFTPFile, (FTPFile) ((FTPFileItem) i2).mFTPFile);
+            }
+            return 0;
+        }
+
+        public abstract int compare(FTPFile i1, FTPFile i2);
+    }
+
+    public static class AtoZComparator extends FTPFileComparator {
+
+        @Override
+        public int compare(FTPFile i1, FTPFile i2) {
+            if (i1.isDirectory() && !i2.isDirectory())
+                return -1;
+            else if (!i1.isDirectory() && i2.isDirectory())
+                return 1;
+
+            if (i1.isDirectory() && i2.isDirectory())
+                LogManager.debug("");
+
+            return i1.getName().compareTo(i2.getName());
+        }
+    }
+
+    public static class ZtoAComparator extends FTPFileComparator {
+
+        @Override
+        public int compare(FTPFile i1, FTPFile i2) {
+            if (i1.isDirectory() && !i2.isDirectory())
+                return -1;
+            else if (!i1.isDirectory() && i2.isDirectory())
+                return 1;
+
+            return i2.getName().compareTo(i1.getName());
+        }
+    }
+
+    public static class RecentComparator extends FTPFileComparator {
+
+        @Override
+        public int compare(FTPFile i1, FTPFile i2) {
+            if (i1.isDirectory() && !i2.isDirectory())
+                return -1;
+            else if (!i1.isDirectory() && i2.isDirectory())
+                return 1;
+
+            long t1 = i1.getTimestamp().getTimeInMillis();
+            long t2 = i2.getTimestamp().getTimeInMillis();
+            return Long.compare(t1, t2);
         }
     }
 
