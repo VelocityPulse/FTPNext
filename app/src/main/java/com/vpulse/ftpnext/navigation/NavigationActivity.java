@@ -3,6 +3,7 @@ package com.vpulse.ftpnext.navigation;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ClipData;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,9 +14,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.text.Editable;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -23,12 +26,11 @@ import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.view.menu.MenuPopupHelper;
-import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -60,7 +62,6 @@ import com.vpulse.ftpnext.ftpservices.FTPTransfer;
 import org.apache.commons.net.ftp.FTPFile;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -242,25 +243,81 @@ public class NavigationActivity extends AppCompatActivity {
         return true;
     }
 
-    public boolean showMenu(View iAnchor) {
-        PopupMenu lPopup = new PopupMenu(this, iAnchor, 0, 0, R.style.PopupMenuTheme);
-        lPopup.getMenuInflater().inflate(R.menu.navigation_drop, lPopup.getMenu());
-        lPopup.setOnMenuItemClickListener(this::onOptionsItemSelected);
+    private boolean showMenuMore(View iAnchor) {
 
-//        MenuPopupHelper menuHelper = new MenuPopupHelper(this, (MenuBuilder) popup.getMenu(), iAnchor);
-//        menuHelper.setForceShowIcon(true);
-//        menuHelper.show();
+        // Inflate the popup_layout.xml
+        LayoutInflater layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View layout = layoutInflater.inflate(R.layout.action_navigation_more, mToolBar, false);
 
-        try {
-            Field mFieldPopup = lPopup.getClass().getDeclaredField("mPopup");
-            mFieldPopup.setAccessible(true);
-            MenuPopupHelper mPopupHelper = (MenuPopupHelper) mFieldPopup.get(lPopup);
-            mPopupHelper.setForceShowIcon(true);
-        } catch (Exception iIgnored) {
-            // No need to show exception
-        } finally {
-            lPopup.show();
-        }
+        // Creating the PopupWindow
+        PopupWindow lMenuMorePopUp = new PopupWindow(layout,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true);
+
+        layout.findViewById(R.id.popup_action_download).setOnClickListener((iView) -> {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                    PackageManager.PERMISSION_GRANTED) {
+
+                String[] lPermissions = new String[]{
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
+                requestPermission(
+                        this,
+                        lPermissions,
+                        ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE,
+                        new OnPermissionAnswer() {
+                            @Override
+                            public void onAccepted() {
+                                onDownloadClicked();
+                            }
+                        });
+
+            }
+            onDownloadClicked();
+            lMenuMorePopUp.dismiss();
+        });
+
+        layout.findViewById(R.id.popup_action_delete).setOnClickListener((iView) -> {
+            onDeleteClicked();
+            lMenuMorePopUp.dismiss();
+        });
+
+
+        lMenuMorePopUp.setWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+        lMenuMorePopUp.setHeight(LinearLayout.LayoutParams.WRAP_CONTENT);
+        lMenuMorePopUp.setFocusable(true);
+        lMenuMorePopUp.showAsDropDown(iAnchor);
+
+        return true;
+    }
+
+    private boolean showMenuSort(View iAnchor) {
+
+        // Inflate the popup_layout.xml
+        LayoutInflater layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View layout = layoutInflater.inflate(R.layout.action_navigation_sort, mToolBar, false);
+
+        // Creating the PopupWindow
+        PopupWindow lMenuSortPopUp = new PopupWindow(layout,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true);
+
+        layout.findViewById(R.id.popup_action_a_to_z).setOnClickListener((iView) -> {
+            lMenuSortPopUp.dismiss();
+        });
+
+        layout.findViewById(R.id.popup_action_z_to_a).setOnClickListener((iView) -> {
+            lMenuSortPopUp.dismiss();
+        });
+
+
+        lMenuSortPopUp.setWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+        lMenuSortPopUp.setHeight(LinearLayout.LayoutParams.WRAP_CONTENT);
+        lMenuSortPopUp.setFocusable(true);
+        lMenuSortPopUp.showAsDropDown(iAnchor);
         return true;
     }
 
@@ -270,36 +327,15 @@ public class NavigationActivity extends AppCompatActivity {
             case android.R.id.home:
                 onBackPressed();
                 return true;
-            case R.id.action_delete:
-                onDeleteClicked();
-                return true;
-            case R.id.action_download:
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                        PackageManager.PERMISSION_GRANTED) {
-
-                    String[] lPermissions = new String[]{
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE};
-
-                    requestPermission(
-                            this,
-                            lPermissions,
-                            ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE,
-                            new OnPermissionAnswer() {
-                                @Override
-                                public void onAccepted() {
-                                    onDownloadClicked();
-                                }
-                            });
-
-                }
-                onDownloadClicked();
-                return true;
             case R.id.action_search:
                 showSearchBar();
                 return true;
             case R.id.action_more:
-                showMenu(mToolBar.findViewById(R.id.action_more));
+                showMenuMore(mToolBar.findViewById(R.id.action_more));
+                return true;
+            case R.id.action_choose_sort:
+                showMenuSort(mToolBar.findViewById(R.id.action_choose_sort));
+                return true;
             default:
                 return super.onOptionsItemSelected(iItem);
         }

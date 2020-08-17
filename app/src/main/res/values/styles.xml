@@ -6,12 +6,11 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
 
-
         <!-- Menu Popup appearance : -->
-        <item name="android:itemTextAppearance">@style/PopupMenuTextStyle</item>
-        <item name="itemTextAppearance">@style/PopupMenuTextStyle</item>
-        <item name="android:listPreferredItemHeightSmall">55dp</item>
-        <item name="listPreferredItemHeightSmall">55dp</item>
+<!--        <item name="android:itemTextAppearance">@style/PopupMenuTextStyle</item>-->
+<!--        <item name="itemTextAppearance">@style/PopupMenuTextStyle</item>-->
+<!--        <item name="android:listPreferredItemHeightSmall">55dp</item>-->
+<!--        <item name="listPreferredItemHeightSmall">55dp</item>-->
 
     </style>
 
@@ -90,15 +89,15 @@
         <item name="android:textSize">15sp</item>
     </style>
 
-    <style name="PopupMenuTheme" parent="android:Widget.PopupMenu">
-        <item name="android:popupBackground">@drawable/popup_menu_background</item>
-        <item name="android:textColorPrimary">?colorOnSecondary</item>
-        <item name="android:textColor">?colorOnSecondary</item>
-    </style>
+<!--    <style name="PopupMenuTheme" parent="android:Widget.PopupMenu">-->
+<!--        <item name="android:popupBackground">@drawable/popup_menu_background</item>-->
+<!--        <item name="android:textColorPrimary">?colorOnSecondary</item>-->
+<!--        <item name="android:textColor">?colorOnSecondary</item>-->
+<!--    </style>-->
 
-    <style name="PopupMenuTextStyle" parent="@android:style/TextAppearance.Widget.IconMenu.Item">
-        <item name="android:textColor">?colorOnSecondary</item>
-        <item name="android:textSize">17sp</item>
-    </style>
+<!--    <style name="PopupMenuTextStyle" parent="@android:style/TextAppearance.Widget.IconMenu.Item">-->
+<!--        <item name="android:textColor">?colorOnSecondary</item>-->
+<!--        <item name="android:textSize">17sp</item>-->
+<!--    </style>-->
 
 </resources>
