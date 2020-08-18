@@ -45,7 +45,7 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
     private List<String> mNameList;
     private List<CustomItemViewAdapter> mCustomViewItemList;
 
-    private FTPFileComparator mComparator = new ZtoAComparator();
+    private FTPFileComparator mComparator = new AtoZComparator();
 
     private OnLongClickListener mLongClickListener;
     private OnClickListener mClickListener;
