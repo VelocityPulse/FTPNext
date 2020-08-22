@@ -17,7 +17,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.vpulse.ftpnext.commons.Utils;
-import com.vpulse.ftpnext.core.AppInfo;
+import com.vpulse.ftpnext.core.AppConstants;
+import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.PreferenceManager;
 
@@ -45,8 +46,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
-        if (PreferenceManager.isDarkTheme())
-            setTheme(R.style.AppTheme_Dark);
+        setTheme(AppCore.getAppTheme());
         setContentView(R.layout.activity_settings);
 
         initializeGUI();
@@ -87,11 +87,11 @@ public class SettingsActivity extends AppCompatActivity {
         mWifiOnlySwitch.setChecked(PreferenceManager.isWifiOnly());
         mDarkThemeSwitch.setChecked(PreferenceManager.isDarkTheme());
 
-        mMinimumDownloadTextView.setText(String.valueOf(AppInfo.MINIMUM_SIMULTANEOUS_DOWNLOAD));
-        mMaximumDownloadTextView.setText(String.valueOf(AppInfo.MAXIMAL_SIMULTANEOUS_DOWNLOAD));
+        mMinimumDownloadTextView.setText(String.valueOf(AppConstants.MINIMUM_SIMULTANEOUS_DOWNLOAD));
+        mMaximumDownloadTextView.setText(String.valueOf(AppConstants.MAXIMAL_SIMULTANEOUS_DOWNLOAD));
         mDownloadValueTextView.setText(String.valueOf(PreferenceManager.getMaxTransfers()));
         mDownloadSeekBar.setProgress(PreferenceManager.getMaxTransfers() - 1);
-        mDownloadSeekBar.setMax(AppInfo.MAXIMAL_SIMULTANEOUS_DOWNLOAD - 1);
+        mDownloadSeekBar.setMax(AppConstants.MAXIMAL_SIMULTANEOUS_DOWNLOAD - 1);
 
         mExistingFileTextView.setText(
                 ExistingFileAction.getTextResourceId(PreferenceManager.getExistingFileAction()));

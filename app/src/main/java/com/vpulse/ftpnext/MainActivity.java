@@ -87,8 +87,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(iSavedInstanceState);
 
         AppCore.getInstance().startApplication(this);
-        if (PreferenceManager.isDarkTheme())
-            setTheme(R.style.AppTheme_Dark);
+        setTheme(AppCore.getAppTheme());
         FTPLogManager.notifyThemeChanged(this);
 
         setContentView(R.layout.activity_main);
@@ -163,33 +162,27 @@ public class MainActivity extends AppCompatActivity {
         DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         lRecyclerView.addItemDecoration(mDividerItemDecoration);
 
-        mAdapter.setOnLongClickListener(new MainRecyclerViewAdapter.OnLongClickListener() {
-            @Override
-            public void onLongClick(final int iServerID) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                // TODO strings
-                builder.setTitle(mFTPServerDAO.fetchById(iServerID).getName())
-                        .setItems(R.array.edit_server_array, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface iDialog, int iWhich) {
-                                if (iWhich == 0) {
-                                    new AlertDialog.Builder(MainActivity.this)
-                                            .setTitle("Deleting :")
-                                            .setMessage("Are you sure to delete this server ?")
-                                            .setPositiveButton("yes", new DialogInterface.OnClickListener() {
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    mFTPServerDAO.delete(iServerID);
-                                                    mAdapter.removeItem(iServerID);
-                                                }
-                                            })
-                                            .setNegativeButton("no", null)
-                                            .show();
-                                } else if (iWhich == 1)
-                                    startFTPConfigureServerActivity(iServerID);
-                            }
-                        });
-                builder.create();
-                builder.show();
-            }
+        mAdapter.setOnLongClickListener(iServerID -> {
+
+            final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            // TODO strings
+            builder.setTitle(mFTPServerDAO.fetchById(iServerID).getName())
+                    .setItems(R.array.edit_server_array, (iDialog, iWhich) -> {
+                        if (iWhich == 0) {
+                            new AlertDialog.Builder(MainActivity.this)
+                                    .setTitle("Deleting :")
+                                    .setMessage("Are you sure to delete this server ?")
+                                    .setPositiveButton("yes", (dialog, which) -> {
+                                        mFTPServerDAO.delete(iServerID);
+                                        mAdapter.removeItem(iServerID);
+                                    })
+                                    .setNegativeButton("no", null)
+                                    .show();
+                        } else if (iWhich == 1)
+                            startFTPConfigureServerActivity(iServerID);
+                    });
+            builder.create();
+            builder.show();
         });
 
         mAdapter.setOnClickListener(new MainRecyclerViewAdapter.OnClickListener() {

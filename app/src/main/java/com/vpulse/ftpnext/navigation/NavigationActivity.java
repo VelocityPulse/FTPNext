@@ -51,7 +51,6 @@ import com.vpulse.ftpnext.commons.interfaces.OnEndAnimation;
 import com.vpulse.ftpnext.commons.interfaces.OnStartAnimation;
 import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.LogManager;
-import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
@@ -159,8 +158,7 @@ public class NavigationActivity extends AppCompatActivity {
     protected void onCreate(Bundle iSavedInstanceState) {
         LogManager.info(TAG, "On create");
         super.onCreate(iSavedInstanceState);
-        if (PreferenceManager.isDarkTheme())
-            setTheme(R.style.AppTheme_Dark);
+        setTheme(AppCore.getAppTheme());
         setContentView(R.layout.activity_navigation);
 
         mIsRunning = true;

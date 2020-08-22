@@ -3,6 +3,7 @@ package com.vpulse.ftpnext.core;
 import android.annotation.SuppressLint;
 import android.content.Context;
 
+import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.ftpservices.FTPLogManager;
 
@@ -34,6 +35,18 @@ public class AppCore {
 
     public static boolean isApplicationStarted() {
         return mApplicationStarted;
+    }
+
+    public static int getAppTheme() {
+        if (PreferenceManager.isDarkTheme())
+            return R.style.AppTheme_Dark;
+        return R.style.AppTheme_Light;
+    }
+
+    public static int getDialogTheme() {
+        if (PreferenceManager.isDarkTheme())
+            return R.style.AppTheme_Dark_Dialog;
+        return R.style.AppTheme_Light_Dialog;
     }
 
     public void startApplication(Context iMainActivityContext) {

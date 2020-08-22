@@ -8,6 +8,7 @@ import android.widget.RadioButton;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.PreferenceManager;
 
 import static com.vpulse.ftpnext.core.ExistingFileAction.IGNORE;
@@ -33,8 +34,7 @@ public class ExistingFileActionActivity extends AppCompatActivity {
     @Override
     public void onCreate(@Nullable Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
-        if (PreferenceManager.isDarkTheme())
-            setTheme(R.style.AppTheme_Dark);
+        setTheme(AppCore.getAppTheme());
         setContentView(R.layout.activity_existing_file_action);
 
         initializeGUI();

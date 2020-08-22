@@ -4,7 +4,7 @@ import android.content.Context;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.vpulse.ftpnext.core.AppInfo;
+import com.vpulse.ftpnext.core.AppConstants;
 import com.vpulse.ftpnext.core.LogManager;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
 import com.vpulse.ftpnext.database.FTPServerTable.IFTPServerSchema;
@@ -18,8 +18,8 @@ import java.util.List;
 
 public class DataBase {
 
-    public static final String DATABASE_NAME = AppInfo.DATABASE_NAME;
-    public static final int DATABASE_VERSION = AppInfo.DATABASE_VERSION;
+    public static final String DATABASE_NAME = AppConstants.DATABASE_NAME;
+    public static final int DATABASE_VERSION = AppConstants.DATABASE_VERSION;
 
     private static String TAG = "DATABASE : Database";
 

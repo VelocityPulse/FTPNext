@@ -1,6 +1,6 @@
 package com.vpulse.ftpnext.core;
 
-public class AppInfo {
+public class AppConstants {
 
     public static final String DATABASE_NAME = "ftpnext.db";
     public static final int DATABASE_VERSION = 4;

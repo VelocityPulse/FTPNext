@@ -5,13 +5,6 @@
     <style name="AppTheme" parent="Theme.MaterialComponents.Light">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-
-        <!-- Menu Popup appearance : -->
-<!--        <item name="android:itemTextAppearance">@style/PopupMenuTextStyle</item>-->
-<!--        <item name="itemTextAppearance">@style/PopupMenuTextStyle</item>-->
-<!--        <item name="android:listPreferredItemHeightSmall">55dp</item>-->
-<!--        <item name="listPreferredItemHeightSmall">55dp</item>-->
-
     </style>
 
     <!--    Sub themes ============================================== -->
@@ -41,6 +34,9 @@
         <item name="logErrorColor">@color/lightLogError</item>
         <item name="logStatusColor">#191919</item>
         <item name="logReplyColor">@color/lightLogReply</item>
+
+        <item name="alertDialogTheme">@style/AppTheme.Light.Dialog</item>
+
     </style>
 
     <style name="AppTheme.Dark">
@@ -59,45 +55,55 @@
         <item name="android:colorBackground">@color/darkBackground</item>
 
         <!--Commented because it made some background issue in PopupWindow.-->
-        <!--        <item name="android:itemBackground">@color/darkPrimary</item>-->
+        <!--<item name="android:itemBackground">@color/darkPrimary</item>-->
 
         <item name="logSuccessColor">@color/darkLogSuccess</item>
         <item name="logErrorColor">@color/darkLogError</item>
         <item name="logStatusColor">@color/darkLogStatus</item>
         <item name="logReplyColor">@color/darkLogReply</item>
 
-
         <item name="alertDialogTheme">@style/AppTheme.Dark.Dialog</item>
 
     </style>
 
     <style name="AppTheme.Dark.Dialog" parent="Theme.AppCompat.Light.Dialog.Alert">
-        <item name="buttonBarButtonStyle">@style/AppTheme.Dark.Dialog.Button</item>
-        <item name="background">@color/darkBackground</item>
-        <item name="android:windowBackground">@color/darkBackground</item>
+        <item name="android:windowBackground">@drawable/dialog_background_dark</item>
+
+        <!-- Colors and sizes for buttons -->
+        <item name="buttonBarButtonStyle">@style/AppTheme.Dialog.Button</item>
 
         <!-- Colors init for contentView of the dialog : -->
         <item name="colorAccent">@color/darkAccent</item>
+        <item name="android:colorPrimary">@color/darkAccent</item>
 
         <!-- Colors of title and message : -->
         <item name="android:textColor">@color/darkWhite</item>
         <item name="android:textColorPrimary">@color/darkWhite</item>
+
+        <!-- Colors for item text -->
+        <item name="textColorAlertDialogListItem">@color/darkWhite</item>
     </style>
 
-    <style name="AppTheme.Dark.Dialog.Button" parent="@style/Widget.MaterialComponents.Button.TextButton">
+    <style name="AppTheme.Light.Dialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_background_light</item>
+
+        <!-- Colors and sizes for buttons -->
+        <item name="buttonBarButtonStyle">@style/AppTheme.Dialog.Button</item>
+
+        <!-- Colors init for contentView of the dialog : -->
+        <item name="colorAccent">@color/lightAccent</item>
+        <item name="android:colorPrimary">@color/lightAccent</item>
+
+        <!-- Colors of title and message : -->
+        <item name="android:textColor">@color/lightTextColor</item>
+        <item name="android:textColorPrimary">@color/lightTextColor</item>
+
+        <item name="textColorAlertDialogListItem">@color/lightTextColor</item>
+    </style>
+
+    <style name="AppTheme.Dialog.Button" parent="@style/Widget.MaterialComponents.Button.TextButton">
         <item name="android:textColor">@color/darkPrimary</item>
         <item name="android:textSize">15sp</item>
     </style>
-
-<!--    <style name="PopupMenuTheme" parent="android:Widget.PopupMenu">-->
-<!--        <item name="android:popupBackground">@drawable/popup_menu_background</item>-->
-<!--        <item name="android:textColorPrimary">?colorOnSecondary</item>-->
-<!--        <item name="android:textColor">?colorOnSecondary</item>-->
-<!--    </style>-->
-
-<!--    <style name="PopupMenuTextStyle" parent="@android:style/TextAppearance.Widget.IconMenu.Item">-->
-<!--        <item name="android:textColor">?colorOnSecondary</item>-->
-<!--        <item name="android:textSize">17sp</item>-->
-<!--    </style>-->
 
 </resources>

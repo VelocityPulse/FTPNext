@@ -25,10 +25,10 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.vpulse.ftpnext.commons.FileUtils;
 import com.vpulse.ftpnext.commons.Utils;
-import com.vpulse.ftpnext.core.AppInfo;
+import com.vpulse.ftpnext.core.AppConstants;
+import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.FTPType;
 import com.vpulse.ftpnext.core.LogManager;
-import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServerDAO;
@@ -71,8 +71,7 @@ public class ConfigureServerActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle iSavedInstanceState) {
         super.onCreate(iSavedInstanceState);
-        if (PreferenceManager.isDarkTheme())
-            setTheme(R.style.AppTheme_Dark);
+        setTheme(AppCore.getAppTheme());
         setContentView(R.layout.activity_configure_ftp_server);
 
         initializeGUI();
@@ -331,10 +330,10 @@ public class ConfigureServerActivity extends AppCompatActivity {
                 switch (lFTPType) {
                     case FTP:
                     case DEFAULT:
-                        lNewFTPServer.setPort(AppInfo.FTP_DEFAULT_PORT);
+                        lNewFTPServer.setPort(AppConstants.FTP_DEFAULT_PORT);
                         break;
                     case SFTP:
-                        lNewFTPServer.setPort(AppInfo.SFTP_DEFAULT_PORT);
+                        lNewFTPServer.setPort(AppConstants.SFTP_DEFAULT_PORT);
                         break;
                 }
             } else
