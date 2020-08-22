@@ -107,12 +107,12 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
         CustomItemViewAdapter oViewHolder = new CustomItemViewAdapter(
                 lLayout,
                 lLayout.findViewById(R.id.navigation_recycler_item_left_section),
-                (ImageView) lLayout.findViewById(R.id.navigation_recycler_item_left_draw),
-                (TextView) lLayout.findViewById(R.id.navigation_recycler_item_main_text),
-                (TextView) lLayout.findViewById(R.id.navigation_recycler_item_secondary_text),
-                (TextView) lLayout.findViewById(R.id.navigation_recycler_item_third_text),
-                (TextView) lLayout.findViewById(R.id.navigation_recycler_item_fourth),
-                (CheckBox) lLayout.findViewById(R.id.navigation_recycler_item_checkbox));
+                lLayout.findViewById(R.id.navigation_recycler_item_left_draw),
+                lLayout.findViewById(R.id.navigation_recycler_item_main_text),
+                lLayout.findViewById(R.id.navigation_recycler_item_secondary_text),
+                lLayout.findViewById(R.id.navigation_recycler_item_third_text),
+                lLayout.findViewById(R.id.navigation_recycler_item_fourth),
+                lLayout.findViewById(R.id.navigation_recycler_item_checkbox));
         mCustomViewItemList.add(oViewHolder);
 
         return oViewHolder;
@@ -312,6 +312,9 @@ public class NavigationRecyclerViewAdapter extends RecyclerView.Adapter<Navigati
             if (lNewPosition != lOldPosition)
                 notifyItemMoved(lOldPosition, lNewPosition);
         }
+        mRecyclerView.postDelayed(() -> {
+            mRecyclerView.smoothScrollToPosition(0);
+        }, 300);
     }
 
     public String[] getNames() {

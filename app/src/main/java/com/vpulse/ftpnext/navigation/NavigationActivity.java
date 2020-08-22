@@ -964,7 +964,6 @@ public class NavigationActivity extends AppCompatActivity {
         if (mIsSearchDisplayed)
             return;
 
-        mIsSearchDisplayed = true;
         Animation fadeOut = new AlphaAnimation(1, 0);
         fadeOut.setInterpolator(new DecelerateInterpolator()); //add this
         fadeOut.setDuration(200);
@@ -977,7 +976,11 @@ public class NavigationActivity extends AppCompatActivity {
 
         mToolBar.startAnimation(fadeOut);
         Utils.showKeyboard(this, mSearchEditText);
+
         hideFABMenu();
+
+        // If we set true now, globalLayout will back press because keyboard is not showed yet
+        mHandler.post(() -> mIsSearchDisplayed = true);
     }
 
     private void hideSearchBar() {
