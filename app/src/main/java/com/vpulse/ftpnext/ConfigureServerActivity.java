@@ -358,6 +358,7 @@ public class ConfigureServerActivity extends AppCompatActivity {
 
     public void onActivityResult(int iRequestCode, int iResultCode, Intent iResultData) {
         super.onActivityResult(iRequestCode, iResultCode, iResultData);
+
         if (iRequestCode == ACTIVITY_REQUEST_CODE_SELECT_FOLDER) {
             if (iResultCode == RESULT_OK) {
                 Uri lTreeUri = iResultData.getData();
@@ -391,6 +392,7 @@ public class ConfigureServerActivity extends AppCompatActivity {
                     .show();
             return;
         } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+
             String[] lPermissions = new String[]{
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE};

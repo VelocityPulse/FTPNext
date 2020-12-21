@@ -274,9 +274,17 @@ public class FTPTransfer extends AFTPConnection {
                             if (lLocalFile.getParentFile().mkdirs()) // TODO : Test with lLocalFile = "/"
                                 LogManager.info(TAG, "mkdir success");
 
-                            if (lLocalFile.createNewFile())
-                                LogManager.info(TAG, "Local creation success");
-                            else {
+                            try {
+                                if (lLocalFile.createNewFile())
+                                    LogManager.info(TAG, "Local creation success");
+                                else {
+                                    LogManager.info(TAG, "File already exists");
+                                    FTPLogManager.pushStatusLog(
+                                            "File already exists : \"" +
+                                                    lLocalFullPath + "\"");
+                                }
+                            } catch (Exception iE) {
+                                iE.printStackTrace();
                                 LogManager.error(TAG, "Impossible to create new file");
                                 mCandidate.setIsAnError(true);
                                 mOnTransferListener.onFail(mCandidate);
@@ -287,7 +295,6 @@ public class FTPTransfer extends AFTPConnection {
                                     break;
                                 continue;
                             }
-
                         } else {
 
                             while (mCandidate.getExistingFileAction() == ExistingFileAction.NOT_DEFINED &&

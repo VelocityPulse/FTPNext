@@ -211,7 +211,6 @@ public class MainActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(this,
                 lPermissionsReadWrite,
                 ACTIVITY_REQUEST_CODE_READ_EXTERNAL_STORAGE);
-
     }
 
     @Override
