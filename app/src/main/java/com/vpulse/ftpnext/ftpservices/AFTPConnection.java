@@ -17,6 +17,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPConnectionClosedException;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -60,6 +61,7 @@ public abstract class AFTPConnection {
         sInstanceNumber++;
 
         startHandlerThread();
+        EventBus.getDefault().register(this);
     }
 
     public AFTPConnection(int iServerId) {
@@ -71,6 +73,7 @@ public abstract class AFTPConnection {
         sInstanceNumber++;
 
         startHandlerThread();
+        EventBus.getDefault().register(this);
     }
 
     public void destroyConnection() {
@@ -92,6 +95,8 @@ public abstract class AFTPConnection {
             mHandlerConnection.removeCallbacksAndMessages(null);
             mHandlerConnection.getLooper().quitSafely();
         }
+
+        EventBus.getDefault().unregister(this);
     }
 
     private void initializeNetworkMonitoring() {

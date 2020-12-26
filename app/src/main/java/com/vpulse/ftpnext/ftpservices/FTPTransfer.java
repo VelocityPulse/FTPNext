@@ -3,12 +3,14 @@ package com.vpulse.ftpnext.ftpservices;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LogManager;
+import com.vpulse.ftpnext.core.MessageEvent;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
+import org.greenrobot.eventbus.Subscribe;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedOutputStream;
@@ -67,6 +69,11 @@ public class FTPTransfer extends AFTPConnection {
         if (sFTPTransferInstances == null)
             sFTPTransferInstances = new ArrayList<>();
         sFTPTransferInstances.add(this);
+    }
+
+    @Subscribe
+    public void onEvent(MessageEvent iMessageEvent) {
+
     }
 
     public static FTPTransfer[] getFTPTransferInstance(int iServerId) {

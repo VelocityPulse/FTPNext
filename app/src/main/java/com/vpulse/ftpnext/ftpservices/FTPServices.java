@@ -85,7 +85,6 @@ public class FTPServices extends AFTPConnection {
                 abortDeleting();
             if (isIndexingPendingFiles())
                 abortIndexingPendingFiles();
-            super.disconnect();
         }
     }
 

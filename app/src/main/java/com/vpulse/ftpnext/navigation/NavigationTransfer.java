@@ -27,6 +27,7 @@ import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LoadDirection;
 import com.vpulse.ftpnext.core.LogManager;
+import com.vpulse.ftpnext.core.MessageEvent;
 import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
@@ -35,6 +36,7 @@ import com.vpulse.ftpnext.ftpservices.FTPServices;
 import com.vpulse.ftpnext.ftpservices.FTPTransfer;
 
 import org.apache.commons.net.ftp.FTPFile;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,12 +73,21 @@ public class NavigationTransfer {
         mContextActivity = iContextActivity;
         mFTPTransferList = new ArrayList<>();
         mUniversalTransferListener = initializeUniversalTransferListener();
+        EventBus.getDefault().register(this);
+    }
+
+    public void onEvent(MessageEvent iMessageEvent) {
+
     }
 
     protected void onResume() {
         if (mFTPTransferList.size() > 0 && mContextActivity.mIsShowingTransfer) {
             mNarrowTransferAdapter.notifyDataSetChanged();
         }
+    }
+
+    protected void onDestroy() {
+        EventBus.getDefault().unregister(this);
     }
 
     protected void createDialogUploadSelection(Uri[] iUris) {

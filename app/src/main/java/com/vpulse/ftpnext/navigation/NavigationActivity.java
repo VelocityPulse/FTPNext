@@ -202,6 +202,7 @@ public class NavigationActivity extends AppCompatActivity {
         if (mFTPServices != null)
             mFTPServices.destroyConnection();
 
+        mNavigationTransfer.onDestroy();
         super.onDestroy();
     }
 
