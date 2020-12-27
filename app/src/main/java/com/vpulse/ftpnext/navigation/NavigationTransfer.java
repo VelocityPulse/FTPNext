@@ -2,6 +2,7 @@ package com.vpulse.ftpnext.navigation;
 
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -24,6 +25,7 @@ import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.adapters.NarrowTransferAdapter;
 import com.vpulse.ftpnext.commons.FileUtils;
 import com.vpulse.ftpnext.commons.Utils;
+import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.ExistingFileAction;
 import com.vpulse.ftpnext.core.LoadDirection;
 import com.vpulse.ftpnext.core.LogManager;
@@ -34,11 +36,14 @@ import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 import com.vpulse.ftpnext.ftpservices.FTPLogManager;
 import com.vpulse.ftpnext.ftpservices.FTPServices;
 import com.vpulse.ftpnext.ftpservices.FTPTransfer;
+import com.vpulse.ftpnext.service.TransferService;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.vpulse.ftpnext.navigation.NavigationActivity.NAVIGATION_MESSAGE_TRANSFER_FINISHED;
@@ -58,6 +63,7 @@ public class NavigationTransfer {
 
     private boolean mCanAutoScrollInLogView;
     private PendingFile[] mPendingFiles;
+    private TransferService mTransferService;
     private int mPendingFileErrors;
 
     private NavigationTransfer() throws InstantiationException {
@@ -76,8 +82,12 @@ public class NavigationTransfer {
         EventBus.getDefault().register(this);
     }
 
+    @Subscribe
     public void onEvent(MessageEvent iMessageEvent) {
-
+        if (iMessageEvent == MessageEvent.CANCEL_ALL_TRANSFER_EVENT) {
+            destroyAllTransferConnections();
+            mContextActivity.mTransferDialog.getButton(DialogInterface.BUTTON_NEGATIVE).callOnClick();
+        }
     }
 
     protected void onResume() {
@@ -227,9 +237,20 @@ public class NavigationTransfer {
     private void uploadFiles(final Uri[] iUris) {
         LogManager.info(TAG, "Upload files");
 
-        destroyAllTransferConnections();
+        if (FTPTransfer.getFTPTransferInstance().length > 0)
+            destroyAllTransferConnections();
+
         mPendingFiles = indexFilesForUpload(iUris);
         mPendingFileErrors = 0;
+
+        // Service
+        mHandler.post(() -> {
+            AppCore.getPendingFilesHistory().addAll(Arrays.asList(mPendingFiles));
+            if (!TransferService.isStarted())
+                mContextActivity.startService(new Intent(mContextActivity, TransferService.class));
+            else
+                TransferService.getInstance().pullPendingFiles();
+        });
 
         createNarrowTransferDialog(mPendingFiles, LoadDirection.UPLOAD);
 
@@ -242,9 +263,20 @@ public class NavigationTransfer {
     private void downloadFiles(final PendingFile[] iPendingFiles) {
         LogManager.info(TAG, "Download files");
 
-        destroyAllTransferConnections();
+        if (FTPTransfer.getFTPTransferInstance().length > 0)
+            destroyAllTransferConnections();
+
         mPendingFiles = iPendingFiles;
         mPendingFileErrors = 0;
+
+        // Service
+        mHandler.post(() -> {
+            AppCore.getPendingFilesHistory().addAll(Arrays.asList(mPendingFiles));
+            if (!TransferService.isStarted())
+                mContextActivity.startService(new Intent(mContextActivity, TransferService.class));
+            else
+                TransferService.getInstance().pullPendingFiles();
+        });
 
         createNarrowTransferDialog(mPendingFiles, LoadDirection.DOWNLOAD);
 
@@ -283,6 +315,7 @@ public class NavigationTransfer {
                     }
 
                 });
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     lScrollView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
                         @Override
@@ -293,7 +326,8 @@ public class NavigationTransfer {
                         }
                     });
                 }
-                final FTPLogManager.OnNewFTPLogColored lOnNewFTPLogColored = new FTPLogManager.OnNewFTPLogColored() {
+
+                final FTPLogManager.OnNewColoredFTPLog lOnNewColoredFTPLog = new FTPLogManager.OnNewColoredFTPLog() {
 
                     int mCount = 0;
                     String mCompleteLog = "";
@@ -317,7 +351,7 @@ public class NavigationTransfer {
                         });
                     }
                 };
-                FTPLogManager.subscribeOnNewFTPLogColored(lOnNewFTPLogColored);
+                FTPLogManager.subscribeOnNewFTPLogColored(lOnNewColoredFTPLog);
 
                 if (mPendingFiles.length > 1) {
                     DividerItemDecoration lDividerItemDecoration = new DividerItemDecoration(
@@ -334,22 +368,15 @@ public class NavigationTransfer {
                     public void onClick(DialogInterface dialog, int which) {
                         destroyAllTransferConnections();
                         mContextActivity.mIsShowingTransfer = false;
-                        FTPLogManager.unsubscribeOnNewFTPLogColored(lOnNewFTPLogColored);
+                        FTPLogManager.unsubscribeOnNewFTPLogColored(lOnNewColoredFTPLog);
                         mContextActivity.mHandler.sendEmptyMessage(NAVIGATION_MESSAGE_TRANSFER_FINISHED);
                     }
                 });
 
-//                lBuilder.setNeutralButton("Background", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface iDialog, int iWhich) {
-//                        iDialog.dismiss();
-//                    }
-//                });
-
                 lBuilder.setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
-                        FTPLogManager.unsubscribeOnNewFTPLogColored(lOnNewFTPLogColored);
+                        FTPLogManager.unsubscribeOnNewFTPLogColored(lOnNewColoredFTPLog);
                         destroyAllTransferConnections();
                     }
                 });
@@ -368,17 +395,14 @@ public class NavigationTransfer {
     }
 
     private void createNewFTPTransfer(final LoadDirection iLoadDirection) {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                final FTPTransfer lFTPTransfer = new FTPTransfer(mContextActivity.mFTPServer.getDataBaseId());
-                mFTPTransferList.add(lFTPTransfer);
+        mHandler.post(() -> {
+            final FTPTransfer lFTPTransfer = new FTPTransfer(mContextActivity.mFTPServer.getDataBaseId());
+            mFTPTransferList.add(lFTPTransfer);
 
-                if (iLoadDirection == LoadDirection.DOWNLOAD)
-                    lFTPTransfer.downloadFiles(mPendingFiles, mUniversalTransferListener);
-                else if (iLoadDirection == LoadDirection.UPLOAD)
-                    lFTPTransfer.uploadFiles(mPendingFiles, mUniversalTransferListener);
-            }
+            if (iLoadDirection == LoadDirection.DOWNLOAD)
+                lFTPTransfer.downloadFiles(mPendingFiles, mUniversalTransferListener);
+            else if (iLoadDirection == LoadDirection.UPLOAD)
+                lFTPTransfer.uploadFiles(mPendingFiles, mUniversalTransferListener);
         });
     }
 
@@ -469,7 +493,9 @@ public class NavigationTransfer {
         return new FTPTransfer.OnTransferListener() {
             @Override
             public void onConnected(PendingFile iPendingFile) {
-
+                mTransferService = TransferService.getInstance();
+                if (mTransferService != null)
+                    mTransferService.onConnected(iPendingFile);
             }
 
             @Override
@@ -480,6 +506,9 @@ public class NavigationTransfer {
                         mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
                     }
                 });
+                mTransferService = TransferService.getInstance();
+                if (mTransferService != null)
+                    mTransferService.onConnectionLost(iPendingFile);
             }
 
             @Override
@@ -491,6 +520,9 @@ public class NavigationTransfer {
                         mNarrowTransferAdapter.addPendingFileToRemove(iPendingFile);
                     }
                 });
+                mTransferService = TransferService.getInstance();
+                if (mTransferService != null)
+                    mTransferService.onTransferSuccess(iPendingFile);
             }
 
             @Override
@@ -501,6 +533,9 @@ public class NavigationTransfer {
                         mNarrowTransferAdapter.updatePendingFileData(iPendingFile);
                     }
                 });
+                mTransferService = TransferService.getInstance();
+                if (mTransferService != null)
+                    mTransferService.onStateUpdateRequested(iPendingFile);
             }
 
             @Override
@@ -511,6 +546,9 @@ public class NavigationTransfer {
                         createExistingFileDialog(iPendingFile);
                     }
                 });
+                mTransferService = TransferService.getInstance();
+                if (mTransferService != null)
+                    mTransferService.onExistingFile(iPendingFile);
             }
 
             @Override
@@ -524,10 +562,17 @@ public class NavigationTransfer {
                         DataBase.getPendingFileDAO().delete(iPendingFile);
                     }
                 });
+                mTransferService = TransferService.getInstance();
+                if (mTransferService != null)
+                    mTransferService.onFail(iPendingFile);
             }
 
             @Override
             public void onStop(FTPTransfer iFTPTransfer) {
+                mTransferService = TransferService.getInstance();
+                if (mTransferService != null)
+                    mTransferService.onStop(iFTPTransfer);
+
                 mFTPTransferList.remove(iFTPTransfer);
 
                 if (mFTPTransferList.size() == 0) {
@@ -559,6 +604,8 @@ public class NavigationTransfer {
     }
 
     private void showSuccessTransfer() {
+        AppCore.cleanPendingFileHistory();
+
         if (mContextActivity.isFinishing()) {
             LogManager.error(TAG, "Show success transfer called but isFinishing == true");
             return;
@@ -581,6 +628,15 @@ public class NavigationTransfer {
         for (FTPTransfer lItem : mFTPTransferList)
             lItem.destroyConnection();
         mFTPTransferList.clear();
+
+        if (mPendingFiles != null) {
+            for (PendingFile lPendingFile : mPendingFiles) {
+                lPendingFile.setStopped(true);
+            }
+        }
+
+        if (TransferService.getInstance() != null)
+            TransferService.getInstance().updateStatus();
     }
 
     private void showUploadConfirmation(final Uri[] iUris) {

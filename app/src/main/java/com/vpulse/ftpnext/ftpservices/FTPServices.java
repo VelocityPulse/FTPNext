@@ -26,7 +26,6 @@ public class FTPServices extends AFTPConnection {
 
     private static List<FTPServices> sFTPServicesInstances;
 
-
     private Thread mDirectoryFetchThread;
     private Thread mDeleteFileThread;
     private Thread mCreateDirectoryThread;

@@ -2,6 +2,7 @@ package com.vpulse.ftpnext.adapters;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.ColorStateList;
 import android.os.Build;
 import android.os.Handler;
@@ -42,6 +43,7 @@ public class NarrowTransferAdapter
     private static final int REMOVE_BREAK_TIMER = 1000;
     private static final int SORT_BUTTON_DELAY = 1000;
 
+    private final Handler mHandler;
     private final List<PendingFileItem> mToRemovePendingFileItemList;
     private final List<PendingFileItem> mPendingFileItemList;
     private final List<CustomItemViewHolder> mCustomItemViewHolderList;
@@ -49,22 +51,21 @@ public class NarrowTransferAdapter
     private Button mSortButton;
     private int mStartedAnimations;
 
-    private Activity mActivity;
+    private Context mActivity;
 
     private RecyclerView mRecyclerView;
 
     private int mUpdateRequestedInSecond;
     private long mTimer;
-    private Handler mHandler;
     private Runnable mSortButtonDelayer;
 
-    public NarrowTransferAdapter(PendingFile[] iPendingFiles, Activity iActivity) {
+    public NarrowTransferAdapter(PendingFile[] iPendingFiles, Context iContext) {
         mPendingFileItemList = new ArrayList<>();
         mToRemovePendingFileItemList = new ArrayList<>();
         mCustomItemViewHolderList = new ArrayList<>();
         mHandler = new Handler();
 
-        mActivity = iActivity;
+        mActivity = iContext;
 
         for (PendingFile lItem : iPendingFiles)
             mPendingFileItemList.add(new PendingFileItem(lItem));
@@ -85,7 +86,8 @@ public class NarrowTransferAdapter
         mSortButtonDelayer = new Runnable() {
             @Override
             public void run() {
-                mSortButton.setEnabled(true);
+                if (mSortButton != null)
+                    mSortButton.setEnabled(true);
             }
         };
 
@@ -95,7 +97,9 @@ public class NarrowTransferAdapter
                 super.onAnimationStarted(viewHolder);
 
                 mStartedAnimations++;
-                mSortButton.setEnabled(false);
+
+                if (mSortButton != null)
+                    mSortButton.setEnabled(false);
             }
 
             @Override
@@ -103,7 +107,8 @@ public class NarrowTransferAdapter
                 super.onMoveStarting(item);
 
                 mStartedAnimations++;
-                mSortButton.setEnabled(false);
+                if (mSortButton != null)
+                    mSortButton.setEnabled(false);
             }
 
             @Override
@@ -443,12 +448,15 @@ public class NarrowTransferAdapter
 
     public void setSortButton(Button iButton) {
         mSortButton = iButton;
-        mSortButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sortItems();
-            }
-        });
+
+        if (mSortButton != null) {
+            mSortButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    sortItems();
+                }
+            });
+        }
     }
 
     // TODO : Why not make it inherit from Pending file ? Cool optimisation

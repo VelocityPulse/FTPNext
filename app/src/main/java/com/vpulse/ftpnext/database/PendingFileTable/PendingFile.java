@@ -24,6 +24,8 @@ public class PendingFile extends ABaseTable {
     private int mSize;
     private boolean mSelected;
     private boolean mIsConnected;
+
+    private boolean mIsStopped;
     private boolean mIsAnError;
     private long mSpeedInByte;
     private int mRemainingTimeInMin;
@@ -151,6 +153,14 @@ public class PendingFile extends ABaseTable {
 
     public void setConnected(boolean iConnected) {
         mIsConnected = iConnected;
+    }
+
+    public boolean isStopped() {
+        return mIsStopped;
+    }
+
+    public void setStopped(boolean iStopped) {
+        mIsStopped = iStopped;
     }
 
     public long getSpeedInByte() {

@@ -26,7 +26,7 @@ public class FTPLogManager {
     private static String mStatusColorString;
 
     private static List<OnNewFTPLog> mOnNewFTPLogList;
-    private static List<OnNewFTPLogColored> mOnNewFTPLogColoredList;
+    private static List<OnNewColoredFTPLog> sMOnNewColoredFTPLogList;
 
     private FTPLogManager() {
     }
@@ -34,7 +34,7 @@ public class FTPLogManager {
     @SuppressLint("ResourceType")
     public static void init(Context iContext) {
         mOnNewFTPLogList = new ArrayList<>();
-        mOnNewFTPLogColoredList = new ArrayList<>();
+        sMOnNewColoredFTPLogList = new ArrayList<>();
 
         notifyThemeChanged(iContext);
     }
@@ -73,16 +73,16 @@ public class FTPLogManager {
         mOnNewFTPLogList.remove(iOnNewFTPLog);
     }
 
-    public static void subscribeOnNewFTPLogColored(OnNewFTPLogColored iOnNewFTPLogColored) {
-        if (iOnNewFTPLogColored == null) {
+    public static void subscribeOnNewFTPLogColored(OnNewColoredFTPLog iOnNewColoredFTPLog) {
+        if (iOnNewColoredFTPLog == null) {
             LogManager.error(TAG, "Subscribe on new FTP log colored null");
             return;
         }
-        mOnNewFTPLogColoredList.add(iOnNewFTPLogColored);
+        sMOnNewColoredFTPLogList.add(iOnNewColoredFTPLog);
     }
 
-    public static void unsubscribeOnNewFTPLogColored(OnNewFTPLogColored iOnNewFTPLogColored) {
-        mOnNewFTPLogColoredList.remove(iOnNewFTPLogColored);
+    public static void unsubscribeOnNewFTPLogColored(OnNewColoredFTPLog iOnNewColoredFTPLog) {
+        sMOnNewColoredFTPLogList.remove(iOnNewColoredFTPLog);
     }
 
     public static void pushSuccessLog(String iLog) {
@@ -142,7 +142,7 @@ public class FTPLogManager {
         else if (iLog.startsWith(TYPE_STATUS))
             iLog = "<font color='" + mStatusColorString + "'>" + iLog + "</font>";
 
-        for (OnNewFTPLogColored lCallback : mOnNewFTPLogColoredList)
+        for (OnNewColoredFTPLog lCallback : sMOnNewColoredFTPLogList)
             lCallback.onNewFTPLogColored(iLog);
     }
 
@@ -150,7 +150,7 @@ public class FTPLogManager {
         void onNewFTPLog(String iLog);
     }
 
-    public interface OnNewFTPLogColored {
+    public interface OnNewColoredFTPLog {
         void onNewFTPLogColored(String iLog);
     }
 }

@@ -5,13 +5,19 @@ import android.content.Context;
 
 import com.vpulse.ftpnext.R;
 import com.vpulse.ftpnext.database.DataBase;
+import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 import com.vpulse.ftpnext.ftpservices.FTPLogManager;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class AppCore {
 
     public static final String APP_ADDRESS = "com.vpulse.ftpnext";
 
     public static final float FLOATING_ACTION_BUTTON_INTERPOLATOR = 2.3F;
+
+    private static final Set<PendingFile> mPendingFilesHistory = new HashSet<>();
 
     private static NetworkManager mNetworkManager = null;
 
@@ -66,5 +72,18 @@ public class AppCore {
         FTPLogManager.init(iMainActivityContext);
 
         mApplicationStarted = true;
+    }
+
+    public static Set<PendingFile> getPendingFilesHistory() {
+        return mPendingFilesHistory;
+    }
+
+    public static void cleanPendingFileHistory() {
+        PendingFile[] lPendingFiles = mPendingFilesHistory.toArray(new PendingFile[0]);
+
+        for (PendingFile lPendingFile : lPendingFiles) {
+            if (lPendingFile.isFinished())
+                mPendingFilesHistory.remove(lPendingFile);
+        }
     }
 }

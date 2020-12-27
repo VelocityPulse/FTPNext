@@ -7,6 +7,7 @@ import android.os.HandlerThread;
 import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.LogManager;
+import com.vpulse.ftpnext.core.MessageEvent;
 import com.vpulse.ftpnext.core.NetworkManager;
 import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.DataBase;
@@ -18,6 +19,7 @@ import org.apache.commons.net.ftp.FTPConnectionClosedException;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -74,6 +76,11 @@ public abstract class AFTPConnection {
 
         startHandlerThread();
         EventBus.getDefault().register(this);
+    }
+
+    @Subscribe
+    public void onEvent(MessageEvent iMessageEvent) {
+
     }
 
     public void destroyConnection() {

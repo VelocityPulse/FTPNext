@@ -21,6 +21,8 @@
     <string name="existing_file_rename_file">Rename file and keep both</string>
     <string name="existing_file_ignore">Ignore</string>
 
+    <string name="service_status_notification">Transfer global status</string>
+
     <string-array name="edit_server_array">
         <item>Delete</item>
         <item>Edit</item>

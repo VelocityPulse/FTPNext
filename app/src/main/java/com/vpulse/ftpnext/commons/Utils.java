@@ -227,7 +227,7 @@ public class Utils {
      * @param iRes      must be an attribute like R.attr.colorAccent
      * @return The color
      */
-    public static int fetchCurrentThemeColor(Activity iActivity, int iRes) {
+    public static int fetchCurrentThemeColor(Context iActivity, int iRes) {
         final TypedValue value = new TypedValue();
         iActivity.getTheme().resolveAttribute(iRes, value, true);
         return value.data;

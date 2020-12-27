@@ -4,9 +4,12 @@
     package="com.vpulse.ftpnext">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="true"
@@ -53,6 +56,10 @@
             android:label="@string/existing_files"
             android:theme="@style/AppTheme.Light"
             android:windowSoftInputMode="adjustNothing" />
+
+        <receiver android:name=".service.TransferService$TransferServiceBroadcast" />
+
+        <service android:name=".service.TransferService" />
     </application>
 
 </manifest>

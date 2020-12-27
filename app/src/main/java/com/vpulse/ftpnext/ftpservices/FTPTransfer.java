@@ -36,6 +36,7 @@ public class FTPTransfer extends AFTPConnection {
     private static boolean mIsAskingActionForExistingFile;
 
     private OnTransferListener mOnTransferListener;
+
     private PendingFile mCandidate;
 
     private Thread mTransferThread;
@@ -89,8 +90,23 @@ public class FTPTransfer extends AFTPConnection {
         return lFTPTransferList.toArray(new FTPTransfer[0]);
     }
 
+    public static FTPTransfer[] getFTPTransferInstance() {
+        LogManager.info(TAG, "Get FTP transfer instance");
+        if (sFTPTransferInstances == null)
+            sFTPTransferInstances = new ArrayList<>();
+
+        List<FTPTransfer> lFTPTransferList = new ArrayList<>(sFTPTransferInstances);
+        return lFTPTransferList.toArray(new FTPTransfer[0]);
+    }
+
     public static void notifyExistingFileActionIsDefined() {
         mIsAskingActionForExistingFile = false;
+    }
+
+    @Override
+    public void disconnect() {
+        super.disconnect();
+
     }
 
     @Override
@@ -112,6 +128,12 @@ public class FTPTransfer extends AFTPConnection {
         });
 
         abortTransfer();
+
+        if (mCandidate != null)
+            mCandidate.setStopped(true);
+
+        if (mOnTransferListener != null)
+            mOnTransferListener.onStop(FTPTransfer.this);
     }
 
     private void initializeListeners(final OnTransferListener iOnTransferListener) {
@@ -141,8 +163,6 @@ public class FTPTransfer extends AFTPConnection {
                             FTPLogManager.pushErrorLog("Server denied connection ...");
                         else
                             FTPLogManager.pushErrorLog("Impossible to reconnect ...");
-                        if (iOnTransferListener != null)
-                            iOnTransferListener.onStop(FTPTransfer.this);
                         if (!mCandidate.isFinished() && mCandidate.isSelected()) {
                             mCandidate.setSelected(false);
                             mOnTransferListener.onStateUpdateRequested(mCandidate);
@@ -226,7 +246,6 @@ public class FTPTransfer extends AFTPConnection {
 
                     // Stopping all transfer activities
                     if (mCandidate == null) {
-                        mOnTransferListener.onStop(FTPTransfer.this);
                         destroyConnection();
                         break;
                     }
@@ -378,6 +397,7 @@ public class FTPTransfer extends AFTPConnection {
                                     "Start download of \"" + mCandidate.getName() + "\"");
 
                             mCandidate.setConnected(true);
+
                             // ---------------- DOWNLAND LOOP
                             while ((lBytesRead = lRemoteStream.read(bytesArray)) != -1) {
                                 mIsTransferring = true;
@@ -461,7 +481,6 @@ public class FTPTransfer extends AFTPConnection {
 
                     // Stopping all transfer activities
                     if (mCandidate == null) {
-                        mOnTransferListener.onStop(FTPTransfer.this);
                         destroyConnection();
                         break;
                     }
@@ -719,8 +738,6 @@ public class FTPTransfer extends AFTPConnection {
                             if (!mCandidate.isFinished() && mHasAlreadyBeenConnected)
                                 mOnTransferListener.onStateUpdateRequested(mCandidate);
 
-                            if (mOnTransferListener != null)
-                                mOnTransferListener.onStop(FTPTransfer.this);
                             destroyConnection();
                         }
                     }
@@ -908,6 +925,10 @@ public class FTPTransfer extends AFTPConnection {
             mSpeedAverage5 = iValue;
             mTurn = 0;
         }
+    }
+
+    public PendingFile getCandidate() {
+        return mCandidate;
     }
 
     private long getAverageSpeed() {
