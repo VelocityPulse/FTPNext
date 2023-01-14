@@ -37,6 +37,7 @@ import com.vpulse.ftpnext.ftpservices.FTPTransfer;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,6 +77,7 @@ public class NavigationTransfer {
         EventBus.getDefault().register(this);
     }
 
+    @Subscribe
     public void onEvent(MessageEvent iMessageEvent) {
 
     }

@@ -5,12 +5,14 @@ import com.vpulse.ftpnext.commons.Utils;
 import com.vpulse.ftpnext.core.AppCore;
 import com.vpulse.ftpnext.core.LoadDirection;
 import com.vpulse.ftpnext.core.LogManager;
+import com.vpulse.ftpnext.core.MessageEvent;
 import com.vpulse.ftpnext.core.PreferenceManager;
 import com.vpulse.ftpnext.database.FTPServerTable.FTPServer;
 import com.vpulse.ftpnext.database.PendingFileTable.PendingFile;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
+import org.greenrobot.eventbus.Subscribe;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -67,6 +69,11 @@ public class FTPServices extends AFTPConnection {
                 return lServices;
         }
         return null;
+    }
+
+    @Subscribe
+    public void onEvent(MessageEvent iMessageEvent) {
+
     }
 
     public void destroyConnection() {
